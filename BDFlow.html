@@ -7,7 +7,6 @@
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#185fa5">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BDFlow">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <style>
@@ -39,12 +38,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
 .btn-primary:hover{background:#0d4d8a}
 .btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-danger:hover{background:#c03a39}
 .main-area{display:flex;flex:1;overflow:hidden}
 .sidebar{width:210px;background:var(--bg2);border-right:1px solid var(--border);padding:14px 8px;overflow-y:auto;flex-shrink:0}
 .content{flex:1;overflow-y:auto;padding:18px}
 .sidebar-section{margin-bottom:18px}
 .sidebar-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:0 8px 6px}
-.sidebar-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s}
+.sidebar-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
 .sidebar-item:hover{background:var(--bg3);color:var(--text)}
 .sidebar-item.active{background:var(--blue-bg);color:var(--blue);font-weight:600}
 .sidebar-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
@@ -91,8 +91,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .kanban-col{min-width:230px;flex:1;background:var(--bg3);border-radius:12px;padding:14px}
 .kanban-col-header{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.04em}
 .kanban-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:8px;cursor:pointer;transition:all .15s}
-.kanban-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.kanban-card-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:7px}
+.kanban-card:hover{border-color:var(--border2);transform:translateY(-1px)}
 .workload-container{margin-bottom:10px}
 .workload-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:5px}
 .workload-track{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
@@ -105,11 +104,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .form-group{margin-bottom:12px}
 .form-label{font-size:12px;color:var(--text2);margin-bottom:5px;display:block;font-weight:600}
 .form-input{width:100%;padding:8px 11px;border-radius:7px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit}
-.form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.1)}
+.form-input:focus{outline:none;border-color:var(--blue)}
 .form-select{width:100%;padding:8px 11px;border-radius:7px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit}
 .close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:4px;line-height:1}
 .initiative-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px}
-.initiative-progress-bar{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;border:1px solid var(--border)}
+.initiative-progress-bar{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
 .initiative-progress-fill{height:100%;background:var(--blue);border-radius:3px}
 .report-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
 .bar-h{height:16px;background:var(--blue);border-radius:3px;display:inline-block}
@@ -146,33 +145,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="sidebar">
   <div class="sidebar-section">
     <div class="sidebar-label">Por área</div>
-    <div class="sidebar-item active" onclick="filterArea('all',this)"><span class="sidebar-dot" style="background:var(--blue)"></span>Todas<span class="sidebar-count" id="count-all">0</span></div>
-    <div class="sidebar-item" onclick="filterArea('Ventas',this)"><span class="sidebar-dot" style="background:var(--green)"></span>Ventas<span class="sidebar-count" id="count-Ventas">0</span></div>
-    <div class="sidebar-item" onclick="filterArea('Producto',this)"><span class="sidebar-dot" style="background:var(--purple)"></span>Producto<span class="sidebar-count" id="count-Producto">0</span></div>
-    <div class="sidebar-item" onclick="filterArea('Marketing',this)"><span class="sidebar-dot" style="background:var(--coral)"></span>Marketing<span class="sidebar-count" id="count-Marketing">0</span></div>
-    <div class="sidebar-item" onclick="filterArea('Partners',this)"><span class="sidebar-dot" style="background:var(--teal)"></span>Partners<span class="sidebar-count" id="count-Partners">0</span></div>
-    <div class="sidebar-item" onclick="filterArea('Dirección',this)"><span class="sidebar-dot" style="background:var(--red)"></span>Dirección<span class="sidebar-count" id="count-Dirección">0</span></div>
-    <div class="sidebar-item" onclick="filterArea('Preventa',this)"><span class="sidebar-dot" style="background:var(--amber)"></span>Preventa<span class="sidebar-count" id="count-Preventa">0</span></div>
-    <div class="sidebar-item" onclick="filterArea('Operaciones',this)"><span class="sidebar-dot" style="background:var(--text3)"></span>Operaciones<span class="sidebar-count" id="count-Operaciones">0</span></div>
+    <button class="sidebar-item active" id="filter-all" onclick="filterArea('all',this)"><span class="sidebar-dot" style="background:var(--blue)"></span>Todas<span class="sidebar-count" id="count-all">0</span></button>
+    <button class="sidebar-item" onclick="filterArea('Ventas',this)"><span class="sidebar-dot" style="background:var(--green)"></span>Ventas<span class="sidebar-count" id="count-Ventas">0</span></button>
+    <button class="sidebar-item" onclick="filterArea('Producto',this)"><span class="sidebar-dot" style="background:var(--purple)"></span>Producto<span class="sidebar-count" id="count-Producto">0</span></button>
+    <button class="sidebar-item" onclick="filterArea('Marketing',this)"><span class="sidebar-dot" style="background:var(--coral)"></span>Marketing<span class="sidebar-count" id="count-Marketing">0</span></button>
+    <button class="sidebar-item" onclick="filterArea('Partners',this)"><span class="sidebar-dot" style="background:var(--teal)"></span>Partners<span class="sidebar-count" id="count-Partners">0</span></button>
+    <button class="sidebar-item" onclick="filterArea('Dirección',this)"><span class="sidebar-dot" style="background:var(--red)"></span>Dirección<span class="sidebar-count" id="count-Dirección">0</span></button>
+    <button class="sidebar-item" onclick="filterArea('Preventa',this)"><span class="sidebar-dot" style="background:var(--amber)"></span>Preventa<span class="sidebar-count" id="count-Preventa">0</span></button>
+    <button class="sidebar-item" onclick="filterArea('Operaciones',this)"><span class="sidebar-dot" style="background:var(--text3)"></span>Operaciones<span class="sidebar-count" id="count-Operaciones">0</span></button>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">Por estado</div>
-    <div class="sidebar-item" onclick="filterStatus('Bloqueada',this)"><span class="sidebar-dot" style="background:var(--red)"></span>Bloqueadas<span class="sidebar-count" id="count-Bloqueada">0</span></div>
-    <div class="sidebar-item" onclick="filterStatus('En espera de terceros',this)"><span class="sidebar-dot" style="background:var(--amber)"></span>En espera<span class="sidebar-count" id="count-Espera">0</span></div>
-    <div class="sidebar-item" onclick="filterStatus('Finalizada',this)"><span class="sidebar-dot" style="background:var(--green)"></span>Finalizadas<span class="sidebar-count" id="count-Finalizada">0</span></div>
+    <button class="sidebar-item" onclick="filterStatus('Bloqueada',this)"><span class="sidebar-dot" style="background:var(--red)"></span>Bloqueadas<span class="sidebar-count" id="count-Bloqueada">0</span></button>
+    <button class="sidebar-item" onclick="filterStatus('En espera de terceros',this)"><span class="sidebar-dot" style="background:var(--amber)"></span>En espera<span class="sidebar-count" id="count-Espera">0</span></button>
+    <button class="sidebar-item" onclick="filterStatus('Finalizada',this)"><span class="sidebar-dot" style="background:var(--green)"></span>Finalizadas<span class="sidebar-count" id="count-Finalizada">0</span></button>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">Configuración</div>
     <div style="padding:6px 8px;font-size:12px;color:var(--text2);font-weight:600">Capacidad diaria</div>
     <div style="display:flex;align-items:center;gap:8px;padding:0 8px 10px">
-      <input type="number" id="daily-capacity" value="6" min="1" max="12" style="width:55px;padding:5px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px" onchange="updateCapacity()">
+      <input type="number" id="daily-capacity" value="6" min="1" max="12" style="width:55px;padding:5px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px" onchange="setCapacity(this.value)">
       <span style="font-size:12px;color:var(--text3)">h/día</span>
     </div>
-    <div style="padding:0 8px 8px">
-      <button class="btn" style="width:100%;font-size:11px;padding:5px 8px" onclick="loadDemoData()">Cargar datos demo</button>
+    <div style="padding:0 8px 6px">
+      <button class="btn" style="width:100%;font-size:11px;padding:6px 8px" onclick="loadDemoData()">📂 Cargar datos demo</button>
     </div>
     <div style="padding:0 8px 8px">
-      <button class="btn btn-danger" style="width:100%;font-size:11px;padding:5px 8px" onclick="clearAllData()">Borrar todo</button>
+      <button class="btn btn-danger" style="width:100%;font-size:11px;padding:6px 8px" onclick="clearAllData()">🗑 Borrar todo</button>
     </div>
   </div>
 </div>
@@ -183,615 +182,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="modal" onclick="event.stopPropagation()" id="modal-body"></div>
 </div>
 <script>
-let dailyCapacity=6,activeAreaFilter='all',activeStatusFilter=null;
-const AREAS=['Ventas','Preventa','Producto','Marketing','Partners','Dirección','Operaciones'];
-const TASK_CATEGORIES=['Reunión','Seguimiento','Análisis','Coordinación','Propuesta','Presentación','Reporte','Escalado','Ejecución','Bloqueo'];
-const TASK_STATUSES=['Pendiente','En curso','Bloqueada','En espera de terceros','Finalizada'];
-const INITIATIVE_TYPES=['Oportunidad','Partner','Cliente','Iniciativa Estratégica','Soporte Interno','Marketing','Producto','Dirección'];
+// ===================== STATE =====================
+var dailyCapacity = 6;
+var activeAreaFilter = 'all';
+var activeStatusFilter = null;
+var currentView = 'dashboard';
 
-let initiatives=[
+var AREAS = ['Ventas','Preventa','Producto','Marketing','Partners','Dirección','Operaciones'];
+var TASK_CATEGORIES = ['Reunión','Seguimiento','Análisis','Coordinación','Propuesta','Presentación','Reporte','Escalado','Ejecución','Bloqueo'];
+var TASK_STATUSES = ['Pendiente','En curso','Bloqueada','En espera de terceros','Finalizada'];
+var INITIATIVE_TYPES = ['Oportunidad','Partner','Cliente','Iniciativa Estratégica','Soporte Interno','Marketing','Producto','Dirección'];
+
+var DEMO_INITIATIVES = [
   {id:'i1',name:'Expansión Partner DACH',type:'Partner',area:'Partners',otherAreas:['Ventas','Marketing'],objective:'Certificar 3 nuevos partners en DACH en Q2',value:240000,importance:'Alta',startDate:'2025-01-15',targetDate:'2025-06-30',status:'En curso'},
   {id:'i2',name:'Deal Bankinter HR Suite',type:'Oportunidad',area:'Ventas',otherAreas:['Preventa','Producto'],objective:'Cerrar contrato marco HR para 3.500 empleados',value:480000,importance:'Alta',startDate:'2025-02-01',targetDate:'2025-07-15',status:'En curso'},
   {id:'i3',name:'Go-to-Market RRHH 2025',type:'Iniciativa Estratégica',area:'Marketing',otherAreas:['Ventas','Producto','Dirección'],objective:'Posicionar Cegid como líder HR en mid-market ibérico',value:0,importance:'Alta',startDate:'2025-01-01',targetDate:'2025-12-31',status:'En curso'},
   {id:'i4',name:'Integración Sage Payroll',type:'Producto',area:'Producto',otherAreas:['Partners','Preventa'],objective:'Certificar integración bidireccional con Sage Payroll',value:0,importance:'Media',startDate:'2025-03-01',targetDate:'2025-09-30',status:'En curso'},
-  {id:'i5',name:'Onboarding Mutua Madrileña',type:'Cliente',area:'Ventas',otherAreas:['Operaciones','Producto'],objective:'Activación exitosa módulo Talent Management',value:0,importance:'Alta',startDate:'2025-04-01',targetDate:'2025-06-15',status:'En curso'},
+  {id:'i5',name:'Onboarding Mutua Madrileña',type:'Cliente',area:'Ventas',otherAreas:['Operaciones','Producto'],objective:'Activación exitosa módulo Talent Management',value:0,importance:'Alta',startDate:'2025-04-01',targetDate:'2025-06-15',status:'En curso'}
 ];
 
-let tasks=[
-  {id:'t1',title:'Preparar propuesta técnica Bankinter',desc:'RFP customizada con módulos HR + Payroll',initiativeId:'i2',category:'Propuesta',area:'Preventa',stakeholder:'Marta Ruiz (CIO)',startDate:'2025-04-07',dueDate:'2025-04-14',status:'En curso',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:8,timeSpent:3,progress:40,deps:'Validación arquitectura con Producto',nextAction:'Completar sección integración Payroll',execVisibility:true},
-  {id:'t2',title:'Reunión kick-off partner Computacenter',desc:'Definir roadmap certificación y pipeline Q2',initiativeId:'i1',category:'Reunión',area:'Partners',stakeholder:'Klaus Müller (Partnership Manager)',startDate:'2025-04-10',dueDate:'2025-04-11',status:'Pendiente',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:2,timeSpent:0,progress:0,deps:'',nextAction:'Confirmar asistencia y enviar agenda',execVisibility:false},
-  {id:'t3',title:'Escalado bloqueante integración SAGE',desc:'El conector API tiene timeout en batch mayor de 500 registros',initiativeId:'i4',category:'Bloqueo',area:'Producto',stakeholder:'Dev Team (Backend)',startDate:'2025-04-03',dueDate:'2025-04-17',status:'Bloqueada',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:0,timeSpent:2,progress:0,deps:'Respuesta equipo producto',nextAction:'Reunión urgente con CTO para desbloquear',execVisibility:true},
-  {id:'t4',title:'Análisis gap funcional HR Mid-Market',desc:'Benchmark capacidades vs SAP SuccessFactors y Workday',initiativeId:'i3',category:'Análisis',area:'Marketing',stakeholder:'Ana Gómez (PMM)',startDate:'2025-04-08',dueDate:'2025-04-22',status:'En curso',priority:'Media',criticality:'Media',businessImpact:'Medio',effort:12,timeSpent:4,progress:35,deps:'',nextAction:'Finalizar matriz comparativa competencia',execVisibility:false},
-  {id:'t5',title:'Follow-up activación módulo Talent Mutua',desc:'Verificar avance onboarding semana 2',initiativeId:'i5',category:'Seguimiento',area:'Operaciones',stakeholder:'Laura Sánchez (IT Manager)',startDate:'2025-04-09',dueDate:'2025-04-11',status:'En espera de terceros',priority:'Media',criticality:'Alta',businessImpact:'Alto',effort:1,timeSpent:0.5,progress:50,deps:'Confirmación SSO configurado por IT Mutua',nextAction:'Llamar a Laura si no hay respuesta en 24h',execVisibility:false},
-  {id:'t6',title:'Presentación QBR Dirección Q1',desc:'Resumen actividad BD, pipeline generado, próximas iniciativas',initiativeId:'i3',category:'Presentación',area:'Dirección',stakeholder:'Carlos Prieto (VP Sales)',startDate:'2025-04-01',dueDate:'2025-04-08',status:'En curso',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:5,timeSpent:4,progress:80,deps:'',nextAction:'Incorporar datos pipeline actualizados y enviar draft',execVisibility:true},
-  {id:'t7',title:'Coordinar traducción collateral DACH',desc:'Adaptar one-pager y case studies al mercado alemán',initiativeId:'i1',category:'Coordinación',area:'Marketing',stakeholder:'Sophie Weber (Marketing EMEA)',startDate:'2025-04-05',dueDate:'2025-04-25',status:'En espera de terceros',priority:'Baja',criticality:'Baja',businessImpact:'Medio',effort:3,timeSpent:0.5,progress:20,deps:'Aprobación copy por Legal',nextAction:'Seguimiento con Legal por validación trademark',execVisibility:false},
-  {id:'t8',title:'Demo técnica Bankinter módulo Analytics',desc:'Sesión con equipo técnico cliente - escenarios nómina',initiativeId:'i2',category:'Reunión',area:'Preventa',stakeholder:'Equipo Técnico Bankinter',startDate:'2025-04-15',dueDate:'2025-04-15',status:'Pendiente',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:3,timeSpent:0,progress:0,deps:'Entorno sandbox actualizado por Preventa',nextAction:'Confirmar disponibilidad sandbox y enviar invitación',execVisibility:true},
-  {id:'t9',title:'Informe mensual BD para CEO',desc:'Resumen ejecutivo iniciativas, KPIs, pipeline y riesgos',initiativeId:'i3',category:'Reporte',area:'Dirección',stakeholder:'Alejandro Torres (CEO)',startDate:'2025-04-28',dueDate:'2025-04-30',status:'Pendiente',priority:'Media',criticality:'Media',businessImpact:'Medio',effort:4,timeSpent:0,progress:0,deps:'',nextAction:'Preparar estructura y recopilar datos KPI',execVisibility:true},
-  {id:'t10',title:'Negociación contrato Partner Framework',desc:'Revisión términos comerciales y SLA con nuevo partner',initiativeId:'i1',category:'Ejecución',area:'Partners',stakeholder:'Legal + Klaus Müller',startDate:'2025-04-14',dueDate:'2025-04-28',status:'Pendiente',priority:'Alta',criticality:'Media',businessImpact:'Alto',effort:6,timeSpent:0,progress:0,deps:'Revisión Legal del borrador',nextAction:'Solicitar draft inicial a Legal',execVisibility:false},
-  {id:'t11',title:'Webinar HR Digital Sector Financiero',desc:'Co-presentación con Marketing para generación leads',initiativeId:'i3',category:'Presentación',area:'Marketing',stakeholder:'Ana Gómez (PMM)',startDate:'2025-04-20',dueDate:'2025-04-20',status:'Pendiente',priority:'Baja',criticality:'Baja',businessImpact:'Medio',effort:4,timeSpent:0,progress:0,deps:'',nextAction:'Preparar slides y alinear mensajes con Marketing',execVisibility:false},
-  {id:'t12',title:'Preventa Caixabank Time & Attendance',desc:'Primera reunión de discovery con L&D Caixabank',initiativeId:'i2',category:'Reunión',area:'Ventas',stakeholder:'Jordi Mas (HR Director)',startDate:'2025-04-17',dueDate:'2025-04-17',status:'Pendiente',priority:'Media',criticality:'Media',businessImpact:'Alto',effort:2,timeSpent:0,progress:0,deps:'',nextAction:'Investigar organigrama HR Caixabank y preparar preguntas discovery',execVisibility:false},
-];
-
-function calcScore(t){
-  const imp={Alto:3,Medio:2,Bajo:1};
-  const pri={Alta:3,Media:2,Baja:1};
-  const today=new Date();today.setHours(0,0,0,0);
-  const due=new Date(t.dueDate);
-  const daysLeft=Math.ceil((due-today)/(1000*60*60*24));
-  const urgency=daysLeft<=2?3:daysLeft<=7?2:1;
-  const blocked=t.status==='Bloqueada'?3:t.status==='En espera de terceros'?2:1;
-  const depRisk=t.deps&&t.deps.trim()?2:1;
-  const visib=t.execVisibility?2:1;
-  const score=(imp[t.businessImpact]||1)*.30+urgency*.20+(pri[t.criticality]||1)*.20+blocked*.15+depRisk*.10+visib*.05;
-  return Math.round(score*100)/100;
-}
-function calcScoreDisplay(t){return Math.round(calcScore(t)*100/3);}
-function sortedTasks(list){return [...list].sort((a,b)=>calcScore(b)-calcScore(a));}
-function todayStr(){return new Date().toISOString().split('T')[0];}
-function todayDate(){const d=new Date();d.setHours(0,0,0,0);return d;}
-function dateObj(s){const d=new Date(s+'T12:00:00');d.setHours(0,0,0,0);return d;}
-function daysLeft(s){return Math.ceil((dateObj(s)-todayDate())/(1000*60*60*24));}
-function isOverdue(t){return t.status!=='Finalizada'&&daysLeft(t.dueDate)<0;}
-function isThisWeek(t){const d=daysLeft(t.dueDate);return d>=0&&d<=7&&t.status!=='Finalizada';}
-function getInitiative(id){return initiatives.find(i=>i.id===id)||{name:'Sin iniciativa',type:''};}
-function priorityBadge(p){const c=p==='Alta'?'red':p==='Media'?'amber':'green';return `<span class="badge badge-${c}">${p}</span>`;}
-function statusBadge(s){const m={Pendiente:'gray','En curso':'blue','Bloqueada':'red','En espera de terceros':'amber','Finalizada':'green'};return `<span class="badge badge-${m[s]||'gray'}">${s}</span>`;}
-function areaBadge(a){const m={Ventas:'green',Preventa:'amber',Producto:'purple',Marketing:'coral',Partners:'teal',Dirección:'red',Operaciones:'gray'};return `<span class="badge badge-${m[a]||'gray'}">${a}</span>`;}
-function impBadge(i){const c=i==='Alto'?'red':i==='Medio'?'amber':'green';return `<span class="badge badge-${c}">${i}</span>`;}
-function areaColor(a){const m={Ventas:'#3b6d11',Preventa:'#ba7517',Producto:'#534ab7',Marketing:'#993c1d',Partners:'#0f6e56',Dirección:'#e24b4a',Operaciones:'#8a8a84'};return m[a]||'#185fa5';}
-function formatDate(s){if(!s)return'—';const d=new Date(s+'T12:00:00');return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'});}
-function getFilteredTasks(){
-  let t=[...tasks];
-  if(activeAreaFilter!=='all')t=t.filter(x=>x.area===activeAreaFilter);
-  if(activeStatusFilter)t=t.filter(x=>x.status===activeStatusFilter);
-  return t;
-}
-function updateSidebarCounts(){
-  document.getElementById('count-all').textContent=tasks.length;
-  AREAS.forEach(a=>{const el=document.getElementById('count-'+a);if(el)el.textContent=tasks.filter(t=>t.area===a).length;});
-  document.getElementById('count-Bloqueada').textContent=tasks.filter(t=>t.status==='Bloqueada').length;
-  document.getElementById('count-Espera').textContent=tasks.filter(t=>t.status==='En espera de terceros').length;
-  document.getElementById('count-Finalizada').textContent=tasks.filter(t=>t.status==='Finalizada').length;
-}
-function filterArea(area,el){activeAreaFilter=area;activeStatusFilter=null;document.querySelectorAll('.sidebar-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');renderCurrentView();}
-function filterStatus(status,el){if(activeStatusFilter===status){activeStatusFilter=null;el.classList.remove('active');}else{activeStatusFilter=status;document.querySelectorAll('.sidebar-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');}renderCurrentView();}
-function updateCapacity(){dailyCapacity=parseInt(document.getElementById('daily-capacity').value)||6;renderCurrentView();}
-
-let currentView='dashboard';
-function showView(v){
-  currentView=v;
-  document.querySelectorAll('.nav-tab').forEach((t,i)=>{
-    const views=['dashboard','daily','weekly','initiatives','kanban','report'];
-    t.classList.toggle('active',views[i]===v);
-  });
-  renderCurrentView();
-}
-function renderCurrentView(){
-  updateSidebarCounts();
-  const fns={dashboard:renderDashboard,daily:renderDaily,weekly:renderWeekly,initiatives:renderInitiatives,kanban:renderKanban,report:renderReport};
-  if(fns[currentView])fns[currentView]();
-}
-
-function renderDashboard(){
-  const all=getFilteredTasks();
-  const active=all.filter(t=>t.status!=='Finalizada');
-  const overdue=all.filter(isOverdue);
-  const blocked=all.filter(t=>t.status==='Bloqueada');
-  const thisWeek=all.filter(isThisWeek);
-  const hoursPlanned=active.reduce((s,t)=>s+(t.effort-t.timeSpent),0);
-  const topTasks=sortedTasks(active).slice(0,5);
-  const capWeek=dailyCapacity*5;
-  const wPct=Math.min(100,Math.round(hoursPlanned/capWeek*100));
-  const wColor=wPct>100?'var(--red)':wPct>75?'var(--amber)':'var(--blue)';
-  const strategic=tasks.filter(t=>{const ini=getInitiative(t.initiativeId);return ['Iniciativa Estratégica','Oportunidad','Partner'].includes(ini.type)&&t.status!=='Finalizada';}).length;
-  const total=tasks.filter(t=>t.status!=='Finalizada').length;
-  const ratioStrat=total?Math.round(strategic/total*100):0;
-
-  let alerts='';
-  if(overdue.length)alerts+=`<div class="alert alert-red"><div class="alert-icon">⚠️</div><div><strong>${overdue.length} tarea${overdue.length>1?'s':''} vencida${overdue.length>1?'s':''}</strong> — atención inmediata requerida</div></div>`;
-  if(blocked.length)alerts+=`<div class="alert alert-red"><div class="alert-icon">⛔</div><div><strong>${blocked.length} tarea${blocked.length>1?'s':''} bloqueada${blocked.length>1?'s':''}</strong> — desbloquear para continuar</div></div>`;
-  if(hoursPlanned>capWeek)alerts+=`<div class="alert alert-amber"><div class="alert-icon">⚡</div><div><strong>Sobrecarga detectada</strong> — ${hoursPlanned.toFixed(0)}h planificadas vs ${capWeek}h capacidad semanal</div></div>`;
-  if(!alerts)alerts=`<div class="alert alert-green"><div class="alert-icon">✅</div>Carga dentro de rango. Sin bloqueos activos.</div>`;
-
-  document.getElementById('main-content').innerHTML=`
-  ${alerts}
-  <div class="grid-4" style="margin-bottom:14px">
-    <div class="metric-card"><div class="metric-label">Tareas activas</div><div class="metric-value">${active.length}</div><div class="metric-sub">${overdue.length} vencidas</div></div>
-    <div class="metric-card"><div class="metric-label">Esta semana</div><div class="metric-value">${thisWeek.length}</div><div class="metric-sub">vencimiento próximo</div></div>
-    <div class="metric-card"><div class="metric-label">Bloqueadas</div><div class="metric-value" style="color:${blocked.length?'var(--red)':'var(--text)'}">${blocked.length}</div><div class="metric-sub">requieren acción</div></div>
-    <div class="metric-card"><div class="metric-label">Ratio estratégico</div><div class="metric-value">${ratioStrat}%</div><div class="metric-sub">vs reactivo</div></div>
-  </div>
-  <div class="grid-2" style="margin-bottom:14px">
-    <div>
-      <div class="card">
-        <div class="section-header"><div class="card-title">Carga de trabajo — semana</div><span style="font-size:12px;color:var(--text3)">${hoursPlanned.toFixed(0)}h / ${capWeek}h</span></div>
-        <div class="workload-container">
-          <div class="workload-track"><div class="workload-fill" style="width:${wPct}%;background:${wColor}"></div></div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">${wPct}% de capacidad utilizada</div>
-        </div>
-        <div style="margin-top:12px">${AREAS.map(a=>{
-          const ah=active.filter(t=>t.area===a).reduce((s,t)=>s+(t.effort-t.timeSpent),0);
-          if(!ah)return '';
-          const ap=Math.min(100,Math.round(ah/capWeek*100));
-          return `<div class="workload-container"><div class="workload-label"><span>${a}</span><span>${ah.toFixed(0)}h</span></div><div class="workload-track"><div class="workload-fill" style="width:${ap}%;background:${areaColor(a)}"></div></div></div>`;
-        }).join('')}</div>
-      </div>
-    </div>
-    <div>
-      <div class="card">
-        <div class="card-title">🏆 Ranking de prioridades</div>
-        ${topTasks.map((t,i)=>`<div class="task-row ${t.status==='Bloqueada'?'blocked':t.status==='En espera de terceros'?'waiting':''}" onclick="openTaskDetail('${t.id}')">
-          <span style="font-size:12px;font-weight:700;color:var(--text3);width:16px">${i+1}</span>
-          <div class="priority-dot ${t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low'}"></div>
-          <span class="task-title">${t.title}</span>
-          <div class="task-meta"><span class="score-badge">${calcScoreDisplay(t)}</span>${statusBadge(t.status)}</div>
-        </div>`).join('')}
-      </div>
-    </div>
-  </div>
-  <div class="grid-2">
-    <div>
-      <div class="section-header"><div class="section-title">⚡ Críticas esta semana</div></div>
-      ${all.filter(t=>t.criticality==='Alta'&&isThisWeek(t)).map(t=>`<div class="task-row" onclick="openTaskDetail('${t.id}')">
-        <div class="priority-dot prio-high"></div>
-        <div style="flex:1;min-width:0"><div class="task-title">${t.title}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${areaBadge(t.area)} — vence ${formatDate(t.dueDate)}</div></div>
-        ${statusBadge(t.status)}
-      </div>`).join('')||'<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin tareas críticas esta semana 🎉</div>'}
-    </div>
-    <div>
-      <div class="section-header"><div class="section-title">🔴 Bloqueadas & En espera</div></div>
-      ${[...getFilteredTasks().filter(t=>t.status==='Bloqueada'),...getFilteredTasks().filter(t=>t.status==='En espera de terceros')].map(t=>`<div class="task-row ${t.status==='Bloqueada'?'blocked':'waiting'}" onclick="openTaskDetail('${t.id}')">
-        <div class="priority-dot ${t.status==='Bloqueada'?'prio-high':'prio-med'}"></div>
-        <div style="flex:1;min-width:0"><div class="task-title">${t.title}</div><div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">→ ${t.nextAction}</div></div>
-        ${statusBadge(t.status)}
-      </div>`).join('')||'<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin bloqueos activos</div>'}
-    </div>
-  </div>`;
-}
-
-function renderDaily(){
-  const all=getFilteredTasks();
-  const active=all.filter(t=>t.status!=='Finalizada');
-  const top=sortedTasks(active).slice(0,7);
-  const urgent=active.filter(t=>daysLeft(t.dueDate)<=2);
-  const waiting=active.filter(t=>t.status==='En espera de terceros');
-  const hoursToday=top.reduce((s,t)=>s+Math.max(0,(t.effort-t.timeSpent)/2),0);
-  const overload=hoursToday>dailyCapacity;
-  const todayFmt=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
-  document.getElementById('main-content').innerHTML=`
-  <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
-    <div><div style="font-size:20px;font-weight:700;color:var(--text);text-transform:capitalize">${todayFmt}</div>
-    <div style="font-size:13px;color:var(--text3);margin-top:3px">Capacidad: ${dailyCapacity}h — Estimado hoy: <span style="color:${overload?'var(--red)':'var(--text2)';font-weight:overload?700:400}">${hoursToday.toFixed(1)}h</span></div></div>
-    ${overload?'<span class="badge badge-red">⚡ Sobrecarga</span>':'<span class="badge badge-green">✅ Carga OK</span>'}
-  </div>
-  ${overload?`<div class="alert alert-amber"><div class="alert-icon">⚡</div>Más trabajo del que puedes asumir hoy. Considera postponer tareas de baja criticidad.</div>`:''}
-  <div class="section-header"><div class="section-title">☀️ Foco de hoy</div><span style="font-size:12px;color:var(--text3)">Ordenado por score de prioridad</span></div>
-  ${top.map((t,i)=>{
-    const dl=daysLeft(t.dueDate);
-    const uf=dl<0?`<span class="badge badge-red">Vencida</span>`:dl===0?`<span class="badge badge-red">Hoy</span>`:dl<=3?`<span class="badge badge-amber">En ${dl}d</span>`:'';
-    return `<div class="task-row ${t.status==='Bloqueada'?'blocked':t.status==='En espera de terceros'?'waiting':''}" onclick="openTaskDetail('${t.id}')">
-      <span style="font-size:14px;font-weight:700;color:var(--text3);min-width:22px">${i+1}</span>
-      <div class="priority-dot ${t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low'}"></div>
-      <div style="flex:1;min-width:0">
-        <div class="task-title">${t.title}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:3px">→ ${t.nextAction}</div>
-        <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">${areaBadge(t.area)}${statusBadge(t.status)}${uf}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-        <span class="score-badge">${calcScoreDisplay(t)}</span>
-        <span style="font-size:11px;color:var(--text3)">${Math.max(0,t.effort-t.timeSpent)}h rest.</span>
-      </div>
-    </div>`;
-  }).join('')}
-  <div class="grid-2" style="margin-top:16px">
-    <div><div class="section-header"><div class="section-title">🔴 Urgentes (≤48h)</div></div>
-    ${urgent.length?urgent.map(t=>`<div class="task-row blocked" onclick="openTaskDetail('${t.id}')">
-      <div class="priority-dot prio-high"></div>
-      <div style="flex:1;min-width:0"><div class="task-title">${t.title}</div><div style="font-size:11px;color:var(--text3)">${formatDate(t.dueDate)} — ${t.stakeholder}</div></div>
-      ${impBadge(t.businessImpact)}
-    </div>`).join(''):'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin urgencias inmediatas</div>'}
-    </div>
-    <div><div class="section-header"><div class="section-title">⏳ En espera de terceros</div></div>
-    ${waiting.length?waiting.map(t=>`<div class="task-row waiting" onclick="openTaskDetail('${t.id}')">
-      <div class="priority-dot prio-med"></div>
-      <div style="flex:1;min-width:0"><div class="task-title">${t.title}</div><div style="font-size:11px;color:var(--text3)">${t.deps}</div></div>
-      ${statusBadge(t.status)}
-    </div>`).join(''):'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin esperas activas</div>'}
-    </div>
-  </div>`;
-}
-
-function renderWeekly(){
-  const today=new Date();today.setHours(0,0,0,0);
-  const dow=today.getDay();
-  const monday=new Date(today);monday.setDate(today.getDate()-(dow===0?6:dow-1));
-  const days=['Lun','Mar','Mié','Jue','Vie'];
-  const dayDates=days.map((_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return d;});
-  const all=getFilteredTasks().filter(t=>t.status!=='Finalizada');
-  const totalHours=all.reduce((s,t)=>s+(t.effort-t.timeSpent),0);
-  const capWeek=dailyCapacity*5;
-  function getTasksForDay(d){
-    return all.filter(t=>{const due=dateObj(t.dueDate);const start=dateObj(t.startDate);return due.getTime()===d.getTime()||(start<=d&&due>=d);});
-  }
-  document.getElementById('main-content').innerHTML=`
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-    <div style="font-size:16px;font-weight:700">Semana ${monday.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})} – ${new Date(monday.getTime()+4*86400000).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}</div>
-    <div style="font-size:13px;color:${totalHours>capWeek?'var(--red)':'var(--text2)'}">Total estimado: ${totalHours.toFixed(0)}h / ${capWeek}h</div>
-  </div>
-  <div style="margin-bottom:14px"><div class="workload-track" style="height:10px"><div class="workload-fill" style="width:${Math.min(100,Math.round(totalHours/capWeek*100))}%;background:${totalHours>capWeek?'var(--red)':totalHours>capWeek*.75?'var(--amber)':'var(--blue)'}"></div></div>
-  <div style="font-size:11px;color:var(--text3);margin-top:3px">${Math.min(100,Math.round(totalHours/capWeek*100))}% de capacidad semanal</div></div>
-  <div class="week-grid">
-    ${dayDates.map((d,i)=>{
-      const dt=sortedTasks(getTasksForDay(d)).slice(0,5);
-      const dh=dt.reduce((s,t)=>s+Math.max(0,t.effort-t.timeSpent)/Math.max(1,Math.ceil((dateObj(t.dueDate)-dateObj(t.startDate))/(86400000))+1),0);
-      const ol=dh>dailyCapacity;
-      const isTod=d.getTime()===today.getTime();
-      return `<div class="day-col" style="${isTod?'border:2px solid var(--blue);':''}">
-        <div class="day-header" style="color:${isTod?'var(--blue)':'var(--text2)'}">${days[i]} ${d.getDate()}</div>
-        ${dt.map(t=>`<div class="day-task ${t.priority.toLowerCase()}" onclick="openTaskDetail('${t.id}')" title="${t.title}">
-          <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">${t.title}</div>
-          <div style="color:var(--text3);margin-top:2px">${t.area}</div>
-        </div>`).join('')||'<div style="color:var(--text3);font-size:11px;text-align:center;padding:14px 0;opacity:.6">Libre</div>'}
-        <div style="font-size:10px;text-align:center;margin-top:6px;color:${ol?'var(--red)':'var(--text3)';font-weight:ol?700:400}">${dh.toFixed(1)}h est.</div>
-      </div>`;
-    }).join('')}
-  </div>
-  <div style="margin-top:16px">
-    <div class="section-header"><div class="section-title">Todas las tareas de la semana</div></div>
-    ${sortedTasks(all.filter(t=>dateObj(t.dueDate)>=monday&&dateObj(t.startDate)<=dayDates[4])).map(t=>`<div class="task-row ${t.status==='Bloqueada'?'blocked':t.status==='En espera de terceros'?'waiting':''}" onclick="openTaskDetail('${t.id}')">
-      <div class="priority-dot ${t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low'}"></div>
-      <div style="flex:1;min-width:0"><div class="task-title">${t.title}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${t.stakeholder} · ${getInitiative(t.initiativeId).name}</div></div>
-      <div class="task-meta">${areaBadge(t.area)}${statusBadge(t.status)}<span style="font-size:11px;color:var(--text3)">${formatDate(t.dueDate)}</span></div>
-    </div>`).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin tareas esta semana</div>'}
-  </div>`;
-}
-
-function renderInitiatives(){
-  document.getElementById('main-content').innerHTML=`
-  <div class="section-header"><div class="section-title">🎯 Iniciativas activas (${initiatives.length})</div></div>
-  ${initiatives.map(ini=>{
-    const it=tasks.filter(t=>t.initiativeId===ini.id);
-    const done=it.filter(t=>t.status==='Finalizada').length;
-    const pct=it.length?Math.round(done/it.length*100):0;
-    const blk=it.filter(t=>t.status==='Bloqueada');
-    const wt=it.filter(t=>t.status==='En espera de terceros');
-    const next=sortedTasks(it.filter(t=>t.status!=='Finalizada')).slice(0,2);
-    const tc={Oportunidad:'blue',Partner:'teal','Iniciativa Estratégica':'purple',Cliente:'green',Marketing:'coral',Producto:'amber','Soporte Interno':'gray',Dirección:'red'};
-    return `<div class="initiative-card">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
-        <div><div style="font-size:15px;font-weight:700;color:var(--text)">${ini.name}</div><div style="font-size:12px;color:var(--text3);margin-top:3px">${ini.objective}</div></div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          ${ini.value?`<span style="font-size:14px;font-weight:700;color:var(--green)">€${ini.value.toLocaleString('es-ES')}</span>`:''}
-          <span class="badge badge-${ini.importance==='Alta'?'red':ini.importance==='Media'?'amber':'green'}">${ini.importance}</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-        <span class="badge badge-${tc[ini.type]||'gray'}">${ini.type}</span>
-        ${areaBadge(ini.area)}${ini.otherAreas.slice(0,2).map(a=>areaBadge(a)).join('')}
-        <span class="badge badge-gray">📅 ${formatDate(ini.startDate)} → ${formatDate(ini.targetDate)}</span>
-      </div>
-      <div style="display:flex;gap:14px;font-size:12px;color:var(--text3);margin-bottom:10px">
-        <span>${it.length} tareas · ${done} completadas</span>
-        ${blk.length?`<span style="color:var(--red);font-weight:600">⛔ ${blk.length} bloqueada${blk.length>1?'s':''}</span>`:''}
-        ${wt.length?`<span style="color:var(--amber);font-weight:600">⏳ ${wt.length} en espera</span>`:''}
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:11px;color:var(--text3);min-width:32px">${pct}%</span>
-        <div class="initiative-progress-bar"><div class="initiative-progress-fill" style="width:${pct}%"></div></div>
-        <span style="font-size:11px;color:var(--text3)">${done}/${it.length}</span>
-      </div>
-      ${next.length?`<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Próximas acciones</div>
-        ${next.map(t=>`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px">
-          <div class="priority-dot ${t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low'}" style="margin-top:4px"></div>
-          <div style="flex:1"><div style="font-size:13px;font-weight:600">${t.title}</div><div style="font-size:11px;color:var(--text3)">→ ${t.nextAction}</div></div>
-          ${statusBadge(t.status)}
-        </div>`).join('')}
-      </div>`:''}
-    </div>`;
-  }).join('')}`;
-}
-
-function renderKanban(){
-  const all=getFilteredTasks();
-  const cols=[{key:'Pendiente',color:'var(--text3)'},{key:'En curso',color:'var(--blue)'},{key:'En espera de terceros',label:'En espera',color:'var(--amber)'},{key:'Bloqueada',color:'var(--red)'},{key:'Finalizada',color:'var(--green)'}];
-  document.getElementById('main-content').innerHTML=`<div class="kanban-board">
-    ${cols.map(col=>{
-      const ct=sortedTasks(all.filter(t=>t.status===col.key));
-      return `<div class="kanban-col">
-        <div class="kanban-col-header"><div style="width:9px;height:9px;border-radius:50%;background:${col.color};flex-shrink:0"></div>${col.label||col.key}<span class="sidebar-count">${ct.length}</span></div>
-        ${ct.map(t=>`<div class="kanban-card" onclick="openTaskDetail('${t.id}')">
-          <div class="kanban-card-title">${t.title}</div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:8px">${getInitiative(t.initiativeId).name}</div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px">${areaBadge(t.area)}${priorityBadge(t.priority)}</div>
-          <div style="display:flex;align-items:center;gap:7px">
-            <div class="progress-bar"><div class="progress-fill" style="width:${t.progress}%"></div></div>
-            <span style="font-size:10px;color:var(--text3)">${t.progress}%</span>
-            <span style="font-size:10px;color:var(--text3);margin-left:auto">${formatDate(t.dueDate)}</span>
-          </div>
-          ${t.nextAction?`<div style="margin-top:6px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:5px">→ ${t.nextAction}</div>`:''}
-        </div>`).join('')}
-      </div>`;
-    }).join('')}
-  </div>`;
-}
-
-function renderReport(){
-  const fin=tasks.filter(t=>t.status==='Finalizada');
-  const active=tasks.filter(t=>t.status!=='Finalizada');
-  const totalTime=tasks.reduce((s,t)=>s+t.timeSpent,0);
-  const areaTime={};AREAS.forEach(a=>{areaTime[a]=tasks.filter(t=>t.area===a).reduce((s,t)=>s+t.timeSpent,0);});
-  const iniTime={};initiatives.forEach(i=>{iniTime[i.id]=tasks.filter(t=>t.initiativeId===i.id).reduce((s,t)=>s+t.timeSpent,0);});
-  const strategic=tasks.filter(t=>['Iniciativa Estratégica','Oportunidad','Partner'].includes(getInitiative(t.initiativeId).type));
-  const stratTime=strategic.reduce((s,t)=>s+t.timeSpent,0);
-  const maxAT=Math.max(...Object.values(areaTime),1);
-  const maxIT=Math.max(...Object.values(iniTime),1);
-  document.getElementById('main-content').innerHTML=`
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <div style="font-size:16px;font-weight:700">📈 Reporting ejecutivo</div>
-    <button class="btn btn-primary" onclick="generateExecutiveSummary()">📋 Resumen ejecutivo</button>
-  </div>
-  <div class="grid-4" style="margin-bottom:16px">
-    <div class="metric-card"><div class="metric-label">Horas invertidas</div><div class="metric-value">${totalTime.toFixed(1)}h</div><div class="metric-sub">tiempo real registrado</div></div>
-    <div class="metric-card"><div class="metric-label">Tareas completadas</div><div class="metric-value">${fin.length}</div><div class="metric-sub">de ${tasks.length} totales (${tasks.length?Math.round(fin.length/tasks.length*100):0}%)</div></div>
-    <div class="metric-card"><div class="metric-label">Trabajo estratégico</div><div class="metric-value">${stratTime.toFixed(1)}h</div><div class="metric-sub">${totalTime?Math.round(stratTime/totalTime*100):0}% del total</div></div>
-    <div class="metric-card"><div class="metric-label">Pipeline activo</div><div class="metric-value" style="font-size:18px">€${initiatives.reduce((s,i)=>s+(i.value||0),0).toLocaleString('es-ES')}</div><div class="metric-sub">valor estimado</div></div>
-  </div>
-  <div class="grid-2" style="margin-bottom:16px">
-    <div class="card"><div class="card-title">Tiempo invertido por área</div>
-    ${AREAS.filter(a=>areaTime[a]>0).sort((a,b)=>areaTime[b]-areaTime[a]).map(a=>`<div class="report-row">
-      <div style="display:flex;align-items:center;gap:8px;min-width:110px"><div style="width:9px;height:9px;border-radius:50%;background:${areaColor(a)}"></div><span>${a}</span></div>
-      <div style="flex:1;margin:0 12px"><div class="bar-h" style="width:${Math.round(areaTime[a]/maxAT*140)}px;background:${areaColor(a)}"></div></div>
-      <span style="font-size:12px;color:var(--text2);min-width:36px;text-align:right">${areaTime[a].toFixed(1)}h</span>
-    </div>`).join('')}
-    </div>
-    <div class="card"><div class="card-title">Tiempo por iniciativa</div>
-    ${initiatives.filter(i=>iniTime[i.id]>0).sort((a,b)=>iniTime[b.id]-iniTime[a.id]).map(i=>`<div class="report-row">
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;margin-right:8px">${i.name}</span>
-      <div style="width:80px;margin-right:8px"><div class="bar-h" style="width:${Math.round(iniTime[i.id]/maxIT*80)}px;background:var(--blue)"></div></div>
-      <span style="font-size:12px;color:var(--text2);min-width:36px;text-align:right">${iniTime[i.id].toFixed(1)}h</span>
-    </div>`).join('')}
-    </div>
-  </div>
-  <div class="grid-2">
-    <div class="card"><div class="card-title">Tareas por estado</div>
-    ${TASK_STATUSES.map(s=>{const c=tasks.filter(t=>t.status===s).length;return c?`<div class="report-row"><span>${s}</span><div style="display:flex;align-items:center;gap:8px"><div class="bar-h" style="width:${Math.round(c/tasks.length*100)}px;background:var(--blue)"></div><strong>${c}</strong></div></div>`:''}).join('')}
-    </div>
-    <div class="card"><div class="card-title">Bloqueadas & en espera</div>
-    ${tasks.filter(t=>['Bloqueada','En espera de terceros'].includes(t.status)).map(t=>`<div class="report-row" style="cursor:pointer" onclick="openTaskDetail('${t.id}')">
-      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title}</div><div style="font-size:11px;color:var(--text3)">${t.deps}</div></div>
-      ${statusBadge(t.status)}
-    </div>`).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px">Sin bloqueos</div>'}
-    </div>
-  </div>`;
-}
-
-function generateExecutiveSummary(){
-  const fin=tasks.filter(t=>t.status==='Finalizada');
-  const active=tasks.filter(t=>t.status!=='Finalizada');
-  const blocked=tasks.filter(t=>t.status==='Bloqueada');
-  const totalTime=tasks.reduce((s,t)=>s+t.timeSpent,0);
-  const pipeline=initiatives.reduce((s,i)=>s+(i.value||0),0);
-  const dateStr=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
-  const top3=sortedTasks(active).slice(0,3);
-  document.getElementById('modal-body').innerHTML=`
-  <div class="modal-header">
-    <div><div class="modal-title">Resumen Ejecutivo — Business Development</div><div style="font-size:12px;color:var(--text3)">${dateStr} · Cegid HR</div></div>
-    <button class="close-btn" onclick="closeModal()">✕</button>
-  </div>
-  <div class="grid-3" style="margin-bottom:16px">
-    <div class="metric-card"><div class="metric-label">Iniciativas activas</div><div class="metric-value">${initiatives.length}</div></div>
-    <div class="metric-card"><div class="metric-label">Tareas en curso</div><div class="metric-value">${active.length}</div></div>
-    <div class="metric-card"><div class="metric-label">Pipeline estimado</div><div class="metric-value" style="font-size:17px">€${pipeline.toLocaleString('es-ES')}</div></div>
-  </div>
-  <div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--text)">ACTIVIDAD DEL PERIODO</div>
-    <div style="font-size:13px;line-height:2">
-      <div>· ${totalTime.toFixed(1)} horas invertidas registradas</div>
-      <div>· ${fin.length} tareas completadas de ${tasks.length} totales (${tasks.length?Math.round(fin.length/tasks.length*100):0}% ratio)</div>
-      ${blocked.length?`<div style="color:var(--red);font-weight:600">· ⛔ ${blocked.length} tarea${blocked.length>1?'s':''} bloqueada${blocked.length>1?'s':''} — requiere atención directiva</div>`:`<div style="color:var(--green)">· Sin bloqueos activos en este momento</div>`}
-    </div>
-  </div>
-  <div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--text)">TOP 3 PRIORIDADES ACTUALES</div>
-    ${top3.map((t,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
-      <strong style="color:var(--text3)">${i+1}.</strong>
-      <div style="flex:1">${t.title}<div style="font-size:11px;color:var(--text3)">${t.stakeholder} · Score ${calcScoreDisplay(t)}/100</div></div>
-      ${statusBadge(t.status)}
-    </div>`).join('')}
-  </div>
-  <div><div style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--text)">INICIATIVAS ESTRATÉGICAS (ALTA IMPORTANCIA)</div>
-    ${initiatives.filter(i=>i.importance==='Alta').map(i=>{
-      const done=tasks.filter(t=>t.initiativeId===i.id&&t.status==='Finalizada').length;
-      const total=tasks.filter(t=>t.initiativeId===i.id).length;
-      return `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
-        <strong>${i.name}</strong>${i.value?` — <span style="color:var(--green)">€${i.value.toLocaleString('es-ES')}</span>`:''}
-        <div style="font-size:11px;color:var(--text3)">${done}/${total} tareas completadas · ${i.objective}</div>
-      </div>`;
-    }).join('')}
-  </div>
-  <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Cerrar</button></div>`;
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-
-function openTaskDetail(id){
-  const t=tasks.find(x=>x.id===id);if(!t)return;
-  const ini=getInitiative(t.initiativeId);
-  const dl=daysLeft(t.dueDate);
-  const dlBadge=dl<0?`<span class="badge badge-red">Vencida ${Math.abs(dl)}d</span>`:dl===0?`<span class="badge badge-red">Vence HOY</span>`:dl<=3?`<span class="badge badge-amber">Vence en ${dl}d</span>`:`<span class="badge badge-gray">${formatDate(t.dueDate)}</span>`;
-  document.getElementById('modal-body').innerHTML=`
-  <div class="modal-header">
-    <div style="flex:1;min-width:0"><div class="modal-title">${t.title}</div><div style="font-size:12px;color:var(--text3);margin-top:2px">${ini.name}</div></div>
-    <div style="display:flex;gap:8px;align-items:center"><span class="score-badge" style="font-size:13px;padding:4px 10px">Score ${calcScoreDisplay(t)}</span><button class="close-btn" onclick="closeModal()">✕</button></div>
-  </div>
-  <div style="font-size:13px;color:var(--text2);margin-bottom:14px;padding:11px;background:var(--bg3);border-radius:8px;line-height:1.6">${t.desc||'Sin descripción'}</div>
-  <div class="form-row" style="margin-bottom:12px">
-    <div><div class="form-label">Estado</div><select class="form-select" onchange="updateTaskField('${t.id}','status',this.value)">
-      ${TASK_STATUSES.map(s=>`<option ${t.status===s?'selected':''}>${s}</option>`).join('')}
-    </select></div>
-    <div><div class="form-label">Progreso (${t.progress}%)</div>
-    <input type="range" min="0" max="100" value="${t.progress}" style="width:100%;margin-top:8px" oninput="this.previousElementSibling.textContent='Progreso ('+this.value+'%)';updateTaskField('${t.id}','progress',parseInt(this.value))"></div>
-  </div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${statusBadge(t.status)}${areaBadge(t.area)}${priorityBadge(t.priority)}${impBadge(t.businessImpact)}${dlBadge}</div>
-  <div style="display:flex;gap:16px;margin-bottom:14px;font-size:13px;background:var(--bg3);padding:10px;border-radius:8px">
-    <div><span style="color:var(--text3)">Esfuerzo:</span> <strong>${t.effort}h</strong></div>
-    <div><span style="color:var(--text3)">Invertido:</span> <strong>${t.timeSpent}h</strong></div>
-    <div><span style="color:var(--text3)">Restante:</span> <strong>${Math.max(0,t.effort-t.timeSpent)}h</strong></div>
-    <div><span style="color:var(--text3)">Stakeholder:</span> <strong>${t.stakeholder}</strong></div>
-  </div>
-  ${t.deps?`<div style="margin-bottom:12px"><div class="form-label">Dependencias</div><div style="font-size:13px;padding:9px;background:var(--amber-bg);border-radius:7px;color:var(--amber-text)">⏳ ${t.deps}</div></div>`:''}
-  <div style="margin-bottom:12px"><div class="form-label">Próxima acción</div>
-    <input class="form-input" value="${t.nextAction}" onchange="updateTaskField('${t.id}','nextAction',this.value)" placeholder="Siguiente paso concreto">
-  </div>
-  <div class="form-row">
-    <div><div class="form-label">Tiempo invertido (h)</div><input type="number" class="form-input" value="${t.timeSpent}" min="0" step="0.5" onchange="updateTaskField('${t.id}','timeSpent',parseFloat(this.value)||0)"></div>
-    <div><div class="form-label">Categoría</div><select class="form-select" onchange="updateTaskField('${t.id}','category',this.value)">${TASK_CATEGORIES.map(c=>`<option ${t.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
-  </div>
-  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
-    <button class="btn btn-danger" onclick="deleteTask('${t.id}')">🗑 Eliminar</button>
-    <button class="btn" onclick="closeModal()">Cerrar</button>
-  </div>`;
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-
-function updateTaskField(id,field,val){const t=tasks.find(x=>x.id===id);if(t)t[field]=val;updateSidebarCounts();}
-function deleteTask(id){tasks=tasks.filter(t=>t.id!==id);closeModal();renderCurrentView();}
-
-function openModal(type){
-  if(type==='task'){
-    document.getElementById('modal-body').innerHTML=`
-    <div class="modal-header"><div class="modal-title">Nueva tarea</div><button class="close-btn" onclick="closeModal()">✕</button></div>
-    <div class="form-group"><div class="form-label">Título *</div><input class="form-input" id="nt-title" placeholder="Título de la tarea"></div>
-    <div class="form-group"><div class="form-label">Descripción</div><textarea class="form-input" id="nt-desc" rows="2" placeholder="Contexto y objetivo"></textarea></div>
-    <div class="form-row">
-      <div><div class="form-label">Iniciativa</div><select class="form-select" id="nt-ini"><option value="">— Sin iniciativa —</option>${initiatives.map(i=>`<option value="${i.id}">${i.name}</option>`).join('')}</select></div>
-      <div><div class="form-label">Área solicitante</div><select class="form-select" id="nt-area"><option value="">Seleccionar</option>${AREAS.map(a=>`<option>${a}</option>`).join('')}</select></div>
-    </div>
-    <div class="form-row">
-      <div><div class="form-label">Categoría</div><select class="form-select" id="nt-cat">${TASK_CATEGORIES.map(c=>`<option>${c}</option>`).join('')}</select></div>
-      <div><div class="form-label">Stakeholder</div><input class="form-input" id="nt-stake" placeholder="Nombre (Rol)"></div>
-    </div>
-    <div class="form-row">
-      <div><div class="form-label">Fecha inicio</div><input type="date" class="form-input" id="nt-start" value="${todayStr()}"></div>
-      <div><div class="form-label">Fecha límite *</div><input type="date" class="form-input" id="nt-due"></div>
-    </div>
-    <div class="form-row">
-      <div><div class="form-label">Prioridad</div><select class="form-select" id="nt-pri"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>
-      <div><div class="form-label">Criticidad</div><select class="form-select" id="nt-crit"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>
-    </div>
-    <div class="form-row">
-      <div><div class="form-label">Impacto negocio</div><select class="form-select" id="nt-imp"><option>Alto</option><option selected>Medio</option><option>Bajo</option></select></div>
-      <div><div class="form-label">Esfuerzo estimado (h)</div><input type="number" class="form-input" id="nt-effort" value="2" min="0.5" step="0.5"></div>
-    </div>
-    <div class="form-group"><div class="form-label">Dependencias</div><input class="form-input" id="nt-deps" placeholder="¿Qué necesitas de terceros?"></div>
-    <div class="form-group"><div class="form-label">Próxima acción</div><input class="form-input" id="nt-next" placeholder="¿Cuál es el primer paso?"></div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><input type="checkbox" id="nt-exec"><label for="nt-exec" style="font-size:13px;color:var(--text2)">Visibilidad ejecutiva (aparece en reportes a dirección)</label></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveNewTask()">Guardar tarea</button></div>`;
-  } else {
-    document.getElementById('modal-body').innerHTML=`
-    <div class="modal-header"><div class="modal-title">Nueva iniciativa</div><button class="close-btn" onclick="closeModal()">✕</button></div>
-    <div class="form-group"><div class="form-label">Nombre *</div><input class="form-input" id="ni-name" placeholder="Nombre de la iniciativa"></div>
-    <div class="form-group"><div class="form-label">Objetivo de negocio</div><input class="form-input" id="ni-obj" placeholder="¿Qué resultado persigue?"></div>
-    <div class="form-row">
-      <div><div class="form-label">Tipo</div><select class="form-select" id="ni-type">${INITIATIVE_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
-      <div><div class="form-label">Área principal</div><select class="form-select" id="ni-area">${AREAS.map(a=>`<option>${a}</option>`).join('')}</select></div>
-    </div>
-    <div class="form-row">
-      <div><div class="form-label">Valor estimado (€)</div><input type="number" class="form-input" id="ni-val" placeholder="0" min="0"></div>
-      <div><div class="form-label">Importancia estratégica</div><select class="form-select" id="ni-imp"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>
-    </div>
-    <div class="form-row">
-      <div><div class="form-label">Fecha inicio</div><input type="date" class="form-input" id="ni-start" value="${todayStr()}"></div>
-      <div><div class="form-label">Fecha objetivo</div><input type="date" class="form-input" id="ni-target"></div>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveNewInitiative()">Guardar iniciativa</button></div>`;
-  }
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-
-function saveNewTask(){
-  const title=document.getElementById('nt-title').value.trim();
-  const due=document.getElementById('nt-due').value;
-  if(!title||!due){alert('Título y fecha límite son obligatorios');return;}
-  tasks.push({id:'t'+Date.now(),title,desc:document.getElementById('nt-desc').value,initiativeId:document.getElementById('nt-ini').value,category:document.getElementById('nt-cat').value,area:document.getElementById('nt-area').value||'Ventas',stakeholder:document.getElementById('nt-stake').value,startDate:document.getElementById('nt-start').value,dueDate:due,status:'Pendiente',priority:document.getElementById('nt-pri').value,criticality:document.getElementById('nt-crit').value,businessImpact:document.getElementById('nt-imp').value,effort:parseFloat(document.getElementById('nt-effort').value)||2,timeSpent:0,progress:0,deps:document.getElementById('nt-deps').value,nextAction:document.getElementById('nt-next').value,execVisibility:document.getElementById('nt-exec').checked});
-  closeModal();renderCurrentView();
-}
-
-function saveNewInitiative(){
-  const name=document.getElementById('ni-name').value.trim();
-  if(!name){alert('El nombre es obligatorio');return;}
-  initiatives.push({id:'i'+Date.now(),name,type:document.getElementById('ni-type').value,area:document.getElementById('ni-area').value,otherAreas:[],objective:document.getElementById('ni-obj').value,value:parseInt(document.getElementById('ni-val').value)||0,importance:document.getElementById('ni-imp').value,startDate:document.getElementById('ni-start').value,targetDate:document.getElementById('ni-target').value,status:'En curso'});
-  closeModal();renderCurrentView();
-}
-
-function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
-
-// ===================== TOAST =====================
-function showToast(msg,duration=2000){
-  const existing=document.getElementById('bdflow-toast');
-  if(existing)existing.remove();
-  const t=document.createElement('div');
-  t.id='bdflow-toast';
-  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#185fa5;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.25);opacity:1;transition:opacity .4s';
-  t.textContent=msg;
-  document.body.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>{if(t.parentNode)t.remove();},400);},duration);
-}
-
-// ===================== LOCALSTORAGE =====================
-const SK_T='bdflow_tasks_v1';
-const SK_I='bdflow_initiatives_v1';
-const SK_C='bdflow_capacity_v1';
-
-function saveData(){
-  try{
-    localStorage.setItem(SK_T,JSON.stringify(tasks));
-    localStorage.setItem(SK_I,JSON.stringify(initiatives));
-    localStorage.setItem(SK_C,String(dailyCapacity));
-  }catch(e){console.warn('saveData error:',e);}
-}
-
-function loadData(){
-  try{
-    const t=localStorage.getItem(SK_T);
-    const i=localStorage.getItem(SK_I);
-    const c=localStorage.getItem(SK_C);
-    if(t){const p=JSON.parse(t);if(Array.isArray(p)&&p.length>0)tasks=p;}
-    if(i){const p=JSON.parse(i);if(Array.isArray(p)&&p.length>0)initiatives=p;}
-    if(c){dailyCapacity=parseInt(c)||6;const el=document.getElementById('daily-capacity');if(el)el.value=dailyCapacity;}
-  }catch(e){console.warn('loadData error:',e);}
-}
-
-// Patch save into mutating functions directly
-const _orig_saveNewTask=saveNewTask;
-saveNewTask=function(){_orig_saveNewTask();saveData();showToast('Tarea guardada ✓');};
-
-const _orig_saveNewInitiative=saveNewInitiative;
-saveNewInitiative=function(){_orig_saveNewInitiative();saveData();showToast('Iniciativa guardada ✓');};
-
-const _orig_deleteTask=deleteTask;
-deleteTask=function(id){_orig_deleteTask(id);saveData();};
-
-const _orig_updateTaskField=updateTaskField;
-updateTaskField=function(id,field,val){_orig_updateTaskField(id,field,val);saveData();};
-
-const _orig_updateCapacity=updateCapacity;
-updateCapacity=function(){_orig_updateCapacity();saveData();};
-
-// ===================== PWA =====================
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js')
-    .then(()=>console.log('SW ok'))
-    .catch(()=>{});
-}
-
-// ===================== DEMO DATA =====================
-const DEFAULT_INITIATIVES=[
-  {id:'i1',name:'Expansión Partner DACH',type:'Partner',area:'Partners',otherAreas:['Ventas','Marketing'],objective:'Certificar 3 nuevos partners en DACH en Q2',value:240000,importance:'Alta',startDate:'2025-01-15',targetDate:'2025-06-30',status:'En curso'},
-  {id:'i2',name:'Deal Bankinter HR Suite',type:'Oportunidad',area:'Ventas',otherAreas:['Preventa','Producto'],objective:'Cerrar contrato marco HR para 3.500 empleados',value:480000,importance:'Alta',startDate:'2025-02-01',targetDate:'2025-07-15',status:'En curso'},
-  {id:'i3',name:'Go-to-Market RRHH 2025',type:'Iniciativa Estratégica',area:'Marketing',otherAreas:['Ventas','Producto','Dirección'],objective:'Posicionar Cegid como líder HR en mid-market ibérico',value:0,importance:'Alta',startDate:'2025-01-01',targetDate:'2025-12-31',status:'En curso'},
-  {id:'i4',name:'Integración Sage Payroll',type:'Producto',area:'Producto',otherAreas:['Partners','Preventa'],objective:'Certificar integración bidireccional con Sage Payroll',value:0,importance:'Media',startDate:'2025-03-01',targetDate:'2025-09-30',status:'En curso'},
-  {id:'i5',name:'Onboarding Mutua Madrileña',type:'Cliente',area:'Ventas',otherAreas:['Operaciones','Producto'],objective:'Activación exitosa módulo Talent Management',value:0,importance:'Alta',startDate:'2025-04-01',targetDate:'2025-06-15',status:'En curso'},
-];
-const DEFAULT_TASKS=[
+var DEMO_TASKS = [
   {id:'t1',title:'Preparar propuesta técnica Bankinter',desc:'RFP customizada con módulos HR + Payroll',initiativeId:'i2',category:'Propuesta',area:'Preventa',stakeholder:'Marta Ruiz (CIO)',startDate:'2025-04-07',dueDate:'2025-04-14',status:'En curso',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:8,timeSpent:3,progress:40,deps:'Validación arquitectura con Producto',nextAction:'Completar sección integración Payroll',execVisibility:true},
   {id:'t2',title:'Reunión kick-off partner Computacenter',desc:'Definir roadmap certificación y pipeline Q2',initiativeId:'i1',category:'Reunión',area:'Partners',stakeholder:'Klaus Müller',startDate:'2025-04-10',dueDate:'2025-04-11',status:'Pendiente',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:2,timeSpent:0,progress:0,deps:'',nextAction:'Confirmar asistencia y enviar agenda',execVisibility:false},
   {id:'t3',title:'Escalado bloqueante integración SAGE',desc:'Conector API con timeout en batch mayor 500 registros',initiativeId:'i4',category:'Bloqueo',area:'Producto',stakeholder:'Dev Team (Backend)',startDate:'2025-04-03',dueDate:'2025-04-17',status:'Bloqueada',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:0,timeSpent:2,progress:0,deps:'Respuesta equipo producto',nextAction:'Reunión urgente con CTO para desbloquear',execVisibility:true},
@@ -801,31 +211,563 @@ const DEFAULT_TASKS=[
   {id:'t7',title:'Coordinar traducción collateral DACH',desc:'Adaptar one-pager y case studies al mercado alemán',initiativeId:'i1',category:'Coordinación',area:'Marketing',stakeholder:'Sophie Weber (Marketing EMEA)',startDate:'2025-04-05',dueDate:'2025-04-25',status:'En espera de terceros',priority:'Baja',criticality:'Baja',businessImpact:'Medio',effort:3,timeSpent:0.5,progress:20,deps:'Aprobación copy por Legal',nextAction:'Seguimiento con Legal por validación trademark',execVisibility:false},
   {id:'t8',title:'Demo técnica Bankinter módulo Analytics',desc:'Sesión con equipo técnico cliente - escenarios nómina',initiativeId:'i2',category:'Reunión',area:'Preventa',stakeholder:'Equipo Técnico Bankinter',startDate:'2025-04-15',dueDate:'2025-04-15',status:'Pendiente',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:3,timeSpent:0,progress:0,deps:'Entorno sandbox actualizado por Preventa',nextAction:'Confirmar disponibilidad sandbox y enviar invitación',execVisibility:true},
   {id:'t9',title:'Informe mensual BD para CEO',desc:'Resumen ejecutivo iniciativas, KPIs, pipeline y riesgos',initiativeId:'i3',category:'Reporte',area:'Dirección',stakeholder:'Alejandro Torres (CEO)',startDate:'2025-04-28',dueDate:'2025-04-30',status:'Pendiente',priority:'Media',criticality:'Media',businessImpact:'Medio',effort:4,timeSpent:0,progress:0,deps:'',nextAction:'Preparar estructura y recopilar datos KPI',execVisibility:true},
-  {id:'t10',title:'Negociación contrato Partner Framework',desc:'Revisión términos comerciales y SLA con nuevo partner',initiativeId:'i1',category:'Ejecución',area:'Partners',stakeholder:'Legal + Klaus Müller',startDate:'2025-04-14',dueDate:'2025-04-28',status:'Pendiente',priority:'Alta',criticality:'Media',businessImpact:'Alto',effort:6,timeSpent:0,progress:0,deps:'Revisión Legal del borrador',nextAction:'Solicitar draft inicial a Legal',execVisibility:false},
+  {id:'t10',title:'Negociación contrato Partner Framework',desc:'Revisión términos comerciales y SLA con nuevo partner',initiativeId:'i1',category:'Ejecución',area:'Partners',stakeholder:'Legal + Klaus Müller',startDate:'2025-04-14',dueDate:'2025-04-28',status:'Pendiente',priority:'Alta',criticality:'Media',businessImpact:'Alto',effort:6,timeSpent:0,progress:0,deps:'Revisión Legal del borrador',nextAction:'Solicitar draft inicial a Legal',execVisibility:false}
 ];
 
-function loadDemoData(){
-  if(!confirm('Cargar datos de ejemplo. Esto reemplazará los datos actuales. ¿Continuar?'))return;
-  tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
-  initiatives=JSON.parse(JSON.stringify(DEFAULT_INITIATIVES));
-  saveData();
-  renderCurrentView();
-  showToast('Datos de ejemplo cargados ✓');
+// ===================== STORAGE =====================
+function save() {
+  try {
+    localStorage.setItem('bdflow_tasks', JSON.stringify(tasks));
+    localStorage.setItem('bdflow_initiatives', JSON.stringify(initiatives));
+    localStorage.setItem('bdflow_capacity', String(dailyCapacity));
+  } catch(e) { console.warn('save error', e); }
 }
 
-function clearAllData(){
-  if(!confirm('Borrar TODOS los datos. Esta acción no se puede deshacer. ¿Continuar?'))return;
-  tasks=[];
-  initiatives=[];
-  saveData();
-  renderCurrentView();
-  showToast('Datos borrados');
+function loadFromStorage() {
+  try {
+    var t = localStorage.getItem('bdflow_tasks');
+    var i = localStorage.getItem('bdflow_initiatives');
+    var c = localStorage.getItem('bdflow_capacity');
+    if (t) { var pt = JSON.parse(t); if (Array.isArray(pt) && pt.length) tasks = pt; }
+    if (i) { var pi = JSON.parse(i); if (Array.isArray(pi) && pi.length) initiatives = pi; }
+    if (c) { dailyCapacity = parseInt(c) || 6; }
+  } catch(e) { console.warn('load error', e); }
+}
+
+function loadDemoData() {
+  if (!confirm('Se cargarán los datos de ejemplo. ¿Continuar?')) return;
+  tasks = JSON.parse(JSON.stringify(DEMO_TASKS));
+  initiatives = JSON.parse(JSON.stringify(DEMO_INITIATIVES));
+  save();
+  refresh();
+  toast('Datos de ejemplo cargados ✓');
+}
+
+function clearAllData() {
+  if (!confirm('Se borrarán TODOS los datos. ¿Continuar?')) return;
+  tasks = [];
+  initiatives = [];
+  save();
+  refresh();
+  toast('Datos borrados');
+}
+
+function setCapacity(val) {
+  dailyCapacity = parseInt(val) || 6;
+  save();
+  refresh();
+}
+
+function toast(msg) {
+  var el = document.getElementById('bdflow-toast');
+  if (el) el.remove();
+  var t = document.createElement('div');
+  t.id = 'bdflow-toast';
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#185fa5;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(function(){ if(t.parentNode)t.remove(); }, 400); }, 2000);
+}
+
+// ===================== DATA =====================
+var tasks = [];
+var initiatives = [];
+
+// ===================== HELPERS =====================
+function calcScore(t) {
+  var imp = {Alto:3,Medio:2,Bajo:1};
+  var pri = {Alta:3,Media:2,Baja:1};
+  var today = new Date(); today.setHours(0,0,0,0);
+  var due = new Date(t.dueDate + 'T12:00:00'); due.setHours(0,0,0,0);
+  var dl = Math.ceil((due - today) / 86400000);
+  var urgency = dl <= 2 ? 3 : dl <= 7 ? 2 : 1;
+  var blocked = t.status === 'Bloqueada' ? 3 : t.status === 'En espera de terceros' ? 2 : 1;
+  var depRisk = (t.deps && t.deps.trim()) ? 2 : 1;
+  var visib = t.execVisibility ? 2 : 1;
+  var s = (imp[t.businessImpact]||1)*.30 + urgency*.20 + (pri[t.criticality]||1)*.20 + blocked*.15 + depRisk*.10 + visib*.05;
+  return Math.round(s * 100) / 100;
+}
+function scoreDisplay(t) { return Math.round(calcScore(t) * 100 / 3); }
+function sorted(list) { return list.slice().sort(function(a,b){ return calcScore(b)-calcScore(a); }); }
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function todayDate() { var d = new Date(); d.setHours(0,0,0,0); return d; }
+function dDate(s) { var d = new Date(s+'T12:00:00'); d.setHours(0,0,0,0); return d; }
+function daysLeft(s) { return Math.ceil((dDate(s) - todayDate()) / 86400000); }
+function isOverdue(t) { return t.status !== 'Finalizada' && daysLeft(t.dueDate) < 0; }
+function isThisWeek(t) { var d = daysLeft(t.dueDate); return d >= 0 && d <= 7 && t.status !== 'Finalizada'; }
+function getIni(id) { for(var i=0;i<initiatives.length;i++){if(initiatives[i].id===id)return initiatives[i];} return {name:'Sin iniciativa',type:''}; }
+function fmtDate(s) { if(!s)return'—'; var d=new Date(s+'T12:00:00'); return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'}); }
+function areaColor(a) { var m={Ventas:'#3b6d11',Preventa:'#ba7517',Producto:'#534ab7',Marketing:'#993c1d',Partners:'#0f6e56',Dirección:'#e24b4a',Operaciones:'#8a8a84'}; return m[a]||'#185fa5'; }
+function pbadge(p) { var c=p==='Alta'?'red':p==='Media'?'amber':'green'; return '<span class="badge badge-'+c+'">'+p+'</span>'; }
+function sbadge(s) { var m={Pendiente:'gray','En curso':'blue','Bloqueada':'red','En espera de terceros':'amber','Finalizada':'green'}; return '<span class="badge badge-'+(m[s]||'gray')+'">'+s+'</span>'; }
+function abadge(a) { var m={Ventas:'green',Preventa:'amber',Producto:'purple',Marketing:'coral',Partners:'teal',Dirección:'red',Operaciones:'gray'}; return '<span class="badge badge-'+(m[a]||'gray')+'">'+a+'</span>'; }
+function ibadge(i) { var c=i==='Alto'?'red':i==='Medio'?'amber':'green'; return '<span class="badge badge-'+c+'">'+i+'</span>'; }
+
+function getFiltered() {
+  var t = tasks.slice();
+  if (activeAreaFilter !== 'all') t = t.filter(function(x){ return x.area === activeAreaFilter; });
+  if (activeStatusFilter) t = t.filter(function(x){ return x.status === activeStatusFilter; });
+  return t;
+}
+
+function updateCounts() {
+  document.getElementById('count-all').textContent = tasks.length;
+  AREAS.forEach(function(a){ var el=document.getElementById('count-'+a); if(el)el.textContent=tasks.filter(function(t){return t.area===a;}).length; });
+  document.getElementById('count-Bloqueada').textContent = tasks.filter(function(t){return t.status==='Bloqueada';}).length;
+  document.getElementById('count-Espera').textContent = tasks.filter(function(t){return t.status==='En espera de terceros';}).length;
+  document.getElementById('count-Finalizada').textContent = tasks.filter(function(t){return t.status==='Finalizada';}).length;
+}
+
+function filterArea(area, el) {
+  activeAreaFilter = area; activeStatusFilter = null;
+  document.querySelectorAll('.sidebar-item').forEach(function(e){e.classList.remove('active');});
+  el.classList.add('active');
+  refresh();
+}
+function filterStatus(status, el) {
+  if (activeStatusFilter === status) { activeStatusFilter = null; el.classList.remove('active'); }
+  else { activeStatusFilter = status; document.querySelectorAll('.sidebar-item').forEach(function(e){e.classList.remove('active');}); el.classList.add('active'); }
+  refresh();
+}
+
+// ===================== VIEWS =====================
+function showView(v) {
+  currentView = v;
+  var views = ['dashboard','daily','weekly','initiatives','kanban','report'];
+  document.querySelectorAll('.nav-tab').forEach(function(t,i){ t.classList.toggle('active', views[i]===v); });
+  refresh();
+}
+
+function refresh() {
+  updateCounts();
+  var cap = document.getElementById('daily-capacity');
+  if (cap) cap.value = dailyCapacity;
+  if (currentView==='dashboard') renderDashboard();
+  else if (currentView==='daily') renderDaily();
+  else if (currentView==='weekly') renderWeekly();
+  else if (currentView==='initiatives') renderInitiatives();
+  else if (currentView==='kanban') renderKanban();
+  else if (currentView==='report') renderReport();
+}
+
+function set(html) { document.getElementById('main-content').innerHTML = html; }
+
+// ---------- DASHBOARD ----------
+function renderDashboard() {
+  var all = getFiltered();
+  var active = all.filter(function(t){return t.status!=='Finalizada';});
+  var overdue = all.filter(isOverdue);
+  var blocked = all.filter(function(t){return t.status==='Bloqueada';});
+  var thisWeek = all.filter(isThisWeek);
+  var hoursLeft = active.reduce(function(s,t){return s+Math.max(0,t.effort-t.timeSpent);},0);
+  var capWeek = dailyCapacity * 5;
+  var wPct = Math.min(100, Math.round(hoursLeft/capWeek*100));
+  var wColor = wPct>100?'var(--red)':wPct>75?'var(--amber)':'var(--blue)';
+  var top5 = sorted(active).slice(0,5);
+  var strategic = tasks.filter(function(t){var ini=getIni(t.initiativeId);return ['Iniciativa Estratégica','Oportunidad','Partner'].indexOf(ini.type)>=0&&t.status!=='Finalizada';}).length;
+  var totalActive = tasks.filter(function(t){return t.status!=='Finalizada';}).length;
+  var ratioStrat = totalActive ? Math.round(strategic/totalActive*100) : 0;
+
+  var alerts = '';
+  if (overdue.length) alerts += '<div class="alert alert-red"><div class="alert-icon">⚠️</div><div><strong>'+overdue.length+' tarea'+(overdue.length>1?'s':'')+' vencida'+(overdue.length>1?'s':'')+'</strong> — atención inmediata</div></div>';
+  if (blocked.length) alerts += '<div class="alert alert-red"><div class="alert-icon">⛔</div><div><strong>'+blocked.length+' tarea'+(blocked.length>1?'s':'')+' bloqueada'+(blocked.length>1?'s':'')+'</strong> — desbloquear para continuar</div></div>';
+  if (hoursLeft > capWeek) alerts += '<div class="alert alert-amber"><div class="alert-icon">⚡</div><div><strong>Sobrecarga</strong> — '+hoursLeft.toFixed(0)+'h planificadas vs '+capWeek+'h capacidad</div></div>';
+  if (!alerts) alerts = '<div class="alert alert-green"><div class="alert-icon">✅</div>Carga dentro de rango. Sin bloqueos activos.</div>';
+
+  var areaRows = AREAS.map(function(a){
+    var ah = active.filter(function(t){return t.area===a;}).reduce(function(s,t){return s+Math.max(0,t.effort-t.timeSpent);},0);
+    if(!ah) return '';
+    var ap = Math.min(100,Math.round(ah/capWeek*100));
+    return '<div class="workload-container"><div class="workload-label"><span>'+a+'</span><span>'+ah.toFixed(0)+'h</span></div><div class="workload-track"><div class="workload-fill" style="width:'+ap+'%;background:'+areaColor(a)+'"></div></div></div>';
+  }).join('');
+
+  var topRows = top5.map(function(t,i){
+    return '<div class="task-row'+(t.status==='Bloqueada'?' blocked':t.status==='En espera de terceros'?' waiting':'')+'" onclick="openTask(\''+t.id+'\')"><span style="font-size:12px;font-weight:700;color:var(--text3);width:16px">'+(i+1)+'</span><div class="priority-dot '+(t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low')+'"></div><span class="task-title">'+t.title+'</span><div class="task-meta"><span class="score-badge">'+scoreDisplay(t)+'</span>'+sbadge(t.status)+'</div></div>';
+  }).join('') || '<div style="color:var(--text3);padding:12px 0">Sin tareas activas. Usa "Cargar datos demo" en el panel izquierdo.</div>';
+
+  var critWeek = all.filter(function(t){return t.criticality==='Alta'&&isThisWeek(t);}).map(function(t){
+    return '<div class="task-row" onclick="openTask(\''+t.id+'\')"><div class="priority-dot prio-high"></div><div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+abadge(t.area)+' '+fmtDate(t.dueDate)+'</div></div>'+sbadge(t.status)+'</div>';
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin tareas críticas esta semana 🎉</div>';
+
+  var blockRows = all.filter(function(t){return t.status==='Bloqueada'||t.status==='En espera de terceros';}).map(function(t){
+    return '<div class="task-row'+(t.status==='Bloqueada'?' blocked':' waiting')+'" onclick="openTask(\''+t.id+'\')"><div class="priority-dot '+(t.status==='Bloqueada'?'prio-high':'prio-med')+'"></div><div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">→ '+t.nextAction+'</div></div>'+sbadge(t.status)+'</div>';
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin bloqueos activos</div>';
+
+  set(alerts +
+    '<div class="grid-4" style="margin-bottom:14px">' +
+    '<div class="metric-card"><div class="metric-label">Tareas activas</div><div class="metric-value">'+active.length+'</div><div class="metric-sub">'+overdue.length+' vencidas</div></div>' +
+    '<div class="metric-card"><div class="metric-label">Esta semana</div><div class="metric-value">'+thisWeek.length+'</div><div class="metric-sub">vencimiento próximo</div></div>' +
+    '<div class="metric-card"><div class="metric-label">Bloqueadas</div><div class="metric-value" style="color:'+(blocked.length?'var(--red)':'var(--text)')+'">'+blocked.length+'</div><div class="metric-sub">requieren acción</div></div>' +
+    '<div class="metric-card"><div class="metric-label">Ratio estratégico</div><div class="metric-value">'+ratioStrat+'%</div><div class="metric-sub">vs reactivo</div></div>' +
+    '</div>' +
+    '<div class="grid-2" style="margin-bottom:14px">' +
+    '<div class="card"><div class="section-header"><div class="card-title">Carga semanal</div><span style="font-size:12px;color:var(--text3)">'+hoursLeft.toFixed(0)+'h / '+capWeek+'h</span></div><div class="workload-track" style="margin-bottom:10px"><div class="workload-fill" style="width:'+wPct+'%;background:'+wColor+'"></div></div>'+areaRows+'</div>' +
+    '<div class="card"><div class="card-title">🏆 Ranking de prioridades</div>'+topRows+'</div>' +
+    '</div>' +
+    '<div class="grid-2">' +
+    '<div><div class="section-header"><div class="section-title">⚡ Críticas esta semana</div></div>'+critWeek+'</div>' +
+    '<div><div class="section-header"><div class="section-title">🔴 Bloqueadas & En espera</div></div>'+blockRows+'</div>' +
+    '</div>'
+  );
+}
+
+// ---------- DAILY ----------
+function renderDaily() {
+  var all = getFiltered();
+  var active = all.filter(function(t){return t.status!=='Finalizada';});
+  var top = sorted(active).slice(0,7);
+  var urgent = active.filter(function(t){return daysLeft(t.dueDate)<=2;});
+  var waiting = active.filter(function(t){return t.status==='En espera de terceros';});
+  var hoursEst = top.reduce(function(s,t){return s+Math.max(0,(t.effort-t.timeSpent)/2);},0);
+  var overload = hoursEst > dailyCapacity;
+  var todayFmt = new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+
+  var topRows = top.map(function(t,i){
+    var dl = daysLeft(t.dueDate);
+    var uf = dl<0?'<span class="badge badge-red">Vencida</span>':dl===0?'<span class="badge badge-red">Hoy</span>':dl<=3?'<span class="badge badge-amber">En '+dl+'d</span>':'';
+    return '<div class="task-row'+(t.status==='Bloqueada'?' blocked':t.status==='En espera de terceros'?' waiting':'')+'" onclick="openTask(\''+t.id+'\')">'+
+      '<span style="font-size:14px;font-weight:700;color:var(--text3);min-width:22px">'+(i+1)+'</span>'+
+      '<div class="priority-dot '+(t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low')+'"></div>'+
+      '<div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:3px">→ '+t.nextAction+'</div><div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">'+abadge(t.area)+sbadge(t.status)+uf+'</div></div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span class="score-badge">'+scoreDisplay(t)+'</span><span style="font-size:11px;color:var(--text3)">'+Math.max(0,t.effort-t.timeSpent)+'h rest.</span></div>'+
+      '</div>';
+  }).join('') || '<div style="color:var(--text3);padding:12px 0">Sin tareas activas.</div>';
+
+  var urgentRows = urgent.map(function(t){
+    return '<div class="task-row blocked" onclick="openTask(\''+t.id+'\')"><div class="priority-dot prio-high"></div><div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+fmtDate(t.dueDate)+' — '+t.stakeholder+'</div></div>'+ibadge(t.businessImpact)+'</div>';
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin urgencias</div>';
+
+  var waitRows = waiting.map(function(t){
+    return '<div class="task-row waiting" onclick="openTask(\''+t.id+'\')"><div class="priority-dot prio-med"></div><div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+t.deps+'</div></div>'+sbadge(t.status)+'</div>';
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin esperas activas</div>';
+
+  set('<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">'+
+    '<div><div style="font-size:20px;font-weight:700;text-transform:capitalize">'+todayFmt+'</div><div style="font-size:13px;color:var(--text3);margin-top:3px">Capacidad: '+dailyCapacity+'h — Est. hoy: '+hoursEst.toFixed(1)+'h</div></div>'+
+    (overload?'<span class="badge badge-red">⚡ Sobrecarga</span>':'<span class="badge badge-green">✅ Carga OK</span>')+
+    '</div>'+
+    (overload?'<div class="alert alert-amber"><div class="alert-icon">⚡</div>Más trabajo del que puedes asumir hoy.</div>':'')+
+    '<div class="section-header"><div class="section-title">☀️ Foco de hoy</div><span style="font-size:12px;color:var(--text3)">Por score de prioridad</span></div>'+
+    topRows+
+    '<div class="grid-2" style="margin-top:16px">'+
+    '<div><div class="section-header"><div class="section-title">🔴 Urgentes (≤48h)</div></div>'+urgentRows+'</div>'+
+    '<div><div class="section-header"><div class="section-title">⏳ En espera de terceros</div></div>'+waitRows+'</div>'+
+    '</div>'
+  );
+}
+
+// ---------- WEEKLY ----------
+function renderWeekly() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var dow = today.getDay();
+  var monday = new Date(today); monday.setDate(today.getDate()-(dow===0?6:dow-1));
+  var days = ['Lun','Mar','Mié','Jue','Vie'];
+  var dayDates = days.map(function(_,i){var d=new Date(monday);d.setDate(monday.getDate()+i);return d;});
+  var all = getFiltered().filter(function(t){return t.status!=='Finalizada';});
+  var totalH = all.reduce(function(s,t){return s+Math.max(0,t.effort-t.timeSpent);},0);
+  var capWeek = dailyCapacity*5;
+  var wPct = Math.min(100,Math.round(totalH/capWeek*100));
+
+  function tasksForDay(d) {
+    return all.filter(function(t){var due=dDate(t.dueDate);var start=dDate(t.startDate);return due.getTime()===d.getTime()||(start<=d&&due>=d);});
+  }
+
+  var dayCols = dayDates.map(function(d,i){
+    var dt = sorted(tasksForDay(d)).slice(0,5);
+    var dh = dt.reduce(function(s,t){return s+Math.max(0,t.effort-t.timeSpent)/Math.max(1,Math.ceil((dDate(t.dueDate)-dDate(t.startDate))/86400000)+1);},0);
+    var ol = dh>dailyCapacity;
+    var isTod = d.getTime()===today.getTime();
+    return '<div class="day-col" style="'+(isTod?'border:2px solid var(--blue)':'')+'">'+
+      '<div class="day-header" style="color:'+(isTod?'var(--blue)':'var(--text2)')+'">'+days[i]+' '+d.getDate()+'</div>'+
+      (dt.length?dt.map(function(t){return '<div class="day-task '+(t.priority==='Alta'?'alta':t.priority==='Media'?'media':'')+'" onclick="openTask(\''+t.id+'\')" title="'+t.title+'"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">'+t.title+'</div><div style="color:var(--text3);margin-top:2px">'+t.area+'</div></div>';}).join(''):'<div style="color:var(--text3);font-size:11px;text-align:center;padding:14px 0;opacity:.6">Libre</div>')+
+      '<div style="font-size:10px;text-align:center;margin-top:6px;color:'+(ol?'var(--red)':'var(--text3)')+'">'+dh.toFixed(1)+'h est.</div>'+
+      '</div>';
+  }).join('');
+
+  var allWeekRows = sorted(all.filter(function(t){return dDate(t.dueDate)>=monday&&dDate(t.startDate)<=dayDates[4];})).map(function(t){
+    return '<div class="task-row'+(t.status==='Bloqueada'?' blocked':t.status==='En espera de terceros'?' waiting':'')+'" onclick="openTask(\''+t.id+'\')">'+
+      '<div class="priority-dot '+(t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low')+'"></div>'+
+      '<div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+t.stakeholder+' · '+getIni(t.initiativeId).name+'</div></div>'+
+      '<div class="task-meta">'+abadge(t.area)+sbadge(t.status)+'<span style="font-size:11px;color:var(--text3)">'+fmtDate(t.dueDate)+'</span></div></div>';
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin tareas esta semana</div>';
+
+  set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'+
+    '<div style="font-size:16px;font-weight:700">Semana '+monday.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+' – '+new Date(monday.getTime()+4*86400000).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+'</div>'+
+    '<div style="font-size:13px;color:'+(totalH>capWeek?'var(--red)':'var(--text2)')+'">'+totalH.toFixed(0)+'h / '+capWeek+'h</div></div>'+
+    '<div style="margin-bottom:14px"><div class="workload-track" style="height:10px"><div class="workload-fill" style="width:'+wPct+'%;background:'+(totalH>capWeek?'var(--red)':totalH>capWeek*.75?'var(--amber)':'var(--blue)')+'"></div></div><div style="font-size:11px;color:var(--text3);margin-top:3px">'+wPct+'% de capacidad semanal</div></div>'+
+    '<div class="week-grid">'+dayCols+'</div>'+
+    '<div style="margin-top:16px"><div class="section-header"><div class="section-title">Todas las tareas de la semana</div></div>'+allWeekRows+'</div>'
+  );
+}
+
+// ---------- INITIATIVES ----------
+function renderInitiatives() {
+  var cards = initiatives.map(function(ini){
+    var it = tasks.filter(function(t){return t.initiativeId===ini.id;});
+    var done = it.filter(function(t){return t.status==='Finalizada';}).length;
+    var pct = it.length?Math.round(done/it.length*100):0;
+    var blk = it.filter(function(t){return t.status==='Bloqueada';}).length;
+    var wt = it.filter(function(t){return t.status==='En espera de terceros';}).length;
+    var next = sorted(it.filter(function(t){return t.status!=='Finalizada';})).slice(0,2);
+    var tc={Oportunidad:'blue',Partner:'teal','Iniciativa Estratégica':'purple',Cliente:'green',Marketing:'coral',Producto:'amber','Soporte Interno':'gray',Dirección:'red'};
+    return '<div class="initiative-card">'+
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">'+
+      '<div><div style="font-size:15px;font-weight:700">'+ini.name+'</div><div style="font-size:12px;color:var(--text3);margin-top:3px">'+ini.objective+'</div></div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+(ini.value?'<span style="font-size:14px;font-weight:700;color:var(--green)">€'+ini.value.toLocaleString('es-ES')+'</span>':'')+'<span class="badge badge-'+(ini.importance==='Alta'?'red':ini.importance==='Media'?'amber':'green')+'">'+ini.importance+'</span></div>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><span class="badge badge-'+(tc[ini.type]||'gray')+'">'+ini.type+'</span>'+abadge(ini.area)+ini.otherAreas.slice(0,2).map(abadge).join('')+'<span class="badge badge-gray">📅 '+fmtDate(ini.startDate)+' → '+fmtDate(ini.targetDate)+'</span></div>'+
+      '<div style="display:flex;gap:14px;font-size:12px;color:var(--text3);margin-bottom:10px"><span>'+it.length+' tareas · '+done+' completadas</span>'+(blk?'<span style="color:var(--red);font-weight:600">⛔ '+blk+' bloqueada'+(blk>1?'s':'')+'</span>':'')+(wt?'<span style="color:var(--amber);font-weight:600">⏳ '+wt+' en espera</span>':'')+'</div>'+
+      '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--text3);min-width:32px">'+pct+'%</span><div class="initiative-progress-bar"><div class="initiative-progress-fill" style="width:'+pct+'%"></div></div><span style="font-size:11px;color:var(--text3)">'+done+'/'+it.length+'</span></div>'+
+      (next.length?'<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Próximas acciones</div>'+
+      next.map(function(t){return '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px"><div class="priority-dot '+(t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low')+'" style="margin-top:4px"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">→ '+t.nextAction+'</div></div>'+sbadge(t.status)+'</div>';}).join('')+'</div>':'')+'</div>';
+  }).join('') || '<div style="color:var(--text3);padding:20px 0">Sin iniciativas. Crea una con el botón "+ Iniciativa".</div>';
+  set('<div class="section-header"><div class="section-title">🎯 Iniciativas ('+initiatives.length+')</div></div>'+cards);
+}
+
+// ---------- KANBAN ----------
+function renderKanban() {
+  var all = getFiltered();
+  var cols = [{key:'Pendiente',color:'var(--text3)'},{key:'En curso',color:'var(--blue)'},{key:'En espera de terceros',label:'En espera',color:'var(--amber)'},{key:'Bloqueada',color:'var(--red)'},{key:'Finalizada',color:'var(--green)'}];
+  var board = cols.map(function(col){
+    var ct = sorted(all.filter(function(t){return t.status===col.key;}));
+    return '<div class="kanban-col">'+
+      '<div class="kanban-col-header"><div style="width:9px;height:9px;border-radius:50%;background:'+col.color+';flex-shrink:0"></div>'+(col.label||col.key)+'<span class="sidebar-count">'+ct.length+'</span></div>'+
+      ct.map(function(t){return '<div class="kanban-card" onclick="openTask(\''+t.id+'\')">'+
+        '<div class="kanban-card-title">'+t.title+'</div>'+
+        '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">'+getIni(t.initiativeId).name+'</div>'+
+        '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px">'+abadge(t.area)+pbadge(t.priority)+'</div>'+
+        '<div style="display:flex;align-items:center;gap:7px"><div class="progress-bar"><div class="progress-fill" style="width:'+t.progress+'%"></div></div><span style="font-size:10px;color:var(--text3)">'+t.progress+'%</span><span style="font-size:10px;color:var(--text3);margin-left:auto">'+fmtDate(t.dueDate)+'</span></div>'+
+        (t.nextAction?'<div style="margin-top:6px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:5px">→ '+t.nextAction+'</div>':'')+
+        '</div>';}).join('')+'</div>';
+  }).join('');
+  set('<div class="kanban-board">'+board+'</div>');
+}
+
+// ---------- REPORT ----------
+function renderReport() {
+  var fin = tasks.filter(function(t){return t.status==='Finalizada';});
+  var totalTime = tasks.reduce(function(s,t){return s+t.timeSpent;},0);
+  var areaTime = {}; AREAS.forEach(function(a){areaTime[a]=tasks.filter(function(t){return t.area===a;}).reduce(function(s,t){return s+t.timeSpent;},0);});
+  var iniTime = {}; initiatives.forEach(function(i){iniTime[i.id]=tasks.filter(function(t){return t.initiativeId===i.id;}).reduce(function(s,t){return s+t.timeSpent;},0);});
+  var stratTime = tasks.filter(function(t){var ini=getIni(t.initiativeId);return ['Iniciativa Estratégica','Oportunidad','Partner'].indexOf(ini.type)>=0;}).reduce(function(s,t){return s+t.timeSpent;},0);
+  var maxAT = Math.max.apply(null,Object.values(areaTime).concat([1]));
+  var maxIT = Math.max.apply(null,Object.values(iniTime).concat([1]));
+  var pipeline = initiatives.reduce(function(s,i){return s+(i.value||0);},0);
+
+  var areaRows = AREAS.filter(function(a){return areaTime[a]>0;}).sort(function(a,b){return areaTime[b]-areaTime[a];}).map(function(a){
+    return '<div class="report-row"><div style="display:flex;align-items:center;gap:8px;min-width:110px"><div style="width:9px;height:9px;border-radius:50%;background:'+areaColor(a)+'"></div><span>'+a+'</span></div><div style="flex:1;margin:0 12px"><div class="bar-h" style="width:'+Math.round(areaTime[a]/maxAT*140)+'px;background:'+areaColor(a)+'"></div></div><span style="font-size:12px;color:var(--text2);min-width:36px;text-align:right">'+areaTime[a].toFixed(1)+'h</span></div>';
+  }).join('') || '<div style="color:var(--text3);padding:8px 0">Sin datos de tiempo registrados</div>';
+
+  var iniRows = initiatives.filter(function(i){return iniTime[i.id]>0;}).sort(function(a,b){return iniTime[b.id]-iniTime[a.id];}).map(function(i){
+    return '<div class="report-row"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;margin-right:8px">'+i.name+'</span><div style="width:80px;margin-right:8px"><div class="bar-h" style="width:'+Math.round(iniTime[i.id]/maxIT*80)+'px;background:var(--blue)"></div></div><span style="font-size:12px;min-width:36px;text-align:right">'+iniTime[i.id].toFixed(1)+'h</span></div>';
+  }).join('') || '<div style="color:var(--text3);padding:8px 0">Sin datos</div>';
+
+  var statusRows = TASK_STATUSES.map(function(s){var c=tasks.filter(function(t){return t.status===s;}).length;return c?'<div class="report-row"><span>'+s+'</span><div style="display:flex;align-items:center;gap:8px"><div class="bar-h" style="width:'+Math.round(c/Math.max(tasks.length,1)*100)+'px"></div><strong>'+c+'</strong></div></div>':'';}).join('');
+
+  var blockRows = tasks.filter(function(t){return ['Bloqueada','En espera de terceros'].indexOf(t.status)>=0;}).map(function(t){
+    return '<div class="report-row" style="cursor:pointer" onclick="openTask(\''+t.id+'\')"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+t.deps+'</div></div>'+sbadge(t.status)+'</div>';
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px">Sin bloqueos</div>';
+
+  set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'+
+    '<div style="font-size:16px;font-weight:700">📈 Reporting ejecutivo</div>'+
+    '<button class="btn btn-primary" onclick="execSummary()">📋 Resumen ejecutivo</button></div>'+
+    '<div class="grid-4" style="margin-bottom:16px">'+
+    '<div class="metric-card"><div class="metric-label">Horas invertidas</div><div class="metric-value">'+totalTime.toFixed(1)+'h</div></div>'+
+    '<div class="metric-card"><div class="metric-label">Completadas</div><div class="metric-value">'+fin.length+'</div><div class="metric-sub">de '+tasks.length+' totales</div></div>'+
+    '<div class="metric-card"><div class="metric-label">Trabajo estratégico</div><div class="metric-value">'+stratTime.toFixed(1)+'h</div><div class="metric-sub">'+(totalTime?Math.round(stratTime/totalTime*100):0)+'% del total</div></div>'+
+    '<div class="metric-card"><div class="metric-label">Pipeline activo</div><div class="metric-value" style="font-size:18px">€'+pipeline.toLocaleString('es-ES')+'</div></div>'+
+    '</div>'+
+    '<div class="grid-2" style="margin-bottom:16px">'+
+    '<div class="card"><div class="card-title">Tiempo por área</div>'+areaRows+'</div>'+
+    '<div class="card"><div class="card-title">Tiempo por iniciativa</div>'+iniRows+'</div>'+
+    '</div>'+
+    '<div class="grid-2">'+
+    '<div class="card"><div class="card-title">Tareas por estado</div>'+statusRows+'</div>'+
+    '<div class="card"><div class="card-title">Bloqueadas & en espera</div>'+blockRows+'</div>'+
+    '</div>'
+  );
+}
+
+function execSummary() {
+  var fin = tasks.filter(function(t){return t.status==='Finalizada';});
+  var active = tasks.filter(function(t){return t.status!=='Finalizada';});
+  var blocked = tasks.filter(function(t){return t.status==='Bloqueada';});
+  var totalTime = tasks.reduce(function(s,t){return s+t.timeSpent;},0);
+  var pipeline = initiatives.reduce(function(s,i){return s+(i.value||0);},0);
+  var dateStr = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  var top3 = sorted(active).slice(0,3);
+  document.getElementById('modal-body').innerHTML =
+    '<div class="modal-header"><div><div class="modal-title">Resumen Ejecutivo BD</div><div style="font-size:12px;color:var(--text3)">'+dateStr+' · Cegid HR</div></div><button class="close-btn" onclick="closeModal()">✕</button></div>'+
+    '<div class="grid-3" style="margin-bottom:16px">'+
+    '<div class="metric-card"><div class="metric-label">Iniciativas</div><div class="metric-value">'+initiatives.length+'</div></div>'+
+    '<div class="metric-card"><div class="metric-label">Tareas activas</div><div class="metric-value">'+active.length+'</div></div>'+
+    '<div class="metric-card"><div class="metric-label">Pipeline</div><div class="metric-value" style="font-size:17px">€'+pipeline.toLocaleString('es-ES')+'</div></div>'+
+    '</div>'+
+    '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">ACTIVIDAD</div><div style="font-size:13px;line-height:2">'+
+    '<div>· '+totalTime.toFixed(1)+'h invertidas</div>'+
+    '<div>· '+fin.length+' tareas completadas de '+tasks.length+' ('+Math.round(fin.length/Math.max(tasks.length,1)*100)+'%)</div>'+
+    (blocked.length?'<div style="color:var(--red);font-weight:600">· ⛔ '+blocked.length+' bloqueada'+(blocked.length>1?'s':'')+' — requiere atención</div>':'<div style="color:var(--green)">· Sin bloqueos activos</div>')+
+    '</div></div>'+
+    '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">TOP PRIORIDADES</div>'+
+    top3.map(function(t,i){return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><strong style="color:var(--text3)">'+(i+1)+'.</strong><div style="flex:1">'+t.title+'<div style="font-size:11px;color:var(--text3)">'+t.stakeholder+' · Score '+scoreDisplay(t)+'/100</div></div>'+sbadge(t.status)+'</div>';}).join('')+
+    '</div>'+
+    '<div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Cerrar</button></div>';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+// ---------- TASK DETAIL ----------
+function openTask(id) {
+  var t = null;
+  for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){t=tasks[i];break;}}
+  if(!t) return;
+  var ini = getIni(t.initiativeId);
+  var dl = daysLeft(t.dueDate);
+  var dlBadge = dl<0?'<span class="badge badge-red">Vencida '+Math.abs(dl)+'d</span>':dl===0?'<span class="badge badge-red">Vence HOY</span>':dl<=3?'<span class="badge badge-amber">En '+dl+'d</span>':'<span class="badge badge-gray">'+fmtDate(t.dueDate)+'</span>';
+
+  document.getElementById('modal-body').innerHTML =
+    '<div class="modal-header">'+
+    '<div style="flex:1;min-width:0"><div class="modal-title">'+t.title+'</div><div style="font-size:12px;color:var(--text3);margin-top:2px">'+ini.name+'</div></div>'+
+    '<div style="display:flex;gap:8px;align-items:center"><span class="score-badge" style="font-size:13px;padding:4px 10px">Score '+scoreDisplay(t)+'</span><button class="close-btn" onclick="closeModal()">✕</button></div>'+
+    '</div>'+
+    '<div style="font-size:13px;color:var(--text2);margin-bottom:14px;padding:11px;background:var(--bg3);border-radius:8px">'+t.desc+'</div>'+
+    '<div class="form-row" style="margin-bottom:12px">'+
+    '<div><div class="form-label">Estado</div><select class="form-select" onchange="updateField(\''+id+'\',\'status\',this.value)">'+TASK_STATUSES.map(function(s){return '<option'+(t.status===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'+
+    '<div><div class="form-label">Progreso <span id="prog-lbl">'+t.progress+'%</span></div><input type="range" min="0" max="100" value="'+t.progress+'" style="width:100%;margin-top:8px" oninput="document.getElementById(\'prog-lbl\').textContent=this.value+\'%\';updateField(\''+id+'\',\'progress\',parseInt(this.value))"></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+sbadge(t.status)+abadge(t.area)+pbadge(t.priority)+ibadge(t.businessImpact)+dlBadge+'</div>'+
+    '<div style="display:flex;gap:16px;margin-bottom:14px;font-size:13px;background:var(--bg3);padding:10px;border-radius:8px">'+
+    '<div><span style="color:var(--text3)">Esfuerzo:</span> <strong>'+t.effort+'h</strong></div>'+
+    '<div><span style="color:var(--text3)">Invertido:</span> <strong>'+t.timeSpent+'h</strong></div>'+
+    '<div><span style="color:var(--text3)">Restante:</span> <strong>'+Math.max(0,t.effort-t.timeSpent)+'h</strong></div>'+
+    '<div><span style="color:var(--text3)">Stakeholder:</span> <strong>'+t.stakeholder+'</strong></div>'+
+    '</div>'+
+    (t.deps?'<div style="margin-bottom:12px"><div class="form-label">Dependencias</div><div style="font-size:13px;padding:9px;background:var(--amber-bg);border-radius:7px;color:var(--amber-text)">⏳ '+t.deps+'</div></div>':'')+
+    '<div style="margin-bottom:12px"><div class="form-label">Próxima acción</div><input class="form-input" value="'+t.nextAction+'" onchange="updateField(\''+id+'\',\'nextAction\',this.value)" placeholder="Siguiente paso concreto"></div>'+
+    '<div class="form-row">'+
+    '<div><div class="form-label">Tiempo invertido (h)</div><input type="number" class="form-input" value="'+t.timeSpent+'" min="0" step="0.5" onchange="updateField(\''+id+'\',\'timeSpent\',parseFloat(this.value)||0)"></div>'+
+    '<div><div class="form-label">Categoría</div><select class="form-select" onchange="updateField(\''+id+'\',\'category\',this.value)">'+TASK_CATEGORIES.map(function(c){return '<option'+(t.category===c?' selected':'')+'>'+c+'</option>';}).join('')+'</select></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">'+
+    '<button class="btn btn-danger" onclick="removeTask(\''+id+'\')">🗑 Eliminar</button>'+
+    '<button class="btn" onclick="closeModal()">Cerrar</button>'+
+    '</div>';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function updateField(id, field, val) {
+  for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){tasks[i][field]=val;break;}}
+  save();
+  updateCounts();
+}
+
+function removeTask(id) {
+  tasks = tasks.filter(function(t){return t.id!==id;});
+  save();
+  closeModal();
+  refresh();
+}
+
+// ---------- NEW TASK MODAL ----------
+function openModal(type) {
+  var html = '';
+  if (type === 'task') {
+    html = '<div class="modal-header"><div class="modal-title">Nueva tarea</div><button class="close-btn" onclick="closeModal()">✕</button></div>'+
+      '<div class="form-group"><div class="form-label">Título *</div><input class="form-input" id="nt-title" placeholder="Título de la tarea"></div>'+
+      '<div class="form-group"><div class="form-label">Descripción</div><textarea class="form-input" id="nt-desc" rows="2" placeholder="Contexto y objetivo"></textarea></div>'+
+      '<div class="form-row">'+
+      '<div><div class="form-label">Iniciativa</div><select class="form-select" id="nt-ini"><option value="">— Sin iniciativa —</option>'+initiatives.map(function(i){return '<option value="'+i.id+'">'+i.name+'</option>';}).join('')+'</select></div>'+
+      '<div><div class="form-label">Área solicitante</div><select class="form-select" id="nt-area"><option value="">Seleccionar</option>'+AREAS.map(function(a){return '<option>'+a+'</option>';}).join('')+'</select></div>'+
+      '</div>'+
+      '<div class="form-row">'+
+      '<div><div class="form-label">Categoría</div><select class="form-select" id="nt-cat">'+TASK_CATEGORIES.map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></div>'+
+      '<div><div class="form-label">Stakeholder</div><input class="form-input" id="nt-stake" placeholder="Nombre (Rol)"></div>'+
+      '</div>'+
+      '<div class="form-row">'+
+      '<div><div class="form-label">Fecha inicio</div><input type="date" class="form-input" id="nt-start" value="'+todayStr()+'"></div>'+
+      '<div><div class="form-label">Fecha límite *</div><input type="date" class="form-input" id="nt-due"></div>'+
+      '</div>'+
+      '<div class="form-row">'+
+      '<div><div class="form-label">Prioridad</div><select class="form-select" id="nt-pri"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>'+
+      '<div><div class="form-label">Criticidad</div><select class="form-select" id="nt-crit"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>'+
+      '</div>'+
+      '<div class="form-row">'+
+      '<div><div class="form-label">Impacto negocio</div><select class="form-select" id="nt-imp"><option>Alto</option><option selected>Medio</option><option>Bajo</option></select></div>'+
+      '<div><div class="form-label">Esfuerzo (h)</div><input type="number" class="form-input" id="nt-effort" value="2" min="0.5" step="0.5"></div>'+
+      '</div>'+
+      '<div class="form-group"><div class="form-label">Dependencias</div><input class="form-input" id="nt-deps" placeholder="¿Qué necesitas de terceros?"></div>'+
+      '<div class="form-group"><div class="form-label">Próxima acción</div><input class="form-input" id="nt-next" placeholder="¿Cuál es el primer paso?"></div>'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><input type="checkbox" id="nt-exec"><label for="nt-exec" style="font-size:13px;color:var(--text2)">Visibilidad ejecutiva</label></div>'+
+      '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="doSaveTask()">Guardar tarea</button></div>';
+  } else {
+    html = '<div class="modal-header"><div class="modal-title">Nueva iniciativa</div><button class="close-btn" onclick="closeModal()">✕</button></div>'+
+      '<div class="form-group"><div class="form-label">Nombre *</div><input class="form-input" id="ni-name" placeholder="Nombre de la iniciativa"></div>'+
+      '<div class="form-group"><div class="form-label">Objetivo de negocio</div><input class="form-input" id="ni-obj" placeholder="¿Qué resultado persigue?"></div>'+
+      '<div class="form-row">'+
+      '<div><div class="form-label">Tipo</div><select class="form-select" id="ni-type">'+INITIATIVE_TYPES.map(function(t){return '<option>'+t+'</option>';}).join('')+'</select></div>'+
+      '<div><div class="form-label">Área principal</div><select class="form-select" id="ni-area">'+AREAS.map(function(a){return '<option>'+a+'</option>';}).join('')+'</select></div>'+
+      '</div>'+
+      '<div class="form-row">'+
+      '<div><div class="form-label">Valor estimado (€)</div><input type="number" class="form-input" id="ni-val" placeholder="0" min="0"></div>'+
+      '<div><div class="form-label">Importancia</div><select class="form-select" id="ni-imp"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>'+
+      '</div>'+
+      '<div class="form-row">'+
+      '<div><div class="form-label">Fecha inicio</div><input type="date" class="form-input" id="ni-start" value="'+todayStr()+'"></div>'+
+      '<div><div class="form-label">Fecha objetivo</div><input type="date" class="form-input" id="ni-target"></div>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="doSaveIni()">Guardar iniciativa</button></div>';
+  }
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function doSaveTask() {
+  var title = document.getElementById('nt-title').value.trim();
+  var due = document.getElementById('nt-due').value;
+  if (!title || !due) { alert('Título y fecha límite son obligatorios'); return; }
+  tasks.push({
+    id: 't'+Date.now(), title: title, desc: document.getElementById('nt-desc').value,
+    initiativeId: document.getElementById('nt-ini').value, category: document.getElementById('nt-cat').value,
+    area: document.getElementById('nt-area').value || 'Ventas', stakeholder: document.getElementById('nt-stake').value,
+    startDate: document.getElementById('nt-start').value, dueDate: due, status: 'Pendiente',
+    priority: document.getElementById('nt-pri').value, criticality: document.getElementById('nt-crit').value,
+    businessImpact: document.getElementById('nt-imp').value, effort: parseFloat(document.getElementById('nt-effort').value)||2,
+    timeSpent: 0, progress: 0, deps: document.getElementById('nt-deps').value,
+    nextAction: document.getElementById('nt-next').value, execVisibility: document.getElementById('nt-exec').checked
+  });
+  save();
+  closeModal();
+  refresh();
+  toast('Tarea guardada ✓');
+}
+
+function doSaveIni() {
+  var name = document.getElementById('ni-name').value.trim();
+  if (!name) { alert('El nombre es obligatorio'); return; }
+  initiatives.push({
+    id: 'i'+Date.now(), name: name, type: document.getElementById('ni-type').value,
+    area: document.getElementById('ni-area').value, otherAreas: [],
+    objective: document.getElementById('ni-obj').value,
+    value: parseInt(document.getElementById('ni-val').value)||0,
+    importance: document.getElementById('ni-imp').value,
+    startDate: document.getElementById('ni-start').value,
+    targetDate: document.getElementById('ni-target').value, status: 'En curso'
+  });
+  save();
+  closeModal();
+  refresh();
+  toast('Iniciativa guardada ✓');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+
+// ===================== PWA =====================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(function(){});
 }
 
 // ===================== INIT =====================
-loadData();
-renderCurrentView();
-setTimeout(()=>showToast('BDFlow listo ✓'),600);
+loadFromStorage();
+refresh();
+setTimeout(function(){ toast('BDFlow listo ✓'); }, 500);
 </script>
 </body>
 </html>
