@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BDFlow</title>
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6fb;color:#0f172a;font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
@@ -117,12 +115,19 @@ a,button,input,select,textarea{font-family:inherit}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:#c8d0e8;border-radius:10px}
 .hid{display:none!important}
+
+.logo-sub{font-size:10px;font-weight:600;color:#94a3b8;line-height:1.1;margin-top:2px}
+.qa{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:8px;border-top:1px solid #e6ebf5}
+.qab{border:1px solid #d8e0f2;background:#fff;color:#334155;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer}
+.qab:hover{background:#eef4ff;border-color:#b9c8ee;color:#1d4ed8}
+.tr img,.kk img{display:none!important;max-width:100%;height:auto}
+
 </style>
 </head>
 <body>
 <div style="display:flex;flex-direction:column;height:100vh">
 <div class="top">
-  <div class="logo">BD<b>Flow</b></div>
+  <div class="logo">BD<b>Flow</b><div class="logo-sub">by Miguel Castillo</div></div>
   <div class="tabs">
     <button class="tab on" onclick="V('dash')">Dashboard</button>
     <button class="tab" onclick="V('hoy')">Hoy</button>
@@ -158,7 +163,6 @@ a,button,input,select,textarea{font-family:inherit}
           <input type="number" id="capI" value="6" min="1" max="16" style="width:58px;padding:6px 9px;border-radius:7px;border:1.5px solid #c8d0e8;background:#f8faff;color:#0f172a;font-size:13px;font-weight:600" onchange="setCap(this.value)">
           <span style="font-size:12px;color:#94a3b8;font-weight:500">h/día</span>
         </div>
-        <button class="btn" style="width:100%;font-size:11px" onclick="loadDemo()">Cargar datos demo</button>
       </div>
     </div>
   </div>
@@ -233,6 +237,42 @@ function setSS(s){var e=ge('ss');if(!e)return;if(s==='ok'){e.className='sok';e.t
 function svT(t){setSS('sav');sbUp('tasks',{id:t.id,data:t}).then(function(){setSS('ok');}).catch(function(){setSS('err');});}
 function svI(i){setSS('sav');sbUp('initiatives',{id:i.id,data:i}).then(function(){setSS('ok');}).catch(function(){setSS('err');});}
 function svS(){setSS('sav');Promise.all([sbUp('settings',{key:'areas',value:AREAS}),sbUp('settings',{key:'capacity',value:CAP})]).then(function(){setSS('ok');}).catch(function(){setSS('err');});}
+
+
+function saveAllLocal(){try{localStorage.setItem('bdflow_tasks',JSON.stringify(tasks));localStorage.setItem('bdflow_initiatives',JSON.stringify(initiatives));localStorage.setItem('bdflow_capacity',String(CAP));localStorage.setItem('bdflow_areas',JSON.stringify(AREAS));}catch(e){}}
+function quickBtns(id){return '<div class="qa">'+
+  '<button class="qab" onclick="event.stopPropagation();QA(\''+id+'\',\'done\')">✓ Finalizar</button>'+
+  '<button class="qab" onclick="event.stopPropagation();QA(\''+id+'\',\'block\')">⛔ Bloquear</button>'+
+  '<button class="qab" onclick="event.stopPropagation();QA(\''+id+'\',\'tomorrow\')">Mañana</button>'+
+  '<button class="qab" onclick="event.stopPropagation();QA(\''+id+'\',\'30m\')">+30m</button>'+
+  '<button class="qab" onclick="event.stopPropagation();QA(\''+id+'\',\'1h\')">+1h</button>'+
+  '</div>';}
+function enhanceQuickActions(){
+  document.querySelectorAll('.qa').forEach(function(e){e.remove();});
+  document.querySelectorAll('.tr[onclick*="OT("], .kk[onclick*="OT("]').forEach(function(card){
+    var oc=card.getAttribute('onclick')||''; var m=oc.match(/OT\('([^']+)'\)/); if(!m)return;
+    card.insertAdjacentHTML('beforeend', quickBtns(m[1]));
+  });
+}
+function findTask(id){for(var i=0;i<tasks.length;i++){if(tasks[i].id===id)return tasks[i];}return null;}
+function shiftDate(ds,days){var d=new Date(ds+'T12:00:00'); if(isNaN(d)) d=new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10);}
+function QA(id,act){
+  var t=findTask(id); if(!t)return;
+  if(act==='done'){t.status='Finalizada'; t.prog=100;}
+  else if(act==='block'){t.status=(t.status==='Bloqueada'?'En curso':'Bloqueada'); if(t.status==='En curso'&&t.prog===0)t.prog=10;}
+  else if(act==='tomorrow'){t.dd=shiftDate(t.dd||tds(),1);}
+  else if(act==='30m'||act==='1h'){
+    var h=act==='30m'?0.5:1;
+    if(!t.diary)t.diary=[];
+    t.diary.push({date:tds(),hours:h,note:'Registro rápido '+act});
+    t.spent=(parseFloat(t.spent)||0)+h;
+    if(t.status==='Pendiente')t.status='En curso';
+    if(t.effort&&t.effort>0)t.prog=Math.min(99,Math.round((t.spent/t.effort)*100));
+  }
+  saveAllLocal();
+  try{svT(t);}catch(e){}
+  RD(); UNB(); toast('Actualizado ✓');
+}
 
 function loadAll(){
   S('<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#94a3b8;font-size:13px;font-weight:500">Cargando...</div>');
@@ -338,9 +378,9 @@ function FA(a,el){AF=a;SF=null;document.querySelectorAll('.si').forEach(function
 function fSt(s,el){if(SF===s){SF=null;el.classList.remove('on');}else{SF=s;document.querySelectorAll('.si').forEach(function(e){e.classList.remove('on');});el.classList.add('on');}RC();}
 
 function V(v){VW=v;var vs=['dash','hoy','sem','ini','kan','rep'];document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('on',vs[i]===v);});RC();}
-function RD(){RS();RC();var c=ge('capI');if(c)c.value=CAP;}
+function RD(){RS();RC();var c=ge('capI');if(c)c.value=CAP;enhanceQuickActions();}
 function S(h){ge('main').innerHTML=h;}
-function RC(){UC();if(VW==='dash')vD();else if(VW==='hoy')vH();else if(VW==='sem')vS();else if(VW==='ini')vI();else if(VW==='kan')vK();else if(VW==='rep')vR();}
+function RC(){UC();if(VW==='dash')vD();else if(VW==='hoy')vH();else if(VW==='sem')vS();else if(VW==='ini')vI();else if(VW==='kan')vK();else if(VW==='rep')vR();setTimeout(enhanceQuickActions,0);}
 
 function vD(){
   var all=FL(),ac=all.filter(function(t){return t.status!=='Finalizada';});
@@ -691,7 +731,6 @@ function DA(i){var n=AREAS[i].name,u=tasks.filter(function(t){return t.area===n;
 
 function CM(){ge('ov').classList.add('hid');}
 
-if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){});}
 
 RS();
 loadAll();
