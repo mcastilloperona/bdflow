@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BDFlow — Gestión BD SaaS</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#185fa5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BDFlow">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -712,7 +718,65 @@ function saveNewInitiative(){
 
 function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
 
+// ===================== LOCALSTORAGE =====================
+const STORAGE_TASKS='bdflow_tasks_v1';
+const STORAGE_INITIATIVES='bdflow_initiatives_v1';
+const STORAGE_CAPACITY='bdflow_capacity_v1';
+
+function saveData(){
+  try{
+    localStorage.setItem(STORAGE_TASKS,JSON.stringify(tasks));
+    localStorage.setItem(STORAGE_INITIATIVES,JSON.stringify(initiatives));
+    localStorage.setItem(STORAGE_CAPACITY,dailyCapacity);
+    showToast('✓ Guardado');
+  }catch(e){console.warn('Error guardando:',e);}
+}
+
+function loadData(){
+  try{
+    const t=localStorage.getItem(STORAGE_TASKS);
+    const i=localStorage.getItem(STORAGE_INITIATIVES);
+    const c=localStorage.getItem(STORAGE_CAPACITY);
+    if(t){const parsed=JSON.parse(t);if(parsed&&parsed.length)tasks=parsed;}
+    if(i){const parsed=JSON.parse(i);if(parsed&&parsed.length)initiatives=parsed;}
+    if(c){dailyCapacity=parseInt(c);const el=document.getElementById('daily-capacity');if(el)el.value=dailyCapacity;}
+  }catch(e){console.warn('Error cargando:',e);}
+}
+
+function showToast(msg,duration=1800){
+  const existing=document.getElementById('bdflow-toast');
+  if(existing)existing.remove();
+  const t=document.createElement('div');
+  t.id='bdflow-toast';
+  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#185fa5;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:opacity .4s';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),400);},duration);
+}
+
+// Auto-save wrapper — intercept mutating operations
+const _origSaveNewTask=saveNewTask;
+saveNewTask=function(){_origSaveNewTask();saveData();};
+const _origSaveNewIni=saveNewInitiative;
+saveNewInitiative=function(){_origSaveNewIni();saveData();};
+const _origDeleteTask=deleteTask;
+deleteTask=function(id){_origDeleteTask(id);saveData();};
+const _origUpdateTaskField=updateTaskField;
+updateTaskField=function(id,field,val){_origUpdateTaskField(id,field,val);saveData();};
+const _origUpdateCapacity=updateCapacity;
+updateCapacity=function(){_origUpdateCapacity();saveData();};
+
+// ===================== PWA SERVICE WORKER =====================
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js')
+    .then(()=>console.log('BDFlow SW registrado'))
+    .catch(e=>console.warn('SW no disponible:',e));
+}
+
+// ===================== INIT =====================
+loadData();
 renderCurrentView();
+setTimeout(()=>showToast('BDFlow listo ✓'),500);
 </script>
 </body>
 </html>
