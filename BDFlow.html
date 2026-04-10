@@ -168,6 +168,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <input type="number" id="daily-capacity" value="6" min="1" max="12" style="width:55px;padding:5px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px" onchange="updateCapacity()">
       <span style="font-size:12px;color:var(--text3)">h/día</span>
     </div>
+    <div style="padding:0 8px 8px">
+      <button class="btn" style="width:100%;font-size:11px;padding:5px 8px" onclick="loadDemoData()">Cargar datos demo</button>
+    </div>
+    <div style="padding:0 8px 8px">
+      <button class="btn btn-danger" style="width:100%;font-size:11px;padding:5px 8px" onclick="clearAllData()">Borrar todo</button>
+    </div>
   </div>
 </div>
 <div class="content" id="main-content"></div>
@@ -718,65 +724,108 @@ function saveNewInitiative(){
 
 function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
 
-// ===================== LOCALSTORAGE =====================
-const STORAGE_TASKS='bdflow_tasks_v1';
-const STORAGE_INITIATIVES='bdflow_initiatives_v1';
-const STORAGE_CAPACITY='bdflow_capacity_v1';
-
-function saveData(){
-  try{
-    localStorage.setItem(STORAGE_TASKS,JSON.stringify(tasks));
-    localStorage.setItem(STORAGE_INITIATIVES,JSON.stringify(initiatives));
-    localStorage.setItem(STORAGE_CAPACITY,dailyCapacity);
-    showToast('✓ Guardado');
-  }catch(e){console.warn('Error guardando:',e);}
-}
-
-function loadData(){
-  try{
-    const t=localStorage.getItem(STORAGE_TASKS);
-    const i=localStorage.getItem(STORAGE_INITIATIVES);
-    const c=localStorage.getItem(STORAGE_CAPACITY);
-    if(t){const parsed=JSON.parse(t);if(parsed&&parsed.length)tasks=parsed;}
-    if(i){const parsed=JSON.parse(i);if(parsed&&parsed.length)initiatives=parsed;}
-    if(c){dailyCapacity=parseInt(c);const el=document.getElementById('daily-capacity');if(el)el.value=dailyCapacity;}
-  }catch(e){console.warn('Error cargando:',e);}
-}
-
-function showToast(msg,duration=1800){
+// ===================== TOAST =====================
+function showToast(msg,duration=2000){
   const existing=document.getElementById('bdflow-toast');
   if(existing)existing.remove();
   const t=document.createElement('div');
   t.id='bdflow-toast';
-  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#185fa5;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:opacity .4s';
+  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#185fa5;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.25);opacity:1;transition:opacity .4s';
   t.textContent=msg;
   document.body.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),400);},duration);
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>{if(t.parentNode)t.remove();},400);},duration);
 }
 
-// Auto-save wrapper — intercept mutating operations
-const _origSaveNewTask=saveNewTask;
-saveNewTask=function(){_origSaveNewTask();saveData();};
-const _origSaveNewIni=saveNewInitiative;
-saveNewInitiative=function(){_origSaveNewIni();saveData();};
-const _origDeleteTask=deleteTask;
-deleteTask=function(id){_origDeleteTask(id);saveData();};
-const _origUpdateTaskField=updateTaskField;
-updateTaskField=function(id,field,val){_origUpdateTaskField(id,field,val);saveData();};
-const _origUpdateCapacity=updateCapacity;
-updateCapacity=function(){_origUpdateCapacity();saveData();};
+// ===================== LOCALSTORAGE =====================
+const SK_T='bdflow_tasks_v1';
+const SK_I='bdflow_initiatives_v1';
+const SK_C='bdflow_capacity_v1';
 
-// ===================== PWA SERVICE WORKER =====================
+function saveData(){
+  try{
+    localStorage.setItem(SK_T,JSON.stringify(tasks));
+    localStorage.setItem(SK_I,JSON.stringify(initiatives));
+    localStorage.setItem(SK_C,String(dailyCapacity));
+  }catch(e){console.warn('saveData error:',e);}
+}
+
+function loadData(){
+  try{
+    const t=localStorage.getItem(SK_T);
+    const i=localStorage.getItem(SK_I);
+    const c=localStorage.getItem(SK_C);
+    if(t){const p=JSON.parse(t);if(Array.isArray(p)&&p.length>0)tasks=p;}
+    if(i){const p=JSON.parse(i);if(Array.isArray(p)&&p.length>0)initiatives=p;}
+    if(c){dailyCapacity=parseInt(c)||6;const el=document.getElementById('daily-capacity');if(el)el.value=dailyCapacity;}
+  }catch(e){console.warn('loadData error:',e);}
+}
+
+// Patch save into mutating functions directly
+const _orig_saveNewTask=saveNewTask;
+saveNewTask=function(){_orig_saveNewTask();saveData();showToast('Tarea guardada ✓');};
+
+const _orig_saveNewInitiative=saveNewInitiative;
+saveNewInitiative=function(){_orig_saveNewInitiative();saveData();showToast('Iniciativa guardada ✓');};
+
+const _orig_deleteTask=deleteTask;
+deleteTask=function(id){_orig_deleteTask(id);saveData();};
+
+const _orig_updateTaskField=updateTaskField;
+updateTaskField=function(id,field,val){_orig_updateTaskField(id,field,val);saveData();};
+
+const _orig_updateCapacity=updateCapacity;
+updateCapacity=function(){_orig_updateCapacity();saveData();};
+
+// ===================== PWA =====================
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/sw.js')
-    .then(()=>console.log('BDFlow SW registrado'))
-    .catch(e=>console.warn('SW no disponible:',e));
+    .then(()=>console.log('SW ok'))
+    .catch(()=>{});
+}
+
+// ===================== DEMO DATA =====================
+const DEFAULT_INITIATIVES=[
+  {id:'i1',name:'Expansión Partner DACH',type:'Partner',area:'Partners',otherAreas:['Ventas','Marketing'],objective:'Certificar 3 nuevos partners en DACH en Q2',value:240000,importance:'Alta',startDate:'2025-01-15',targetDate:'2025-06-30',status:'En curso'},
+  {id:'i2',name:'Deal Bankinter HR Suite',type:'Oportunidad',area:'Ventas',otherAreas:['Preventa','Producto'],objective:'Cerrar contrato marco HR para 3.500 empleados',value:480000,importance:'Alta',startDate:'2025-02-01',targetDate:'2025-07-15',status:'En curso'},
+  {id:'i3',name:'Go-to-Market RRHH 2025',type:'Iniciativa Estratégica',area:'Marketing',otherAreas:['Ventas','Producto','Dirección'],objective:'Posicionar Cegid como líder HR en mid-market ibérico',value:0,importance:'Alta',startDate:'2025-01-01',targetDate:'2025-12-31',status:'En curso'},
+  {id:'i4',name:'Integración Sage Payroll',type:'Producto',area:'Producto',otherAreas:['Partners','Preventa'],objective:'Certificar integración bidireccional con Sage Payroll',value:0,importance:'Media',startDate:'2025-03-01',targetDate:'2025-09-30',status:'En curso'},
+  {id:'i5',name:'Onboarding Mutua Madrileña',type:'Cliente',area:'Ventas',otherAreas:['Operaciones','Producto'],objective:'Activación exitosa módulo Talent Management',value:0,importance:'Alta',startDate:'2025-04-01',targetDate:'2025-06-15',status:'En curso'},
+];
+const DEFAULT_TASKS=[
+  {id:'t1',title:'Preparar propuesta técnica Bankinter',desc:'RFP customizada con módulos HR + Payroll',initiativeId:'i2',category:'Propuesta',area:'Preventa',stakeholder:'Marta Ruiz (CIO)',startDate:'2025-04-07',dueDate:'2025-04-14',status:'En curso',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:8,timeSpent:3,progress:40,deps:'Validación arquitectura con Producto',nextAction:'Completar sección integración Payroll',execVisibility:true},
+  {id:'t2',title:'Reunión kick-off partner Computacenter',desc:'Definir roadmap certificación y pipeline Q2',initiativeId:'i1',category:'Reunión',area:'Partners',stakeholder:'Klaus Müller',startDate:'2025-04-10',dueDate:'2025-04-11',status:'Pendiente',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:2,timeSpent:0,progress:0,deps:'',nextAction:'Confirmar asistencia y enviar agenda',execVisibility:false},
+  {id:'t3',title:'Escalado bloqueante integración SAGE',desc:'Conector API con timeout en batch mayor 500 registros',initiativeId:'i4',category:'Bloqueo',area:'Producto',stakeholder:'Dev Team (Backend)',startDate:'2025-04-03',dueDate:'2025-04-17',status:'Bloqueada',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:0,timeSpent:2,progress:0,deps:'Respuesta equipo producto',nextAction:'Reunión urgente con CTO para desbloquear',execVisibility:true},
+  {id:'t4',title:'Análisis gap funcional HR Mid-Market',desc:'Benchmark capacidades vs SAP SuccessFactors y Workday',initiativeId:'i3',category:'Análisis',area:'Marketing',stakeholder:'Ana Gómez (PMM)',startDate:'2025-04-08',dueDate:'2025-04-22',status:'En curso',priority:'Media',criticality:'Media',businessImpact:'Medio',effort:12,timeSpent:4,progress:35,deps:'',nextAction:'Finalizar matriz comparativa competencia',execVisibility:false},
+  {id:'t5',title:'Follow-up activación módulo Talent Mutua',desc:'Verificar avance onboarding semana 2',initiativeId:'i5',category:'Seguimiento',area:'Operaciones',stakeholder:'Laura Sánchez (IT Manager)',startDate:'2025-04-09',dueDate:'2025-04-11',status:'En espera de terceros',priority:'Media',criticality:'Alta',businessImpact:'Alto',effort:1,timeSpent:0.5,progress:50,deps:'Confirmación SSO configurado por IT Mutua',nextAction:'Llamar a Laura si no hay respuesta en 24h',execVisibility:false},
+  {id:'t6',title:'Presentación QBR Dirección Q1',desc:'Resumen actividad BD, pipeline generado, próximas iniciativas',initiativeId:'i3',category:'Presentación',area:'Dirección',stakeholder:'Carlos Prieto (VP Sales)',startDate:'2025-04-01',dueDate:'2025-04-08',status:'En curso',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:5,timeSpent:4,progress:80,deps:'',nextAction:'Incorporar datos pipeline actualizados y enviar draft',execVisibility:true},
+  {id:'t7',title:'Coordinar traducción collateral DACH',desc:'Adaptar one-pager y case studies al mercado alemán',initiativeId:'i1',category:'Coordinación',area:'Marketing',stakeholder:'Sophie Weber (Marketing EMEA)',startDate:'2025-04-05',dueDate:'2025-04-25',status:'En espera de terceros',priority:'Baja',criticality:'Baja',businessImpact:'Medio',effort:3,timeSpent:0.5,progress:20,deps:'Aprobación copy por Legal',nextAction:'Seguimiento con Legal por validación trademark',execVisibility:false},
+  {id:'t8',title:'Demo técnica Bankinter módulo Analytics',desc:'Sesión con equipo técnico cliente - escenarios nómina',initiativeId:'i2',category:'Reunión',area:'Preventa',stakeholder:'Equipo Técnico Bankinter',startDate:'2025-04-15',dueDate:'2025-04-15',status:'Pendiente',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:3,timeSpent:0,progress:0,deps:'Entorno sandbox actualizado por Preventa',nextAction:'Confirmar disponibilidad sandbox y enviar invitación',execVisibility:true},
+  {id:'t9',title:'Informe mensual BD para CEO',desc:'Resumen ejecutivo iniciativas, KPIs, pipeline y riesgos',initiativeId:'i3',category:'Reporte',area:'Dirección',stakeholder:'Alejandro Torres (CEO)',startDate:'2025-04-28',dueDate:'2025-04-30',status:'Pendiente',priority:'Media',criticality:'Media',businessImpact:'Medio',effort:4,timeSpent:0,progress:0,deps:'',nextAction:'Preparar estructura y recopilar datos KPI',execVisibility:true},
+  {id:'t10',title:'Negociación contrato Partner Framework',desc:'Revisión términos comerciales y SLA con nuevo partner',initiativeId:'i1',category:'Ejecución',area:'Partners',stakeholder:'Legal + Klaus Müller',startDate:'2025-04-14',dueDate:'2025-04-28',status:'Pendiente',priority:'Alta',criticality:'Media',businessImpact:'Alto',effort:6,timeSpent:0,progress:0,deps:'Revisión Legal del borrador',nextAction:'Solicitar draft inicial a Legal',execVisibility:false},
+];
+
+function loadDemoData(){
+  if(!confirm('Cargar datos de ejemplo. Esto reemplazará los datos actuales. ¿Continuar?'))return;
+  tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
+  initiatives=JSON.parse(JSON.stringify(DEFAULT_INITIATIVES));
+  saveData();
+  renderCurrentView();
+  showToast('Datos de ejemplo cargados ✓');
+}
+
+function clearAllData(){
+  if(!confirm('Borrar TODOS los datos. Esta acción no se puede deshacer. ¿Continuar?'))return;
+  tasks=[];
+  initiatives=[];
+  saveData();
+  renderCurrentView();
+  showToast('Datos borrados');
 }
 
 // ===================== INIT =====================
 loadData();
 renderCurrentView();
-setTimeout(()=>showToast('BDFlow listo ✓'),500);
+setTimeout(()=>showToast('BDFlow listo ✓'),600);
 </script>
 </body>
 </html>
