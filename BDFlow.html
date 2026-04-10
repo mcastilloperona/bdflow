@@ -272,7 +272,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 var SB_URL='https://jljaejkmbnfnhcbjcjnm.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsamFlamttYm5mbmhjYmpjam5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTEyMDksImV4cCI6MjA5MTM4NzIwOX0.7Ey8qKDlDcvOQq77rqBeH9goGWI1whrL9WiefHOp3XI';
 var GEMINI_KEY='AIzaSyAk2h_tpyyDnVDXnOafUopQe564Zu3LSRk';
-var GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+GEMINI_KEY;
+var GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+GEMINI_KEY;
 
 // ===== SUPABASE =====
 function sbH(){return{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};}
@@ -341,21 +341,48 @@ function loadAll(){
   set('<div style="display:flex;align-items:center;justify-content:center;height:300px;flex-direction:column;gap:12px"><div style="width:36px;height:36px;border:3px solid var(--blue-l);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite"></div><div style="color:var(--text3);font-size:13px;font-weight:500">Cargando datos...</div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>');
   Promise.all([sbGet('tasks'),sbGet('initiatives'),sbGet('settings')]).then(function(res){
     var tR=res[0],iR=res[1],sR=res[2];
-    if(Array.isArray(tR))tasks=tR.map(function(r){return r.data;}).filter(Boolean);
-    if(Array.isArray(iR))initiatives=iR.map(function(r){return r.data;}).filter(Boolean);
-    if(Array.isArray(sR))sR.forEach(function(r){
-      if(r.key==='areas'&&Array.isArray(r.value)&&r.value.length){
-        var loaded=r.value;
-        if(loaded.length&&typeof loaded[0]==='string'){
-          AREAS=loaded.map(function(n,i){return{name:n,color:PALETTE[i%PALETTE.length]};});
-        } else {
-          AREAS=loaded.filter(function(a){return a&&a.name;});
+    console.log('Supabase tasks:', JSON.stringify(tR).substring(0,200));
+    console.log('Supabase initiatives:', JSON.stringify(iR).substring(0,200));
+    console.log('Supabase settings:', JSON.stringify(sR).substring(0,200));
+    if(Array.isArray(tR)&&tR.length>0){
+      var parsed=tR.map(function(r){return r.data;}).filter(Boolean);
+      if(parsed.length>0)tasks=parsed;
+    }
+    if(Array.isArray(iR)&&iR.length>0){
+      var parsed=iR.map(function(r){return r.data;}).filter(Boolean);
+      if(parsed.length>0)initiatives=parsed;
+    }
+    if(Array.isArray(sR)&&sR.length>0){
+      sR.forEach(function(r){
+        if(!r)return;
+        if(r.key==='areas'){
+          var loaded=Array.isArray(r.value)?r.value:[];
+          if(loaded.length>0){
+            if(typeof loaded[0]==='string'){
+              AREAS=loaded.map(function(n,i){return{name:n,color:PALETTE[i%PALETTE.length]};});
+            } else {
+              var valid=loaded.filter(function(a){return a&&typeof a==='object'&&a.name;});
+              if(valid.length>0)AREAS=valid;
+            }
+          }
         }
-      }
-      if(r.key==='capacity'){CAP=parseInt(r.value)||6;var el=document.getElementById('cap-input');if(el)el.value=CAP;}
-    });
-    setSS('ok');updateNotifBadge();redraw();
-  }).catch(function(e){console.error(e);setSS('err');redraw();});
+        if(r.key==='capacity'){
+          var cap=parseInt(r.value)||6;
+          CAP=cap;
+          var el=document.getElementById('cap-input');
+          if(el)el.value=CAP;
+        }
+      });
+    }
+    console.log('Loaded tasks:',tasks.length,'initiatives:',initiatives.length,'areas:',AREAS.length);
+    setSS('ok');
+    updateNotifBadge();
+    redraw();
+  }).catch(function(e){
+    console.error('loadAll error:',e);
+    setSS('err');
+    redraw();
+  });
 }
 
 function loadDemo(){
