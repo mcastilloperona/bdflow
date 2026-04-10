@@ -803,8 +803,11 @@ function analyzeWithAI(){
   callGemini(prompt).then(function(raw){
     btn.textContent='✨ Analizar con IA';btn.disabled=false;
     var clean=raw.replace(/```json/g,'').replace(/```/g,'').trim();
+    var jsonMatch=clean.match(/\{[\s\S]*\}/);
+    if(jsonMatch)clean=jsonMatch[0];
     var r;try{r=JSON.parse(clean);}catch(e){
-      showQCError('No se pudo interpretar la respuesta. Rellena el formulario manualmente.');return;
+      console.error('Gemini raw:',raw);
+      showQCError('No se pudo interpretar la respuesta de la IA. Inténtalo de nuevo con más detalle.');return;
     }
     var ini=r.iniciativaId?initiatives.filter(function(i){return i.id===r.iniciativaId;})[0]:null;
     var resHtml='<div class="ai-result-box" style="margin-bottom:14px">'+
