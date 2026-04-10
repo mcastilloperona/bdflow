@@ -24,848 +24,736 @@
   --coral:#993c1d;--coral-bg:#faece7;--coral-text:#4a1b0c;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;height:100vh;overflow:hidden;display:flex;flex-direction:column}
-.app{display:flex;flex-direction:column;height:100vh}
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;gap:8px;height:52px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.topbar-logo{font-weight:700;font-size:16px;color:var(--text);margin-right:12px}
-.topbar-logo span{color:var(--blue)}
-.nav-tabs{display:flex;gap:2px;flex:1}
-.nav-tab{padding:7px 13px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;border:none;background:none;white-space:nowrap;font-family:inherit}
-.nav-tab:hover{background:var(--bg3);color:var(--text)}
-.nav-tab.active{background:var(--blue-bg);color:var(--blue);font-weight:600}
-.topbar-actions{display:flex;gap:8px;margin-left:auto}
-.btn{padding:7px 13px;border-radius:7px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;font-weight:500}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;gap:8px;height:52px;flex-shrink:0}
+.logo{font-weight:700;font-size:16px;margin-right:12px}
+.logo span{color:var(--blue)}
+.navtabs{display:flex;gap:2px;flex:1}
+.ntab{padding:7px 13px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);border:none;background:none;white-space:nowrap;font-family:inherit}
+.ntab:hover{background:var(--bg3)}
+.ntab.on{background:var(--blue-bg);color:var(--blue);font-weight:600}
+.tactions{display:flex;gap:8px;margin-left:auto}
+.btn{padding:7px 13px;border-radius:7px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;font-weight:500}
 .btn:hover{background:var(--bg3)}
-.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn-primary:hover{background:#0d4d8a}
-.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
-.btn-danger:hover{background:#c03a39}
-.main-area{display:flex;flex:1;overflow:hidden}
-.sidebar{width:210px;background:var(--bg2);border-right:1px solid var(--border);padding:14px 8px;overflow-y:auto;flex-shrink:0}
+.btnp{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btnp:hover{background:#0d4d8a}
+.btnd{background:var(--red);color:#fff;border-color:var(--red)}
+.btnd:hover{background:#c03a39}
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:214px;background:var(--bg2);border-right:1px solid var(--border);padding:12px 8px;overflow-y:auto;flex-shrink:0}
 .content{flex:1;overflow-y:auto;padding:18px}
-.sidebar-section{margin-bottom:18px}
-.sidebar-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:0 8px 6px}
-.sidebar-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
-.sidebar-item:hover{background:var(--bg3);color:var(--text)}
-.sidebar-item.active{background:var(--blue-bg);color:var(--blue);font-weight:600}
-.sidebar-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.sidebar-count{margin-left:auto;font-size:11px;background:var(--bg3);border-radius:10px;padding:1px 7px;color:var(--text3);font-weight:600}
+.slabel{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:0 8px 6px;display:flex;align-items:center;justify-content:space-between}
+.slabel button{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text3);padding:0;line-height:1}
+.sitem{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.sitem:hover{background:var(--bg3)}
+.sitem.on{background:var(--blue-bg);color:var(--blue);font-weight:600}
+.sdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.scnt{margin-left:auto;font-size:11px;background:var(--bg3);border-radius:10px;padding:1px 7px;color:var(--text3);font-weight:600}
+.ssec{margin-bottom:16px}
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px}
-.card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px}
-.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.metric-card{background:var(--bg3);border-radius:10px;padding:14px 16px}
-.metric-label{font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.metric-value{font-size:24px;font-weight:700;color:var(--text);line-height:1.1}
-.metric-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.ctitle{font-size:13px;font-weight:700;margin-bottom:10px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.mcard{background:var(--bg3);border-radius:10px;padding:14px 16px}
+.mlbl{font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.mval{font-size:24px;font-weight:700;line-height:1.1}
+.msub{font-size:11px;color:var(--text3);margin-top:3px}
 .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap}
-.badge-red{background:var(--red-bg);color:var(--red-text)}
-.badge-amber{background:var(--amber-bg);color:var(--amber-text)}
-.badge-green{background:var(--green-bg);color:var(--green-text)}
-.badge-blue{background:var(--blue-bg);color:var(--blue-text)}
-.badge-purple{background:var(--purple-bg);color:var(--purple-text)}
-.badge-teal{background:var(--teal-bg);color:var(--teal-text)}
-.badge-coral{background:var(--coral-bg);color:var(--coral-text)}
-.badge-gray{background:var(--bg3);color:var(--text2)}
-.task-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin-bottom:6px;cursor:pointer;transition:all .15s}
-.task-row:hover{border-color:var(--border2);background:var(--bg3);transform:translateY(-1px)}
-.task-row.blocked{border-left:3px solid var(--red)}
-.task-row.waiting{border-left:3px solid var(--amber)}
-.task-title{font-size:13px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.task-meta{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.priority-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.prio-high{background:var(--red)}
-.prio-med{background:var(--amber)}
-.prio-low{background:var(--green)}
-.progress-bar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;width:64px}
-.progress-fill{height:100%;border-radius:3px;background:var(--blue)}
-.score-badge{background:var(--blue-bg);color:var(--blue-text);border-radius:5px;padding:3px 7px;font-size:11px;font-weight:700;min-width:32px;text-align:center}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.section-title{font-size:15px;font-weight:700;color:var(--text)}
+.br{background:var(--red-bg);color:var(--red-text)}
+.ba{background:var(--amber-bg);color:var(--amber-text)}
+.bg{background:var(--green-bg);color:var(--green-text)}
+.bb{background:var(--blue-bg);color:var(--blue-text)}
+.bp{background:var(--purple-bg);color:var(--purple-text)}
+.bt{background:var(--teal-bg);color:var(--teal-text)}
+.bc{background:var(--coral-bg);color:var(--coral-text)}
+.bx{background:var(--bg3);color:var(--text2)}
+.trow{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin-bottom:6px;cursor:pointer}
+.trow:hover{border-color:var(--border2);background:var(--bg3);transform:translateY(-1px)}
+.trow.blk{border-left:3px solid var(--red)}
+.trow.wait{border-left:3px solid var(--amber)}
+.ttitle{font-size:13px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.ph{background:var(--red)}.pm{background:var(--amber)}.pl{background:var(--green)}
+.pbar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;width:64px}
+.pfill{height:100%;border-radius:3px;background:var(--blue)}
+.sbadge{background:var(--blue-bg);color:var(--blue-text);border-radius:5px;padding:3px 7px;font-size:11px;font-weight:700;min-width:32px;text-align:center}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.stitle{font-size:15px;font-weight:700}
 .alert{padding:11px 14px;border-radius:8px;font-size:13px;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px;border:1px solid}
-.alert-icon{font-size:15px;flex-shrink:0;margin-top:1px}
-.alert-red{background:var(--red-bg);color:var(--red-text);border-color:var(--red)}
-.alert-amber{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber)}
-.alert-green{background:var(--green-bg);color:var(--green-text);border-color:var(--green)}
-.kanban-board{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;min-height:400px}
-.kanban-col{min-width:230px;flex:1;background:var(--bg3);border-radius:12px;padding:14px}
-.kanban-col-header{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.04em}
-.kanban-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:8px;cursor:pointer;transition:all .15s}
-.kanban-card:hover{border-color:var(--border2);transform:translateY(-1px)}
-.workload-container{margin-bottom:10px}
-.workload-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:5px}
-.workload-track{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
-.workload-fill{height:100%;border-radius:4px;transition:width .4s}
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center}
-.modal{background:var(--bg2);border-radius:14px;padding:22px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;border:1px solid var(--border2);box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-.modal-title{font-size:16px;font-weight:700}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.form-group{margin-bottom:12px}
-.form-label{font-size:12px;color:var(--text2);margin-bottom:5px;display:block;font-weight:600}
-.form-input{width:100%;padding:8px 11px;border-radius:7px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit}
-.form-input:focus{outline:none;border-color:var(--blue)}
-.form-select{width:100%;padding:8px 11px;border-radius:7px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit}
-.close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:4px;line-height:1}
-.initiative-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px}
-.initiative-progress-bar{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
-.initiative-progress-fill{height:100%;background:var(--blue);border-radius:3px}
-.report-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
-.bar-h{height:16px;background:var(--blue);border-radius:3px;display:inline-block}
-.week-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-.day-col{background:var(--bg3);border-radius:10px;padding:12px;border:1px solid var(--border)}
-.day-header{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-align:center}
-.day-task{background:var(--bg2);border-radius:6px;padding:6px 8px;margin-bottom:5px;font-size:11px;border-left:3px solid var(--blue);cursor:pointer}
-.day-task.alta{border-color:var(--red)}
-.day-task.media{border-color:var(--amber)}
+.alert-r{background:var(--red-bg);color:var(--red-text);border-color:var(--red)}
+.alert-a{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber)}
+.alert-g{background:var(--green-bg);color:var(--green-text);border-color:var(--green)}
+.kboard{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;min-height:400px}
+.kcol{min-width:230px;flex:1;background:var(--bg3);border-radius:12px;padding:14px}
+.khead{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.04em}
+.kcard{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:8px;cursor:pointer}
+.kcard:hover{border-color:var(--border2);transform:translateY(-1px)}
+.kctitle{font-size:12px;font-weight:600;margin-bottom:7px}
+.wtrack{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+.wfill{height:100%;border-radius:4px}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--bg2);border-radius:14px;padding:22px;width:620px;max-width:95vw;max-height:90vh;overflow-y:auto;border:1px solid var(--border2);box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.mhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.mtitle{font-size:16px;font-weight:700}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg{margin-bottom:12px}
+.flbl{font-size:12px;color:var(--text2);margin-bottom:5px;display:block;font-weight:600}
+.finput{width:100%;padding:8px 11px;border-radius:7px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit}
+.finput:focus{outline:none;border-color:var(--blue)}
+.fsel{width:100%;padding:8px 11px;border-radius:7px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit}
+.xbtn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:4px;line-height:1}
+.icard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.ipbar{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.ipfill{height:100%;background:var(--blue);border-radius:3px}
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.barh{height:16px;background:var(--blue);border-radius:3px;display:inline-block}
+.wgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.dcol{background:var(--bg3);border-radius:10px;padding:12px;border:1px solid var(--border)}
+.dhdr{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-align:center}
+.dtask{background:var(--bg2);border-radius:6px;padding:6px 8px;margin-bottom:5px;font-size:11px;border-left:3px solid var(--blue);cursor:pointer}
+.dtask.alta{border-color:var(--red)}.dtask.media{border-color:var(--amber)}
 ::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 .hidden{display:none!important}
+.hint{border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;line-height:1.6}
+.hint-b{background:var(--blue-bg);color:var(--blue-text)}
+.hint-g{background:var(--green-bg);color:var(--green-text)}
 </style>
 </head>
 <body>
-<div class="app">
+<div style="display:flex;flex-direction:column;height:100vh">
 <div class="topbar">
-  <div class="topbar-logo">BD<span>Flow</span></div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showView('dashboard')">📊 Dashboard</button>
-    <button class="nav-tab" onclick="showView('daily')">☀️ Hoy</button>
-    <button class="nav-tab" onclick="showView('weekly')">📅 Semana</button>
-    <button class="nav-tab" onclick="showView('initiatives')">🎯 Iniciativas</button>
-    <button class="nav-tab" onclick="showView('kanban')">🗂 Kanban</button>
-    <button class="nav-tab" onclick="showView('report')">📈 Reporting</button>
+  <div class="logo">BD<span>Flow</span></div>
+  <div class="navtabs" id="navtabs">
+    <button class="ntab on" onclick="showView('dashboard')">📊 Dashboard</button>
+    <button class="ntab" onclick="showView('daily')">☀️ Hoy</button>
+    <button class="ntab" onclick="showView('weekly')">📅 Semana</button>
+    <button class="ntab" onclick="showView('initiatives')">🎯 Iniciativas</button>
+    <button class="ntab" onclick="showView('kanban')">🗂 Kanban</button>
+    <button class="ntab" onclick="showView('report')">📈 Reporting</button>
   </div>
-  <div class="topbar-actions">
-    <button class="btn" onclick="openModal('task')">+ Tarea</button>
-    <button class="btn btn-primary" onclick="openModal('initiative')">+ Iniciativa</button>
+  <div class="tactions">
+    <button class="btn" onclick="showTaskModal()">+ Tarea</button>
+    <button class="btn btnp" onclick="showIniModal()">+ Iniciativa</button>
   </div>
 </div>
-<div class="main-area">
-<div class="sidebar">
-  <div class="sidebar-section">
-    <div id="areas-sidebar-section"><!-- rendered by renderSidebar() --></div>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-label">Por estado</div>
-    <button class="sidebar-item" onclick="filterStatus('Bloqueada',this)"><span class="sidebar-dot" style="background:var(--red)"></span>Bloqueadas<span class="sidebar-count" id="count-Bloqueada">0</span></button>
-    <button class="sidebar-item" onclick="filterStatus('En espera de terceros',this)"><span class="sidebar-dot" style="background:var(--amber)"></span>En espera<span class="sidebar-count" id="count-Espera">0</span></button>
-    <button class="sidebar-item" onclick="filterStatus('Finalizada',this)"><span class="sidebar-dot" style="background:var(--green)"></span>Finalizadas<span class="sidebar-count" id="count-Finalizada">0</span></button>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-label">Configuración</div>
-    <div style="padding:6px 8px;font-size:12px;color:var(--text2);font-weight:600">Capacidad diaria</div>
-    <div style="display:flex;align-items:center;gap:8px;padding:0 8px 10px">
-      <input type="number" id="daily-capacity" value="6" min="1" max="12" style="width:55px;padding:5px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px" onchange="setCapacity(this.value)">
-      <span style="font-size:12px;color:var(--text3)">h/día</span>
+<div class="main">
+  <div class="sidebar">
+    <div class="ssec" id="areas-section"></div>
+    <div class="ssec">
+      <div class="slabel"><span>Por estado</span></div>
+      <button class="sitem" onclick="fStatus('Bloqueada',this)"><span class="sdot" style="background:var(--red)"></span>Bloqueadas<span class="scnt" id="cnt-Bloqueada">0</span></button>
+      <button class="sitem" onclick="fStatus('En espera de terceros',this)"><span class="sdot" style="background:var(--amber)"></span>En espera<span class="scnt" id="cnt-Espera">0</span></button>
+      <button class="sitem" onclick="fStatus('Finalizada',this)"><span class="sdot" style="background:var(--green)"></span>Finalizadas<span class="scnt" id="cnt-Finalizada">0</span></button>
     </div>
-    <div style="padding:0 8px 6px">
-      <button class="btn" style="width:100%;font-size:11px;padding:6px 8px" onclick="loadDemoData()">📂 Cargar datos demo</button>
-    </div>
-    <div style="padding:0 8px 8px">
-      <button class="btn btn-danger" style="width:100%;font-size:11px;padding:6px 8px" onclick="clearAllData()">🗑 Borrar todo</button>
+    <div class="ssec">
+      <div class="slabel"><span>Configuración</span></div>
+      <div style="padding:4px 8px 8px">
+        <div style="font-size:12px;color:var(--text2);font-weight:600;margin-bottom:6px">Capacidad diaria</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <input type="number" id="cap-input" value="6" min="1" max="16" style="width:55px;padding:5px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px" onchange="setCap(this.value)">
+          <span style="font-size:12px;color:var(--text3)">h/día</span>
+        </div>
+        <button class="btn" style="width:100%;margin-bottom:6px;font-size:11px" onclick="loadDemo()">📂 Cargar datos demo</button>
+        <button class="btn btnd" style="width:100%;font-size:11px" onclick="clearAll()">🗑 Borrar todo</button>
+      </div>
     </div>
   </div>
+  <div class="content" id="content"></div>
 </div>
-<div class="content" id="main-content"></div>
 </div>
-</div>
-<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()">
-  <div class="modal" onclick="event.stopPropagation()" id="modal-body"></div>
+<div class="overlay hidden" id="overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()" id="modal"></div>
 </div>
 <script>
-// ===================== STATE =====================
-var dailyCapacity = 6;
-var activeAreaFilter = 'all';
-var activeStatusFilter = null;
-var currentView = 'dashboard';
+// ===== STATE =====
+var CAP = 6;
+var areaFilter = 'all';
+var statusFilter = null;
+var view = 'dashboard';
 
-var AREAS = ['Ventas','Preventa','Producto','Marketing','Partners','Dirección','Operaciones']; // loaded from storage on init
-var TASK_CATEGORIES = ['Reunión','Seguimiento','Análisis','Coordinación','Propuesta','Presentación','Reporte','Escalado','Ejecución','Bloqueo'];
-var TASK_STATUSES = ['Pendiente','En curso','Bloqueada','En espera de terceros','Finalizada'];
-var INITIATIVE_TYPES = ['Oportunidad','Partner','Cliente','Iniciativa Estratégica','Soporte Interno','Marketing','Producto','Dirección'];
+var AREA_PALETTE = ['#3b6d11','#ba7517','#534ab7','#993c1d','#0f6e56','#e24b4a','#8a8a84','#185fa5','#9c3d8f','#c07a00','#0e7490','#b45309'];
+var DEFAULT_AREAS = ['Ventas','Preventa','Producto','Marketing','Partners','Dirección','Operaciones'];
+var AREAS = DEFAULT_AREAS.slice();
 
-var DEMO_INITIATIVES = [
+var CAT = ['Reunión','Seguimiento','Análisis','Coordinación','Propuesta','Presentación','Reporte','Escalado','Ejecución','Bloqueo'];
+var STATUSES = ['Pendiente','En curso','Bloqueada','En espera de terceros','Finalizada'];
+var INI_TYPES = ['Oportunidad','Partner','Cliente','Iniciativa Estratégica','Soporte Interno','Marketing','Producto','Dirección'];
+
+var tasks = [];
+var initiatives = [];
+
+// ===== DEMO DATA =====
+var DEMO_INI = [
   {id:'i1',name:'Expansión Partner DACH',type:'Partner',area:'Partners',otherAreas:['Ventas','Marketing'],objective:'Certificar 3 nuevos partners en DACH en Q2',value:240000,importance:'Alta',startDate:'2025-01-15',targetDate:'2025-06-30',status:'En curso'},
   {id:'i2',name:'Deal Bankinter HR Suite',type:'Oportunidad',area:'Ventas',otherAreas:['Preventa','Producto'],objective:'Cerrar contrato marco HR para 3.500 empleados',value:480000,importance:'Alta',startDate:'2025-02-01',targetDate:'2025-07-15',status:'En curso'},
   {id:'i3',name:'Go-to-Market RRHH 2025',type:'Iniciativa Estratégica',area:'Marketing',otherAreas:['Ventas','Producto','Dirección'],objective:'Posicionar Cegid como líder HR en mid-market ibérico',value:0,importance:'Alta',startDate:'2025-01-01',targetDate:'2025-12-31',status:'En curso'},
   {id:'i4',name:'Integración Sage Payroll',type:'Producto',area:'Producto',otherAreas:['Partners','Preventa'],objective:'Certificar integración bidireccional con Sage Payroll',value:0,importance:'Media',startDate:'2025-03-01',targetDate:'2025-09-30',status:'En curso'},
   {id:'i5',name:'Onboarding Mutua Madrileña',type:'Cliente',area:'Ventas',otherAreas:['Operaciones','Producto'],objective:'Activación exitosa módulo Talent Management',value:0,importance:'Alta',startDate:'2025-04-01',targetDate:'2025-06-15',status:'En curso'}
 ];
-
 var DEMO_TASKS = [
-  {id:'t1',title:'Preparar propuesta técnica Bankinter',desc:'RFP customizada con módulos HR + Payroll',initiativeId:'i2',category:'Propuesta',area:'Preventa',stakeholder:'Marta Ruiz (CIO)',startDate:'2025-04-07',dueDate:'2025-04-14',status:'En curso',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:8,timeSpent:3,progress:40,deps:'Validación arquitectura con Producto',nextAction:'Completar sección integración Payroll',execVisibility:true},
-  {id:'t2',title:'Reunión kick-off partner Computacenter',desc:'Definir roadmap certificación y pipeline Q2',initiativeId:'i1',category:'Reunión',area:'Partners',stakeholder:'Klaus Müller',startDate:'2025-04-10',dueDate:'2025-04-11',status:'Pendiente',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:2,timeSpent:0,progress:0,deps:'',nextAction:'Confirmar asistencia y enviar agenda',execVisibility:false},
-  {id:'t3',title:'Escalado bloqueante integración SAGE',desc:'Conector API con timeout en batch mayor 500 registros',initiativeId:'i4',category:'Bloqueo',area:'Producto',stakeholder:'Dev Team (Backend)',startDate:'2025-04-03',dueDate:'2025-04-17',status:'Bloqueada',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:0,timeSpent:2,progress:0,deps:'Respuesta equipo producto',nextAction:'Reunión urgente con CTO para desbloquear',execVisibility:true},
-  {id:'t4',title:'Análisis gap funcional HR Mid-Market',desc:'Benchmark capacidades vs SAP SuccessFactors y Workday',initiativeId:'i3',category:'Análisis',area:'Marketing',stakeholder:'Ana Gómez (PMM)',startDate:'2025-04-08',dueDate:'2025-04-22',status:'En curso',priority:'Media',criticality:'Media',businessImpact:'Medio',effort:12,timeSpent:4,progress:35,deps:'',nextAction:'Finalizar matriz comparativa competencia',execVisibility:false},
-  {id:'t5',title:'Follow-up activación módulo Talent Mutua',desc:'Verificar avance onboarding semana 2',initiativeId:'i5',category:'Seguimiento',area:'Operaciones',stakeholder:'Laura Sánchez (IT Manager)',startDate:'2025-04-09',dueDate:'2025-04-11',status:'En espera de terceros',priority:'Media',criticality:'Alta',businessImpact:'Alto',effort:1,timeSpent:0.5,progress:50,deps:'Confirmación SSO configurado por IT Mutua',nextAction:'Llamar a Laura si no hay respuesta en 24h',execVisibility:false},
-  {id:'t6',title:'Presentación QBR Dirección Q1',desc:'Resumen actividad BD, pipeline generado, próximas iniciativas',initiativeId:'i3',category:'Presentación',area:'Dirección',stakeholder:'Carlos Prieto (VP Sales)',startDate:'2025-04-01',dueDate:'2025-04-08',status:'En curso',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:5,timeSpent:4,progress:80,deps:'',nextAction:'Incorporar datos pipeline actualizados y enviar draft',execVisibility:true},
-  {id:'t7',title:'Coordinar traducción collateral DACH',desc:'Adaptar one-pager y case studies al mercado alemán',initiativeId:'i1',category:'Coordinación',area:'Marketing',stakeholder:'Sophie Weber (Marketing EMEA)',startDate:'2025-04-05',dueDate:'2025-04-25',status:'En espera de terceros',priority:'Baja',criticality:'Baja',businessImpact:'Medio',effort:3,timeSpent:0.5,progress:20,deps:'Aprobación copy por Legal',nextAction:'Seguimiento con Legal por validación trademark',execVisibility:false},
-  {id:'t8',title:'Demo técnica Bankinter módulo Analytics',desc:'Sesión con equipo técnico cliente - escenarios nómina',initiativeId:'i2',category:'Reunión',area:'Preventa',stakeholder:'Equipo Técnico Bankinter',startDate:'2025-04-15',dueDate:'2025-04-15',status:'Pendiente',priority:'Alta',criticality:'Alta',businessImpact:'Alto',effort:3,timeSpent:0,progress:0,deps:'Entorno sandbox actualizado por Preventa',nextAction:'Confirmar disponibilidad sandbox y enviar invitación',execVisibility:true},
-  {id:'t9',title:'Informe mensual BD para CEO',desc:'Resumen ejecutivo iniciativas, KPIs, pipeline y riesgos',initiativeId:'i3',category:'Reporte',area:'Dirección',stakeholder:'Alejandro Torres (CEO)',startDate:'2025-04-28',dueDate:'2025-04-30',status:'Pendiente',priority:'Media',criticality:'Media',businessImpact:'Medio',effort:4,timeSpent:0,progress:0,deps:'',nextAction:'Preparar estructura y recopilar datos KPI',execVisibility:true},
-  {id:'t10',title:'Negociación contrato Partner Framework',desc:'Revisión términos comerciales y SLA con nuevo partner',initiativeId:'i1',category:'Ejecución',area:'Partners',stakeholder:'Legal + Klaus Müller',startDate:'2025-04-14',dueDate:'2025-04-28',status:'Pendiente',priority:'Alta',criticality:'Media',businessImpact:'Alto',effort:6,timeSpent:0,progress:0,deps:'Revisión Legal del borrador',nextAction:'Solicitar draft inicial a Legal',execVisibility:false}
+  {id:'t1',title:'Preparar propuesta técnica Bankinter',desc:'RFP customizada con módulos HR + Payroll',iid:'i2',cat:'Propuesta',area:'Preventa',sh:'Marta Ruiz (CIO)',sd:'2025-04-07',dd:'2025-04-14',status:'En curso',prio:'Alta',crit:'Alta',impact:'Alto',effort:8,spent:3,prog:40,deps:'Validación arquitectura con Producto',next:'Completar sección integración Payroll',exec:true},
+  {id:'t2',title:'Reunión kick-off partner Computacenter',desc:'Definir roadmap certificación Q2',iid:'i1',cat:'Reunión',area:'Partners',sh:'Klaus Müller',sd:'2025-04-10',dd:'2025-04-11',status:'Pendiente',prio:'Alta',crit:'Alta',impact:'Alto',effort:2,spent:0,prog:0,deps:'',next:'Confirmar asistencia y enviar agenda',exec:false},
+  {id:'t3',title:'Escalado bloqueante integración SAGE',desc:'Conector API con timeout en batch >500 registros',iid:'i4',cat:'Bloqueo',area:'Producto',sh:'Dev Team (Backend)',sd:'2025-04-03',dd:'2025-04-17',status:'Bloqueada',prio:'Alta',crit:'Alta',impact:'Alto',effort:0,spent:2,prog:0,deps:'Respuesta equipo producto',next:'Reunión urgente con CTO para desbloquear',exec:true},
+  {id:'t4',title:'Análisis gap funcional HR Mid-Market',desc:'Benchmark vs SAP SuccessFactors y Workday',iid:'i3',cat:'Análisis',area:'Marketing',sh:'Ana Gómez (PMM)',sd:'2025-04-08',dd:'2025-04-22',status:'En curso',prio:'Media',crit:'Media',impact:'Medio',effort:12,spent:4,prog:35,deps:'',next:'Finalizar matriz comparativa competencia',exec:false},
+  {id:'t5',title:'Follow-up activación módulo Talent Mutua',desc:'Verificar avance onboarding semana 2',iid:'i5',cat:'Seguimiento',area:'Operaciones',sh:'Laura Sánchez (IT Manager)',sd:'2025-04-09',dd:'2025-04-11',status:'En espera de terceros',prio:'Media',crit:'Alta',impact:'Alto',effort:1,spent:0.5,prog:50,deps:'Confirmación SSO configurado por IT Mutua',next:'Llamar a Laura si no hay respuesta en 24h',exec:false},
+  {id:'t6',title:'Presentación QBR Dirección Q1',desc:'Resumen actividad BD, pipeline, próximas iniciativas',iid:'i3',cat:'Presentación',area:'Dirección',sh:'Carlos Prieto (VP Sales)',sd:'2025-04-01',dd:'2025-04-08',status:'En curso',prio:'Alta',crit:'Alta',impact:'Alto',effort:5,spent:4,prog:80,deps:'',next:'Incorporar datos pipeline y enviar draft',exec:true},
+  {id:'t7',title:'Coordinar traducción collateral DACH',desc:'Adaptar one-pager y case studies al mercado alemán',iid:'i1',cat:'Coordinación',area:'Marketing',sh:'Sophie Weber (Marketing EMEA)',sd:'2025-04-05',dd:'2025-04-25',status:'En espera de terceros',prio:'Baja',crit:'Baja',impact:'Medio',effort:3,spent:0.5,prog:20,deps:'Aprobación copy por Legal',next:'Seguimiento con Legal por validación trademark',exec:false},
+  {id:'t8',title:'Demo técnica Bankinter módulo Analytics',desc:'Sesión con equipo técnico cliente - escenarios nómina',iid:'i2',cat:'Reunión',area:'Preventa',sh:'Equipo Técnico Bankinter',sd:'2025-04-15',dd:'2025-04-15',status:'Pendiente',prio:'Alta',crit:'Alta',impact:'Alto',effort:3,spent:0,prog:0,deps:'Entorno sandbox actualizado por Preventa',next:'Confirmar sandbox y enviar invitación',exec:true},
+  {id:'t9',title:'Informe mensual BD para CEO',desc:'Resumen ejecutivo iniciativas, KPIs, pipeline y riesgos',iid:'i3',cat:'Reporte',area:'Dirección',sh:'Alejandro Torres (CEO)',sd:'2025-04-28',dd:'2025-04-30',status:'Pendiente',prio:'Media',crit:'Media',impact:'Medio',effort:4,spent:0,prog:0,deps:'',next:'Preparar estructura y recopilar datos KPI',exec:true},
+  {id:'t10',title:'Negociación contrato Partner Framework',desc:'Revisión términos comerciales y SLA con nuevo partner',iid:'i1',cat:'Ejecución',area:'Partners',sh:'Legal + Klaus Müller',sd:'2025-04-14',dd:'2025-04-28',status:'Pendiente',prio:'Alta',crit:'Media',impact:'Alto',effort:6,spent:0,prog:0,deps:'Revisión Legal del borrador',next:'Solicitar draft inicial a Legal',exec:false}
 ];
 
-// ===================== STORAGE =====================
+// ===== STORAGE =====
 function save() {
   try {
-    localStorage.setItem('bdflow_tasks', JSON.stringify(tasks));
-    localStorage.setItem('bdflow_initiatives', JSON.stringify(initiatives));
-    localStorage.setItem('bdflow_capacity', String(dailyCapacity));
-    localStorage.setItem('bdflow_areas', JSON.stringify(AREAS));
-  } catch(e) { console.warn('save error', e); }
+    localStorage.setItem('bdflow_t', JSON.stringify(tasks));
+    localStorage.setItem('bdflow_i', JSON.stringify(initiatives));
+    localStorage.setItem('bdflow_c', String(CAP));
+    localStorage.setItem('bdflow_a', JSON.stringify(AREAS));
+  } catch(e) {}
 }
-
-function loadFromStorage() {
+function load() {
   try {
-    var t = localStorage.getItem('bdflow_tasks');
-    var i = localStorage.getItem('bdflow_initiatives');
-    var c = localStorage.getItem('bdflow_capacity');
-    var a = localStorage.getItem('bdflow_areas');
-    if (t) { var pt = JSON.parse(t); if (Array.isArray(pt) && pt.length) tasks = pt; }
-    if (i) { var pi = JSON.parse(i); if (Array.isArray(pi) && pi.length) initiatives = pi; }
-    if (c) { dailyCapacity = parseInt(c) || 6; }
-    if (a) { var pa = JSON.parse(a); if (Array.isArray(pa) && pa.length) AREAS = pa; }
-  } catch(e) { console.warn('load error', e); }
+    var t=localStorage.getItem('bdflow_t'), i=localStorage.getItem('bdflow_i'), c=localStorage.getItem('bdflow_c'), a=localStorage.getItem('bdflow_a');
+    if(t){var p=JSON.parse(t);if(p&&p.length)tasks=p;}
+    if(i){var p=JSON.parse(i);if(p&&p.length)initiatives=p;}
+    if(c){CAP=parseInt(c)||6;}
+    if(a){var p=JSON.parse(a);if(p&&p.length)AREAS=p;}
+  } catch(e) {}
 }
-
-// ===================== AREAS MANAGEMENT =====================
-var AREA_COLORS = ['#3b6d11','#ba7517','#534ab7','#993c1d','#0f6e56','#e24b4a','#8a8a84','#185fa5','#9c3d8f','#c07a00'];
-
-function openAreasModal() {
-  var rows = AREAS.map(function(a, i) {
-    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)" id="area-row-'+i+'">' +
-      '<div style="width:12px;height:12px;border-radius:50%;background:'+areaColor(a)+';flex-shrink:0"></div>' +
-      '<span style="flex:1;font-size:13px" id="area-name-'+i+'">'+a+'</span>' +
-      '<button class="btn" style="padding:3px 8px;font-size:11px" onclick="editArea('+i+')">Editar</button>' +
-      '<button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteArea('+i+')">✕</button>' +
-      '</div>';
-  }).join('');
-
-  document.getElementById('modal-body').innerHTML =
-    '<div class="modal-header"><div class="modal-title">⚙️ Gestionar áreas</div><button class="close-btn" onclick="closeModal()">✕</button></div>' +
-    '<div style="font-size:12px;color:var(--text3);margin-bottom:14px;padding:10px;background:var(--bg3);border-radius:8px">Las áreas representan los equipos o departamentos que solicitan o están implicados en tus tareas.</div>' +
-    '<div id="areas-list">'+rows+'</div>' +
-    '<div style="display:flex;gap:8px;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">' +
-    '<input class="form-input" id="new-area-input" placeholder="Nueva área..." style="flex:1">' +
-    '<button class="btn btn-primary" onclick="addArea()">+ Añadir</button>' +
-    '</div>' +
-    '<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn" onclick="closeModal()">Cerrar</button></div>';
-  document.getElementById('modal-overlay').classList.remove('hidden');
+function loadDemo() {
+  if(!confirm('Cargar datos de ejemplo. ¿Continuar?'))return;
+  tasks=JSON.parse(JSON.stringify(DEMO_TASKS));
+  initiatives=JSON.parse(JSON.stringify(DEMO_INI));
+  save(); redraw(); toast('Datos demo cargados ✓');
 }
-
-function addArea() {
-  var input = document.getElementById('new-area-input');
-  var name = input.value.trim();
-  if (!name) return;
-  if (AREAS.indexOf(name) >= 0) { alert('Esa área ya existe'); return; }
-  AREAS.push(name);
-  save();
-  renderSidebar();
-  openAreasModal();
-  toast('Área "'+name+'" añadida ✓');
+function clearAll() {
+  if(!confirm('Borrar TODOS los datos. ¿Continuar?'))return;
+  tasks=[];initiatives=[];save();redraw();toast('Datos borrados');
 }
+function setCap(v){CAP=parseInt(v)||6;save();redraw();}
 
-function editArea(i) {
-  var current = AREAS[i];
-  var newName = prompt('Nuevo nombre para "'+current+'":', current);
-  if (!newName || !newName.trim() || newName.trim() === current) return;
-  newName = newName.trim();
-  if (AREAS.indexOf(newName) >= 0) { alert('Esa área ya existe'); return; }
-  // Update tasks and initiatives that use this area
-  tasks.forEach(function(t){ if(t.area===current) t.area=newName; });
-  initiatives.forEach(function(ini){
-    if(ini.area===current) ini.area=newName;
-    ini.otherAreas = ini.otherAreas.map(function(a){return a===current?newName:a;});
-  });
-  AREAS[i] = newName;
-  if (activeAreaFilter === current) activeAreaFilter = newName;
-  save();
-  renderSidebar();
-  openAreasModal();
-  toast('Área renombrada a "'+newName+'" ✓');
-}
-
-function deleteArea(i) {
-  var name = AREAS[i];
-  var inUse = tasks.filter(function(t){return t.area===name;}).length;
-  if (inUse > 0) {
-    if (!confirm('El área "'+name+'" tiene '+inUse+' tareas asignadas. ¿Eliminarla igualmente? Las tareas quedarán sin área.')) return;
-    tasks.forEach(function(t){ if(t.area===name) t.area=''; });
-  } else {
-    if (!confirm('¿Eliminar el área "'+name+'"?')) return;
-  }
-  AREAS.splice(i, 1);
-  if (activeAreaFilter === name) activeAreaFilter = 'all';
-  save();
-  renderSidebar();
-  openAreasModal();
-  toast('Área eliminada');
-}
-
-function renderSidebar() {
-  var section = document.querySelector('.sidebar-section');
-  if (!section) return;
-  var html = '<div class="sidebar-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:4px">' +
-    '<span>Por área</span>' +
-    '<button style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text3);padding:0" onclick="openAreasModal()" title="Gestionar áreas">⚙️</button>' +
-    '</div>' +
-    '<button class="sidebar-item'+(activeAreaFilter==='all'?' active':'')+'" id="filter-all" onclick="filterArea('all',this)"><span class="sidebar-dot" style="background:var(--blue)"></span>Todas<span class="sidebar-count" id="count-all">0</span></button>';
-  AREAS.forEach(function(a) {
-    html += '<button class="sidebar-item'+(activeAreaFilter===a?' active':'')+'" onclick="filterArea(''+a+'',this)"><span class="sidebar-dot" style="background:'+areaColor(a)+'"></span>'+a+'<span class="sidebar-count" id="count-'+a+'">0</span></button>';
-  });
-  section.innerHTML = html;
-  updateCounts();
-}
-
-function loadDemoData() {
-  if (!confirm('Se cargarán los datos de ejemplo. ¿Continuar?')) return;
-  tasks = JSON.parse(JSON.stringify(DEMO_TASKS));
-  initiatives = JSON.parse(JSON.stringify(DEMO_INITIATIVES));
-  save();
-  refresh();
-  toast('Datos de ejemplo cargados ✓');
-}
-
-function clearAllData() {
-  if (!confirm('Se borrarán TODOS los datos. ¿Continuar?')) return;
-  tasks = [];
-  initiatives = [];
-  save();
-  refresh();
-  toast('Datos borrados');
-}
-
-function setCapacity(val) {
-  dailyCapacity = parseInt(val) || 6;
-  save();
-  refresh();
-}
-
+// ===== TOAST =====
 function toast(msg) {
-  var el = document.getElementById('bdflow-toast');
-  if (el) el.remove();
-  var t = document.createElement('div');
-  t.id = 'bdflow-toast';
-  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#185fa5;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)';
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(function() { t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(function(){ if(t.parentNode)t.remove(); }, 400); }, 2000);
+  var old=document.getElementById('toast');if(old)old.remove();
+  var el=document.createElement('div');el.id='toast';
+  el.style.cssText='position:fixed;bottom:24px;right:24px;background:#185fa5;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+  el.textContent=msg;document.body.appendChild(el);
+  setTimeout(function(){el.style.transition='opacity .4s';el.style.opacity='0';setTimeout(function(){el.remove();},400);},2000);
 }
 
-// ===================== DATA =====================
-var tasks = [];
-var initiatives = [];
-
-// ===================== HELPERS =====================
-function calcScore(t) {
-  var imp = {Alto:3,Medio:2,Bajo:1};
-  var pri = {Alta:3,Media:2,Baja:1};
-  var today = new Date(); today.setHours(0,0,0,0);
-  var due = new Date(t.dueDate + 'T12:00:00'); due.setHours(0,0,0,0);
-  var dl = Math.ceil((due - today) / 86400000);
-  var urgency = dl <= 2 ? 3 : dl <= 7 ? 2 : 1;
-  var blocked = t.status === 'Bloqueada' ? 3 : t.status === 'En espera de terceros' ? 2 : 1;
-  var depRisk = (t.deps && t.deps.trim()) ? 2 : 1;
-  var visib = t.execVisibility ? 2 : 1;
-  var s = (imp[t.businessImpact]||1)*.30 + urgency*.20 + (pri[t.criticality]||1)*.20 + blocked*.15 + depRisk*.10 + visib*.05;
-  return Math.round(s * 100) / 100;
+// ===== HELPERS =====
+function score(t) {
+  var im={Alto:3,Medio:2,Bajo:1},pr={Alta:3,Media:2,Baja:1};
+  var td=new Date();td.setHours(0,0,0,0);
+  var dd=new Date(t.dd+'T12:00:00');dd.setHours(0,0,0,0);
+  var dl=Math.ceil((dd-td)/86400000);
+  var urg=dl<=2?3:dl<=7?2:1;
+  var blk=t.status==='Bloqueada'?3:t.status==='En espera de terceros'?2:1;
+  var dep=(t.deps&&t.deps.trim())?2:1;
+  var vis=t.exec?2:1;
+  return (im[t.impact]||1)*.30+urg*.20+(pr[t.crit]||1)*.20+blk*.15+dep*.10+vis*.05;
 }
-function scoreDisplay(t) { return Math.round(calcScore(t) * 100 / 3); }
-function sorted(list) { return list.slice().sort(function(a,b){ return calcScore(b)-calcScore(a); }); }
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-function todayDate() { var d = new Date(); d.setHours(0,0,0,0); return d; }
-function dDate(s) { var d = new Date(s+'T12:00:00'); d.setHours(0,0,0,0); return d; }
-function daysLeft(s) { return Math.ceil((dDate(s) - todayDate()) / 86400000); }
-function isOverdue(t) { return t.status !== 'Finalizada' && daysLeft(t.dueDate) < 0; }
-function isThisWeek(t) { var d = daysLeft(t.dueDate); return d >= 0 && d <= 7 && t.status !== 'Finalizada'; }
-function getIni(id) { for(var i=0;i<initiatives.length;i++){if(initiatives[i].id===id)return initiatives[i];} return {name:'Sin iniciativa',type:''}; }
-function fmtDate(s) { if(!s)return'—'; var d=new Date(s+'T12:00:00'); return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'}); }
-function areaColor(a) {
-  var defaults={Ventas:'#3b6d11',Preventa:'#ba7517',Producto:'#534ab7',Marketing:'#993c1d',Partners:'#0f6e56',Dirección:'#e24b4a',Operaciones:'#8a8a84'};
-  if (defaults[a]) return defaults[a];
-  var idx = AREAS.indexOf(a);
-  return AREA_COLORS[idx % AREA_COLORS.length] || '#185fa5';
-}
-function pbadge(p) { var c=p==='Alta'?'red':p==='Media'?'amber':'green'; return '<span class="badge badge-'+c+'">'+p+'</span>'; }
-function sbadge(s) { var m={Pendiente:'gray','En curso':'blue','Bloqueada':'red','En espera de terceros':'amber','Finalizada':'green'}; return '<span class="badge badge-'+(m[s]||'gray')+'">'+s+'</span>'; }
-function abadge(a) { var m={Ventas:'green',Preventa:'amber',Producto:'purple',Marketing:'coral',Partners:'teal',Dirección:'red',Operaciones:'gray'}; return '<span class="badge badge-'+(m[a]||'gray')+'">'+a+'</span>'; }
-function ibadge(i) { var c=i==='Alto'?'red':i==='Medio'?'amber':'green'; return '<span class="badge badge-'+c+'">'+i+'</span>'; }
-
-function getFiltered() {
-  var t = tasks.slice();
-  if (activeAreaFilter !== 'all') t = t.filter(function(x){ return x.area === activeAreaFilter; });
-  if (activeStatusFilter) t = t.filter(function(x){ return x.status === activeStatusFilter; });
+function scoreN(t){return Math.round(score(t)*100/3);}
+function srt(arr){return arr.slice().sort(function(a,b){return score(b)-score(a);});}
+function today(){var d=new Date();d.setHours(0,0,0,0);return d;}
+function dd(s){var d=new Date(s+'T12:00:00');d.setHours(0,0,0,0);return d;}
+function dl(s){return Math.ceil((dd(s)-today())/86400000);}
+function overdue(t){return t.status!=='Finalizada'&&dl(t.dd)<0;}
+function thisWeek(t){var d=dl(t.dd);return d>=0&&d<=7&&t.status!=='Finalizada';}
+function getIni(id){for(var i=0;i<initiatives.length;i++){if(initiatives[i].id===id)return initiatives[i];}return {name:'Sin iniciativa',type:''};}
+function fmt(s){if(!s)return'—';var d=new Date(s+'T12:00:00');return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'});}
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function aclr(a){var def={Ventas:'#3b6d11',Preventa:'#ba7517',Producto:'#534ab7',Marketing:'#993c1d',Partners:'#0f6e56',Dirección:'#e24b4a',Operaciones:'#8a8a84'};if(def[a])return def[a];var i=AREAS.indexOf(a);return AREA_PALETTE[i%AREA_PALETTE.length]||'#185fa5';}
+function filtered(){
+  var t=tasks.slice();
+  if(areaFilter!=='all')t=t.filter(function(x){return x.area===areaFilter;});
+  if(statusFilter)t=t.filter(function(x){return x.status===statusFilter;});
   return t;
 }
 
-function updateCounts() {
-  var el;
-  el = document.getElementById('count-all'); if(el) el.textContent = tasks.length;
-  AREAS.forEach(function(a){ var el=document.getElementById('count-'+a); if(el)el.textContent=tasks.filter(function(t){return t.area===a;}).length; });
-  el = document.getElementById('count-Bloqueada'); if(el) el.textContent = tasks.filter(function(t){return t.status==='Bloqueada';}).length;
-  el = document.getElementById('count-Espera'); if(el) el.textContent = tasks.filter(function(t){return t.status==='En espera de terceros';}).length;
-  el = document.getElementById('count-Finalizada'); if(el) el.textContent = tasks.filter(function(t){return t.status==='Finalizada';}).length;
-}
+// badge helpers
+function bdg(cls,txt){return '<span class="badge '+cls+'">'+txt+'</span>';}
+function pbdg(p){return bdg(p==='Alta'?'br':p==='Media'?'ba':'bg',p);}
+function sbdg(s){var m={Pendiente:'bx','En curso':'bb',Bloqueada:'br','En espera de terceros':'ba',Finalizada:'bg'};return bdg(m[s]||'bx',s);}
+function abdg(a){var m={Ventas:'bg',Preventa:'ba',Producto:'bp',Marketing:'bc',Partners:'bt',Dirección:'br',Operaciones:'bx'};return bdg(m[a]||'bx',a);}
+function ibdg(i){return bdg(i==='Alto'?'br':i==='Medio'?'ba':'bg',i);}
 
-function filterArea(area, el) {
-  activeAreaFilter = area; activeStatusFilter = null;
-  document.querySelectorAll('.sidebar-item').forEach(function(e){e.classList.remove('active');});
-  el.classList.add('active');
-  refresh();
-}
-function filterStatus(status, el) {
-  if (activeStatusFilter === status) { activeStatusFilter = null; el.classList.remove('active'); }
-  else { activeStatusFilter = status; document.querySelectorAll('.sidebar-item').forEach(function(e){e.classList.remove('active');}); el.classList.add('active'); }
-  refresh();
-}
-
-// ===================== VIEWS =====================
-function showView(v) {
-  currentView = v;
-  var views = ['dashboard','daily','weekly','initiatives','kanban','report'];
-  document.querySelectorAll('.nav-tab').forEach(function(t,i){ t.classList.toggle('active', views[i]===v); });
-  refresh();
-}
-
-function refresh() {
-  renderSidebar();
+// ===== SIDEBAR =====
+function renderSidebar() {
+  var html='<div class="slabel"><span>Por área</span><button onclick="showAreasModal()" title="Gestionar áreas">⚙️</button></div>';
+  html+='<button class="sitem'+(areaFilter==='all'?' on':'')+'" onclick="fArea(\'all\',this)"><span class="sdot" style="background:var(--blue)"></span>Todas<span class="scnt" id="cnt-all">0</span></button>';
+  AREAS.forEach(function(a){
+    html+='<button class="sitem'+(areaFilter===a?' on':'')+'" onclick="fArea(\''+a+'\',this)"><span class="sdot" style="background:'+aclr(a)+'"></span>'+a+'<span class="scnt" id="cnt-'+a+'">0</span></button>';
+  });
+  document.getElementById('areas-section').innerHTML=html;
   updateCounts();
-  var cap = document.getElementById('daily-capacity');
-  if (cap) cap.value = dailyCapacity;
-  if (currentView==='dashboard') renderDashboard();
-  else if (currentView==='daily') renderDaily();
-  else if (currentView==='weekly') renderWeekly();
-  else if (currentView==='initiatives') renderInitiatives();
-  else if (currentView==='kanban') renderKanban();
-  else if (currentView==='report') renderReport();
+}
+function updateCounts() {
+  function s(id,n){var e=document.getElementById(id);if(e)e.textContent=n;}
+  s('cnt-all',tasks.length);
+  AREAS.forEach(function(a){s('cnt-'+a,tasks.filter(function(t){return t.area===a;}).length);});
+  s('cnt-Bloqueada',tasks.filter(function(t){return t.status==='Bloqueada';}).length);
+  s('cnt-Espera',tasks.filter(function(t){return t.status==='En espera de terceros';}).length);
+  s('cnt-Finalizada',tasks.filter(function(t){return t.status==='Finalizada';}).length);
+}
+function fArea(a,el){
+  areaFilter=a;statusFilter=null;
+  document.querySelectorAll('.sitem').forEach(function(e){e.classList.remove('on');});
+  el.classList.add('on');
+  renderContent();
+}
+function fStatus(s,el){
+  if(statusFilter===s){statusFilter=null;el.classList.remove('on');}
+  else{statusFilter=s;document.querySelectorAll('.sitem').forEach(function(e){e.classList.remove('on');});el.classList.add('on');}
+  renderContent();
 }
 
-function set(html) { document.getElementById('main-content').innerHTML = html; }
+// ===== VIEWS =====
+function showView(v){
+  view=v;
+  var views=['dashboard','daily','weekly','initiatives','kanban','report'];
+  document.querySelectorAll('.ntab').forEach(function(t,i){t.classList.toggle('on',views[i]===v);});
+  renderContent();
+}
+function redraw(){renderSidebar();renderContent();var c=document.getElementById('cap-input');if(c)c.value=CAP;}
+function set(html){document.getElementById('content').innerHTML=html;}
+function renderContent(){
+  updateCounts();
+  if(view==='dashboard')vDashboard();
+  else if(view==='daily')vDaily();
+  else if(view==='weekly')vWeekly();
+  else if(view==='initiatives')vInitiatives();
+  else if(view==='kanban')vKanban();
+  else if(view==='report')vReport();
+}
 
-// ---------- DASHBOARD ----------
-function renderDashboard() {
-  var all = getFiltered();
-  var active = all.filter(function(t){return t.status!=='Finalizada';});
-  var overdue = all.filter(isOverdue);
-  var blocked = all.filter(function(t){return t.status==='Bloqueada';});
-  var thisWeek = all.filter(isThisWeek);
-  var hoursLeft = active.reduce(function(s,t){return s+Math.max(0,t.effort-t.timeSpent);},0);
-  var capWeek = dailyCapacity * 5;
-  var wPct = Math.min(100, Math.round(hoursLeft/capWeek*100));
-  var wColor = wPct>100?'var(--red)':wPct>75?'var(--amber)':'var(--blue)';
-  var top5 = sorted(active).slice(0,5);
-  var strategic = tasks.filter(function(t){var ini=getIni(t.initiativeId);return ['Iniciativa Estratégica','Oportunidad','Partner'].indexOf(ini.type)>=0&&t.status!=='Finalizada';}).length;
-  var totalActive = tasks.filter(function(t){return t.status!=='Finalizada';}).length;
-  var ratioStrat = totalActive ? Math.round(strategic/totalActive*100) : 0;
+// ===== DASHBOARD =====
+function vDashboard(){
+  var all=filtered(), active=all.filter(function(t){return t.status!=='Finalizada';});
+  var blk=all.filter(function(t){return t.status==='Bloqueada';});
+  var ovd=all.filter(overdue), wk=all.filter(thisWeek);
+  var cap=CAP*5, hrs=active.reduce(function(s,t){return s+Math.max(0,t.effort-t.spent);},0);
+  var wp=Math.min(100,Math.round(hrs/cap*100));
+  var wc=wp>100?'var(--red)':wp>75?'var(--amber)':'var(--blue)';
+  var top=srt(active).slice(0,5);
+  var strat=tasks.filter(function(t){var ini=getIni(t.iid);return ['Iniciativa Estratégica','Oportunidad','Partner'].indexOf(ini.type)>=0&&t.status!=='Finalizada';}).length;
+  var tot=tasks.filter(function(t){return t.status!=='Finalizada';}).length;
+  var rs=tot?Math.round(strat/tot*100):0;
 
-  var alerts = '';
-  if (overdue.length) alerts += '<div class="alert alert-red"><div class="alert-icon">⚠️</div><div><strong>'+overdue.length+' tarea'+(overdue.length>1?'s':'')+' vencida'+(overdue.length>1?'s':'')+'</strong> — atención inmediata</div></div>';
-  if (blocked.length) alerts += '<div class="alert alert-red"><div class="alert-icon">⛔</div><div><strong>'+blocked.length+' tarea'+(blocked.length>1?'s':'')+' bloqueada'+(blocked.length>1?'s':'')+'</strong> — desbloquear para continuar</div></div>';
-  if (hoursLeft > capWeek) alerts += '<div class="alert alert-amber"><div class="alert-icon">⚡</div><div><strong>Sobrecarga</strong> — '+hoursLeft.toFixed(0)+'h planificadas vs '+capWeek+'h capacidad</div></div>';
-  if (!alerts) alerts = '<div class="alert alert-green"><div class="alert-icon">✅</div>Carga dentro de rango. Sin bloqueos activos.</div>';
+  var al='';
+  if(ovd.length)al+='<div class="alert alert-r"><span>⚠️</span><div><strong>'+ovd.length+' tarea'+(ovd.length>1?'s':'')+' vencida'+(ovd.length>1?'s':'')+'</strong> — atención inmediata</div></div>';
+  if(blk.length)al+='<div class="alert alert-r"><span>⛔</span><div><strong>'+blk.length+' bloqueada'+(blk.length>1?'s':'')+'</strong> — desbloquear para continuar</div></div>';
+  if(hrs>cap)al+='<div class="alert alert-a"><span>⚡</span><div><strong>Sobrecarga</strong> — '+hrs.toFixed(0)+'h planificadas vs '+cap+'h capacidad semanal</div></div>';
+  if(!al)al='<div class="alert alert-g"><span>✅</span>Carga dentro de rango. Sin bloqueos activos.</div>';
 
-  var areaRows = AREAS.map(function(a){
-    var ah = active.filter(function(t){return t.area===a;}).reduce(function(s,t){return s+Math.max(0,t.effort-t.timeSpent);},0);
-    if(!ah) return '';
-    var ap = Math.min(100,Math.round(ah/capWeek*100));
-    return '<div class="workload-container"><div class="workload-label"><span>'+a+'</span><span>'+ah.toFixed(0)+'h</span></div><div class="workload-track"><div class="workload-fill" style="width:'+ap+'%;background:'+areaColor(a)+'"></div></div></div>';
+  var arH=AREAS.map(function(a){
+    var h=active.filter(function(t){return t.area===a;}).reduce(function(s,t){return s+Math.max(0,t.effort-t.spent);},0);
+    if(!h)return'';
+    var p=Math.min(100,Math.round(h/cap*100));
+    return '<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px"><span>'+a+'</span><span>'+h.toFixed(0)+'h</span></div><div class="wtrack"><div class="wfill" style="width:'+p+'%;background:'+aclr(a)+'"></div></div></div>';
   }).join('');
 
-  var topRows = top5.map(function(t,i){
-    return '<div class="task-row'+(t.status==='Bloqueada'?' blocked':t.status==='En espera de terceros'?' waiting':'')+'" onclick="openTask(\''+t.id+'\')"><span style="font-size:12px;font-weight:700;color:var(--text3);width:16px">'+(i+1)+'</span><div class="priority-dot '+(t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low')+'"></div><span class="task-title">'+t.title+'</span><div class="task-meta"><span class="score-badge">'+scoreDisplay(t)+'</span>'+sbadge(t.status)+'</div></div>';
-  }).join('') || '<div style="color:var(--text3);padding:12px 0">Sin tareas activas. Usa "Cargar datos demo" en el panel izquierdo.</div>';
+  var topH=top.map(function(t,i){
+    return '<div class="trow'+(t.status==='Bloqueada'?' blk':t.status==='En espera de terceros'?' wait':'')+'" onclick="openTask(\''+t.id+'\')">'+
+      '<span style="font-size:12px;font-weight:700;color:var(--text3);width:16px">'+(i+1)+'</span>'+
+      '<div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'"></div>'+
+      '<span class="ttitle">'+t.title+'</span>'+
+      '<div style="display:flex;align-items:center;gap:6px"><span class="sbadge">'+scoreN(t)+'</span>'+sbdg(t.status)+'</div></div>';
+  }).join('')||'<div style="color:var(--text3);padding:12px 0">Sin tareas. Usa "Cargar datos demo" en el panel izquierdo.</div>';
 
-  var critWeek = all.filter(function(t){return t.criticality==='Alta'&&isThisWeek(t);}).map(function(t){
-    return '<div class="task-row" onclick="openTask(\''+t.id+'\')"><div class="priority-dot prio-high"></div><div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+abadge(t.area)+' '+fmtDate(t.dueDate)+'</div></div>'+sbadge(t.status)+'</div>';
-  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin tareas críticas esta semana 🎉</div>';
+  var critH=all.filter(function(t){return t.crit==='Alta'&&thisWeek(t);}).map(function(t){
+    return '<div class="trow" onclick="openTask(\''+t.id+'\')"><div class="pdot ph"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+abdg(t.area)+' '+fmt(t.dd)+'</div></div>'+sbdg(t.status)+'</div>';
+  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin críticas esta semana 🎉</div>';
 
-  var blockRows = all.filter(function(t){return t.status==='Bloqueada'||t.status==='En espera de terceros';}).map(function(t){
-    return '<div class="task-row'+(t.status==='Bloqueada'?' blocked':' waiting')+'" onclick="openTask(\''+t.id+'\')"><div class="priority-dot '+(t.status==='Bloqueada'?'prio-high':'prio-med')+'"></div><div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">→ '+t.nextAction+'</div></div>'+sbadge(t.status)+'</div>';
-  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin bloqueos activos</div>';
+  var blkH=all.filter(function(t){return t.status==='Bloqueada'||t.status==='En espera de terceros';}).map(function(t){
+    return '<div class="trow'+(t.status==='Bloqueada'?' blk':' wait')+'" onclick="openTask(\''+t.id+'\')"><div class="pdot '+(t.status==='Bloqueada'?'ph':'pm')+'"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">→ '+t.next+'</div></div>'+sbdg(t.status)+'</div>';
+  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin bloqueos activos</div>';
 
-  set(alerts +
-    '<div class="grid-4" style="margin-bottom:14px">' +
-    '<div class="metric-card"><div class="metric-label">Tareas activas</div><div class="metric-value">'+active.length+'</div><div class="metric-sub">'+overdue.length+' vencidas</div></div>' +
-    '<div class="metric-card"><div class="metric-label">Esta semana</div><div class="metric-value">'+thisWeek.length+'</div><div class="metric-sub">vencimiento próximo</div></div>' +
-    '<div class="metric-card"><div class="metric-label">Bloqueadas</div><div class="metric-value" style="color:'+(blocked.length?'var(--red)':'var(--text)')+'">'+blocked.length+'</div><div class="metric-sub">requieren acción</div></div>' +
-    '<div class="metric-card"><div class="metric-label">Ratio estratégico</div><div class="metric-value">'+ratioStrat+'%</div><div class="metric-sub">vs reactivo</div></div>' +
-    '</div>' +
-    '<div class="grid-2" style="margin-bottom:14px">' +
-    '<div class="card"><div class="section-header"><div class="card-title">Carga semanal</div><span style="font-size:12px;color:var(--text3)">'+hoursLeft.toFixed(0)+'h / '+capWeek+'h</span></div><div class="workload-track" style="margin-bottom:10px"><div class="workload-fill" style="width:'+wPct+'%;background:'+wColor+'"></div></div>'+areaRows+'</div>' +
-    '<div class="card"><div class="card-title">🏆 Ranking de prioridades</div>'+topRows+'</div>' +
-    '</div>' +
-    '<div class="grid-2">' +
-    '<div><div class="section-header"><div class="section-title">⚡ Críticas esta semana</div></div>'+critWeek+'</div>' +
-    '<div><div class="section-header"><div class="section-title">🔴 Bloqueadas & En espera</div></div>'+blockRows+'</div>' +
-    '</div>'
-  );
-}
-
-// ---------- DAILY ----------
-function renderDaily() {
-  var all = getFiltered();
-  var active = all.filter(function(t){return t.status!=='Finalizada';});
-  var top = sorted(active).slice(0,7);
-  var urgent = active.filter(function(t){return daysLeft(t.dueDate)<=2;});
-  var waiting = active.filter(function(t){return t.status==='En espera de terceros';});
-  var hoursEst = top.reduce(function(s,t){return s+Math.max(0,(t.effort-t.timeSpent)/2);},0);
-  var overload = hoursEst > dailyCapacity;
-  var todayFmt = new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
-
-  var topRows = top.map(function(t,i){
-    var dl = daysLeft(t.dueDate);
-    var uf = dl<0?'<span class="badge badge-red">Vencida</span>':dl===0?'<span class="badge badge-red">Hoy</span>':dl<=3?'<span class="badge badge-amber">En '+dl+'d</span>':'';
-    return '<div class="task-row'+(t.status==='Bloqueada'?' blocked':t.status==='En espera de terceros'?' waiting':'')+'" onclick="openTask(\''+t.id+'\')">'+
-      '<span style="font-size:14px;font-weight:700;color:var(--text3);min-width:22px">'+(i+1)+'</span>'+
-      '<div class="priority-dot '+(t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low')+'"></div>'+
-      '<div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:3px">→ '+t.nextAction+'</div><div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">'+abadge(t.area)+sbadge(t.status)+uf+'</div></div>'+
-      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span class="score-badge">'+scoreDisplay(t)+'</span><span style="font-size:11px;color:var(--text3)">'+Math.max(0,t.effort-t.timeSpent)+'h rest.</span></div>'+
-      '</div>';
-  }).join('') || '<div style="color:var(--text3);padding:12px 0">Sin tareas activas.</div>';
-
-  var urgentRows = urgent.map(function(t){
-    return '<div class="task-row blocked" onclick="openTask(\''+t.id+'\')"><div class="priority-dot prio-high"></div><div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+fmtDate(t.dueDate)+' — '+t.stakeholder+'</div></div>'+ibadge(t.businessImpact)+'</div>';
-  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin urgencias</div>';
-
-  var waitRows = waiting.map(function(t){
-    return '<div class="task-row waiting" onclick="openTask(\''+t.id+'\')"><div class="priority-dot prio-med"></div><div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+t.deps+'</div></div>'+sbadge(t.status)+'</div>';
-  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin esperas activas</div>';
-
-  set('<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">'+
-    '<div><div style="font-size:20px;font-weight:700;text-transform:capitalize">'+todayFmt+'</div><div style="font-size:13px;color:var(--text3);margin-top:3px">Capacidad: '+dailyCapacity+'h — Est. hoy: '+hoursEst.toFixed(1)+'h</div></div>'+
-    (overload?'<span class="badge badge-red">⚡ Sobrecarga</span>':'<span class="badge badge-green">✅ Carga OK</span>')+
+  set(al+
+    '<div class="g4" style="margin-bottom:14px">'+
+    '<div class="mcard"><div class="mlbl">Tareas activas</div><div class="mval">'+active.length+'</div><div class="msub">'+ovd.length+' vencidas</div></div>'+
+    '<div class="mcard"><div class="mlbl">Esta semana</div><div class="mval">'+wk.length+'</div><div class="msub">vencimiento próximo</div></div>'+
+    '<div class="mcard"><div class="mlbl">Bloqueadas</div><div class="mval" style="color:'+(blk.length?'var(--red)':'inherit')+'">'+blk.length+'</div><div class="msub">requieren acción</div></div>'+
+    '<div class="mcard"><div class="mlbl">Ratio estratégico</div><div class="mval">'+rs+'%</div><div class="msub">vs reactivo</div></div>'+
     '</div>'+
-    (overload?'<div class="alert alert-amber"><div class="alert-icon">⚡</div>Más trabajo del que puedes asumir hoy.</div>':'')+
-    '<div class="section-header"><div class="section-title">☀️ Foco de hoy</div><span style="font-size:12px;color:var(--text3)">Por score de prioridad</span></div>'+
-    topRows+
-    '<div class="grid-2" style="margin-top:16px">'+
-    '<div><div class="section-header"><div class="section-title">🔴 Urgentes (≤48h)</div></div>'+urgentRows+'</div>'+
-    '<div><div class="section-header"><div class="section-title">⏳ En espera de terceros</div></div>'+waitRows+'</div>'+
+    '<div class="g2" style="margin-bottom:14px">'+
+    '<div class="card"><div class="sh"><div class="ctitle">Carga semanal</div><span style="font-size:12px;color:var(--text3)">'+hrs.toFixed(0)+'h / '+cap+'h</span></div><div class="wtrack" style="margin-bottom:12px"><div class="wfill" style="width:'+wp+'%;background:'+wc+'"></div></div>'+arH+'</div>'+
+    '<div class="card"><div class="ctitle">🏆 Ranking prioridades</div>'+topH+'</div>'+
+    '</div>'+
+    '<div class="g2">'+
+    '<div><div class="sh"><div class="stitle">⚡ Críticas esta semana</div></div>'+critH+'</div>'+
+    '<div><div class="sh"><div class="stitle">🔴 Bloqueadas & En espera</div></div>'+blkH+'</div>'+
     '</div>'
   );
 }
 
-// ---------- WEEKLY ----------
-function renderWeekly() {
-  var today = new Date(); today.setHours(0,0,0,0);
-  var dow = today.getDay();
-  var monday = new Date(today); monday.setDate(today.getDate()-(dow===0?6:dow-1));
-  var days = ['Lun','Mar','Mié','Jue','Vie'];
-  var dayDates = days.map(function(_,i){var d=new Date(monday);d.setDate(monday.getDate()+i);return d;});
-  var all = getFiltered().filter(function(t){return t.status!=='Finalizada';});
-  var totalH = all.reduce(function(s,t){return s+Math.max(0,t.effort-t.timeSpent);},0);
-  var capWeek = dailyCapacity*5;
-  var wPct = Math.min(100,Math.round(totalH/capWeek*100));
+// ===== DAILY =====
+function vDaily(){
+  var all=filtered(), active=all.filter(function(t){return t.status!=='Finalizada';});
+  var top=srt(active).slice(0,7);
+  var urg=active.filter(function(t){return dl(t.dd)<=2;});
+  var wait=active.filter(function(t){return t.status==='En espera de terceros';});
+  var est=top.reduce(function(s,t){return s+Math.max(0,(t.effort-t.spent)/2);},0);
+  var ol=est>CAP;
+  var df=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
 
-  function tasksForDay(d) {
-    return all.filter(function(t){var due=dDate(t.dueDate);var start=dDate(t.startDate);return due.getTime()===d.getTime()||(start<=d&&due>=d);});
-  }
-
-  var dayCols = dayDates.map(function(d,i){
-    var dt = sorted(tasksForDay(d)).slice(0,5);
-    var dh = dt.reduce(function(s,t){return s+Math.max(0,t.effort-t.timeSpent)/Math.max(1,Math.ceil((dDate(t.dueDate)-dDate(t.startDate))/86400000)+1);},0);
-    var ol = dh>dailyCapacity;
-    var isTod = d.getTime()===today.getTime();
-    return '<div class="day-col" style="'+(isTod?'border:2px solid var(--blue)':'')+'">'+
-      '<div class="day-header" style="color:'+(isTod?'var(--blue)':'var(--text2)')+'">'+days[i]+' '+d.getDate()+'</div>'+
-      (dt.length?dt.map(function(t){return '<div class="day-task '+(t.priority==='Alta'?'alta':t.priority==='Media'?'media':'')+'" onclick="openTask(\''+t.id+'\')" title="'+t.title+'"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">'+t.title+'</div><div style="color:var(--text3);margin-top:2px">'+t.area+'</div></div>';}).join(''):'<div style="color:var(--text3);font-size:11px;text-align:center;padding:14px 0;opacity:.6">Libre</div>')+
-      '<div style="font-size:10px;text-align:center;margin-top:6px;color:'+(ol?'var(--red)':'var(--text3)')+'">'+dh.toFixed(1)+'h est.</div>'+
+  var topH=top.map(function(t,i){
+    var d=dl(t.dd),uf=d<0?bdg('br','Vencida'):d===0?bdg('br','Hoy'):d<=3?bdg('ba','En '+d+'d'):'';
+    return '<div class="trow'+(t.status==='Bloqueada'?' blk':t.status==='En espera de terceros'?' wait':'')+'" onclick="openTask(\''+t.id+'\')">'+
+      '<span style="font-size:14px;font-weight:700;color:var(--text3);min-width:22px">'+(i+1)+'</span>'+
+      '<div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'"></div>'+
+      '<div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div>'+
+      '<div style="font-size:11px;color:var(--text3);margin-top:3px">→ '+t.next+'</div>'+
+      '<div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">'+abdg(t.area)+sbdg(t.status)+uf+'</div></div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span class="sbadge">'+scoreN(t)+'</span><span style="font-size:11px;color:var(--text3)">'+Math.max(0,t.effort-t.spent)+'h rest.</span></div>'+
       '</div>';
+  }).join('')||'<div style="color:var(--text3);padding:12px 0">Sin tareas activas.</div>';
+
+  var urgH=urg.map(function(t){
+    return '<div class="trow blk" onclick="openTask(\''+t.id+'\')"><div class="pdot ph"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+fmt(t.dd)+' — '+t.sh+'</div></div>'+ibdg(t.impact)+'</div>';
+  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin urgencias</div>';
+
+  var waitH=wait.map(function(t){
+    return '<div class="trow wait" onclick="openTask(\''+t.id+'\')"><div class="pdot pm"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+t.deps+'</div></div>'+sbdg(t.status)+'</div>';
+  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin esperas activas</div>';
+
+  set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'+
+    '<div><div style="font-size:20px;font-weight:700;text-transform:capitalize">'+df+'</div>'+
+    '<div style="font-size:13px;color:var(--text3);margin-top:3px">Capacidad: '+CAP+'h — Est. hoy: '+est.toFixed(1)+'h</div></div>'+
+    (ol?bdg('br','⚡ Sobrecarga'):bdg('bg','✅ Carga OK'))+
+    '</div>'+
+    (ol?'<div class="alert alert-a"><span>⚡</span>Más trabajo del que puedes asumir hoy.</div>':'')+
+    '<div class="sh"><div class="stitle">☀️ Foco de hoy</div><span style="font-size:12px;color:var(--text3)">Por score de prioridad</span></div>'+
+    topH+
+    '<div class="g2" style="margin-top:16px">'+
+    '<div><div class="sh"><div class="stitle">🔴 Urgentes (≤48h)</div></div>'+urgH+'</div>'+
+    '<div><div class="sh"><div class="stitle">⏳ En espera de terceros</div></div>'+waitH+'</div>'+
+    '</div>'
+  );
+}
+
+// ===== WEEKLY =====
+function vWeekly(){
+  var td=new Date();td.setHours(0,0,0,0);
+  var dow=td.getDay(),mon=new Date(td);mon.setDate(td.getDate()-(dow===0?6:dow-1));
+  var days=['Lun','Mar','Mié','Jue','Vie'];
+  var dates=days.map(function(_,i){var d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+  var all=filtered().filter(function(t){return t.status!=='Finalizada';});
+  var totH=all.reduce(function(s,t){return s+Math.max(0,t.effort-t.spent);},0);
+  var cap=CAP*5, wp=Math.min(100,Math.round(totH/cap*100));
+
+  var cols=dates.map(function(d,i){
+    var dt=srt(all.filter(function(t){
+      var due=dd(t.dd),start=dd(t.sd);
+      return due.getTime()===d.getTime()||(start<=d&&due>=d);
+    })).slice(0,5);
+    var dh=dt.reduce(function(s,t){return s+Math.max(0,t.effort-t.spent)/Math.max(1,Math.ceil((dd(t.dd)-dd(t.sd))/86400000)+1);},0);
+    var isTd=d.getTime()===td.getTime();
+    return '<div class="dcol" style="'+(isTd?'border:2px solid var(--blue)':'')+'">'+
+      '<div class="dhdr" style="color:'+(isTd?'var(--blue)':'var(--text2)')+'">'+days[i]+' '+d.getDate()+'</div>'+
+      (dt.length?dt.map(function(t){return '<div class="dtask '+(t.prio==='Alta'?'alta':t.prio==='Media'?'media':'')+'" onclick="openTask(\''+t.id+'\')" title="'+t.title+'"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">'+t.title+'</div><div style="color:var(--text3);margin-top:2px">'+t.area+'</div></div>';}).join(''):'<div style="color:var(--text3);font-size:11px;text-align:center;padding:14px 0;opacity:.6">Libre</div>')+
+      '<div style="font-size:10px;text-align:center;margin-top:6px;color:'+(dh>CAP?'var(--red)':'var(--text3)')+'">'+dh.toFixed(1)+'h est.</div></div>';
   }).join('');
 
-  var allWeekRows = sorted(all.filter(function(t){return dDate(t.dueDate)>=monday&&dDate(t.startDate)<=dayDates[4];})).map(function(t){
-    return '<div class="task-row'+(t.status==='Bloqueada'?' blocked':t.status==='En espera de terceros'?' waiting':'')+'" onclick="openTask(\''+t.id+'\')">'+
-      '<div class="priority-dot '+(t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low')+'"></div>'+
-      '<div style="flex:1;min-width:0"><div class="task-title">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+t.stakeholder+' · '+getIni(t.initiativeId).name+'</div></div>'+
-      '<div class="task-meta">'+abadge(t.area)+sbadge(t.status)+'<span style="font-size:11px;color:var(--text3)">'+fmtDate(t.dueDate)+'</span></div></div>';
-  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin tareas esta semana</div>';
+  var allRows=srt(all.filter(function(t){return dd(t.dd)>=mon&&dd(t.sd)<=dates[4];})).map(function(t){
+    return '<div class="trow'+(t.status==='Bloqueada'?' blk':t.status==='En espera de terceros'?' wait':'')+'" onclick="openTask(\''+t.id+'\')">'+
+      '<div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'"></div>'+
+      '<div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+t.sh+' · '+getIni(t.iid).name+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:6px">'+abdg(t.area)+sbdg(t.status)+'<span style="font-size:11px;color:var(--text3)">'+fmt(t.dd)+'</span></div></div>';
+  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin tareas esta semana</div>';
 
   set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'+
-    '<div style="font-size:16px;font-weight:700">Semana '+monday.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+' – '+new Date(monday.getTime()+4*86400000).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+'</div>'+
-    '<div style="font-size:13px;color:'+(totalH>capWeek?'var(--red)':'var(--text2)')+'">'+totalH.toFixed(0)+'h / '+capWeek+'h</div></div>'+
-    '<div style="margin-bottom:14px"><div class="workload-track" style="height:10px"><div class="workload-fill" style="width:'+wPct+'%;background:'+(totalH>capWeek?'var(--red)':totalH>capWeek*.75?'var(--amber)':'var(--blue)')+'"></div></div><div style="font-size:11px;color:var(--text3);margin-top:3px">'+wPct+'% de capacidad semanal</div></div>'+
-    '<div class="week-grid">'+dayCols+'</div>'+
-    '<div style="margin-top:16px"><div class="section-header"><div class="section-title">Todas las tareas de la semana</div></div>'+allWeekRows+'</div>'
+    '<div style="font-size:16px;font-weight:700">Semana '+mon.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+' – '+new Date(mon.getTime()+4*86400000).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+'</div>'+
+    '<div style="font-size:13px;color:'+(totH>cap?'var(--red)':'var(--text2)')+'">'+totH.toFixed(0)+'h / '+cap+'h</div></div>'+
+    '<div style="margin-bottom:14px"><div class="wtrack" style="height:10px"><div class="wfill" style="width:'+wp+'%;background:'+(totH>cap?'var(--red)':totH>cap*.75?'var(--amber)':'var(--blue)')+'"></div></div><div style="font-size:11px;color:var(--text3);margin-top:3px">'+wp+'% de capacidad semanal</div></div>'+
+    '<div class="wgrid">'+cols+'</div>'+
+    '<div style="margin-top:16px"><div class="sh"><div class="stitle">Todas las tareas de la semana</div></div>'+allRows+'</div>'
   );
 }
 
-// ---------- INITIATIVES ----------
-function renderInitiatives() {
-  var cards = initiatives.map(function(ini){
-    var it = tasks.filter(function(t){return t.initiativeId===ini.id;});
-    var done = it.filter(function(t){return t.status==='Finalizada';}).length;
-    var pct = it.length?Math.round(done/it.length*100):0;
-    var blk = it.filter(function(t){return t.status==='Bloqueada';}).length;
-    var wt = it.filter(function(t){return t.status==='En espera de terceros';}).length;
-    var next = sorted(it.filter(function(t){return t.status!=='Finalizada';})).slice(0,2);
-    var tc={Oportunidad:'blue',Partner:'teal','Iniciativa Estratégica':'purple',Cliente:'green',Marketing:'coral',Producto:'amber','Soporte Interno':'gray',Dirección:'red'};
-    return '<div class="initiative-card">'+
+// ===== INITIATIVES =====
+function vInitiatives(){
+  var INI_TC={Oportunidad:'bb',Partner:'bt','Iniciativa Estratégica':'bp',Cliente:'bg',Marketing:'bc',Producto:'ba','Soporte Interno':'bx',Dirección:'br'};
+  var cards=initiatives.map(function(ini){
+    var it=tasks.filter(function(t){return t.iid===ini.id;});
+    var done=it.filter(function(t){return t.status==='Finalizada';}).length;
+    var pct=it.length?Math.round(done/it.length*100):0;
+    var blk=it.filter(function(t){return t.status==='Bloqueada';}).length;
+    var wt=it.filter(function(t){return t.status==='En espera de terceros';}).length;
+    var nxt=srt(it.filter(function(t){return t.status!=='Finalizada';})).slice(0,2);
+    return '<div class="icard">'+
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">'+
       '<div><div style="font-size:15px;font-weight:700">'+ini.name+'</div><div style="font-size:12px;color:var(--text3);margin-top:3px">'+ini.objective+'</div></div>'+
-      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+(ini.value?'<span style="font-size:14px;font-weight:700;color:var(--green)">€'+ini.value.toLocaleString('es-ES')+'</span>':'')+'<span class="badge badge-'+(ini.importance==='Alta'?'red':ini.importance==='Media'?'amber':'green')+'">'+ini.importance+'</span></div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+(ini.value?'<span style="font-size:14px;font-weight:700;color:var(--green)">€'+ini.value.toLocaleString('es-ES')+'</span>':'')+bdg(ini.importance==='Alta'?'br':ini.importance==='Media'?'ba':'bg',ini.importance)+'</div>'+
       '</div>'+
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><span class="badge badge-'+(tc[ini.type]||'gray')+'">'+ini.type+'</span>'+abadge(ini.area)+ini.otherAreas.slice(0,2).map(abadge).join('')+'<span class="badge badge-gray">📅 '+fmtDate(ini.startDate)+' → '+fmtDate(ini.targetDate)+'</span></div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+bdg(INI_TC[ini.type]||'bx',ini.type)+abdg(ini.area)+ini.otherAreas.slice(0,2).map(abdg).join('')+bdg('bx','📅 '+fmt(ini.startDate)+' → '+fmt(ini.targetDate))+'</div>'+
       '<div style="display:flex;gap:14px;font-size:12px;color:var(--text3);margin-bottom:10px"><span>'+it.length+' tareas · '+done+' completadas</span>'+(blk?'<span style="color:var(--red);font-weight:600">⛔ '+blk+' bloqueada'+(blk>1?'s':'')+'</span>':'')+(wt?'<span style="color:var(--amber);font-weight:600">⏳ '+wt+' en espera</span>':'')+'</div>'+
-      '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--text3);min-width:32px">'+pct+'%</span><div class="initiative-progress-bar"><div class="initiative-progress-fill" style="width:'+pct+'%"></div></div><span style="font-size:11px;color:var(--text3)">'+done+'/'+it.length+'</span></div>'+
-      (next.length?'<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Próximas acciones</div>'+
-      next.map(function(t){return '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px"><div class="priority-dot '+(t.priority==='Alta'?'prio-high':t.priority==='Media'?'prio-med':'prio-low')+'" style="margin-top:4px"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">→ '+t.nextAction+'</div></div>'+sbadge(t.status)+'</div>';}).join('')+'</div>':'')+'</div>';
-  }).join('') || '<div style="color:var(--text3);padding:20px 0">Sin iniciativas. Crea una con el botón "+ Iniciativa".</div>';
-  set('<div class="section-header"><div class="section-title">🎯 Iniciativas ('+initiatives.length+')</div></div>'+cards);
+      '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--text3);min-width:32px">'+pct+'%</span><div class="ipbar"><div class="ipfill" style="width:'+pct+'%"></div></div><span style="font-size:11px;color:var(--text3)">'+done+'/'+it.length+'</span></div>'+
+      (nxt.length?'<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Próximas acciones</div>'+
+      nxt.map(function(t){return '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px"><div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'" style="margin-top:4px"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">→ '+t.next+'</div></div>'+sbdg(t.status)+'</div>';}).join('')+'</div>':'')+'</div>';
+  }).join('')||'<div style="color:var(--text3);padding:20px 0">Sin iniciativas. Crea una con el botón "+ Iniciativa".</div>';
+  set('<div class="sh"><div class="stitle">🎯 Iniciativas ('+initiatives.length+')</div></div>'+cards);
 }
 
-// ---------- KANBAN ----------
-function renderKanban() {
-  var all = getFiltered();
-  var cols = [{key:'Pendiente',color:'var(--text3)'},{key:'En curso',color:'var(--blue)'},{key:'En espera de terceros',label:'En espera',color:'var(--amber)'},{key:'Bloqueada',color:'var(--red)'},{key:'Finalizada',color:'var(--green)'}];
-  var board = cols.map(function(col){
-    var ct = sorted(all.filter(function(t){return t.status===col.key;}));
-    return '<div class="kanban-col">'+
-      '<div class="kanban-col-header"><div style="width:9px;height:9px;border-radius:50%;background:'+col.color+';flex-shrink:0"></div>'+(col.label||col.key)+'<span class="sidebar-count">'+ct.length+'</span></div>'+
-      ct.map(function(t){return '<div class="kanban-card" onclick="openTask(\''+t.id+'\')">'+
-        '<div class="kanban-card-title">'+t.title+'</div>'+
-        '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">'+getIni(t.initiativeId).name+'</div>'+
-        '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px">'+abadge(t.area)+pbadge(t.priority)+'</div>'+
-        '<div style="display:flex;align-items:center;gap:7px"><div class="progress-bar"><div class="progress-fill" style="width:'+t.progress+'%"></div></div><span style="font-size:10px;color:var(--text3)">'+t.progress+'%</span><span style="font-size:10px;color:var(--text3);margin-left:auto">'+fmtDate(t.dueDate)+'</span></div>'+
-        (t.nextAction?'<div style="margin-top:6px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:5px">→ '+t.nextAction+'</div>':'')+
+// ===== KANBAN =====
+function vKanban(){
+  var all=filtered();
+  var cols=[{k:'Pendiente',c:'var(--text3)'},{k:'En curso',c:'var(--blue)'},{k:'En espera de terceros',lb:'En espera',c:'var(--amber)'},{k:'Bloqueada',c:'var(--red)'},{k:'Finalizada',c:'var(--green)'}];
+  var board=cols.map(function(col){
+    var ct=srt(all.filter(function(t){return t.status===col.k;}));
+    return '<div class="kcol">'+
+      '<div class="khead"><div style="width:9px;height:9px;border-radius:50%;background:'+col.c+';flex-shrink:0"></div>'+(col.lb||col.k)+bdg('bx',ct.length)+'</div>'+
+      ct.map(function(t){return '<div class="kcard" onclick="openTask(\''+t.id+'\')">'+
+        '<div class="kctitle">'+t.title+'</div>'+
+        '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">'+getIni(t.iid).name+'</div>'+
+        '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px">'+abdg(t.area)+pbdg(t.prio)+'</div>'+
+        '<div style="display:flex;align-items:center;gap:7px"><div class="pbar"><div class="pfill" style="width:'+t.prog+'%"></div></div><span style="font-size:10px;color:var(--text3)">'+t.prog+'%</span><span style="font-size:10px;color:var(--text3);margin-left:auto">'+fmt(t.dd)+'</span></div>'+
+        (t.next?'<div style="margin-top:6px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:5px">→ '+t.next+'</div>':'')+
         '</div>';}).join('')+'</div>';
   }).join('');
-  set('<div class="kanban-board">'+board+'</div>');
+  set('<div class="kboard">'+board+'</div>');
 }
 
-// ---------- REPORT ----------
-function renderReport() {
-  var fin = tasks.filter(function(t){return t.status==='Finalizada';});
-  var totalTime = tasks.reduce(function(s,t){return s+t.timeSpent;},0);
-  var areaTime = {}; AREAS.forEach(function(a){areaTime[a]=tasks.filter(function(t){return t.area===a;}).reduce(function(s,t){return s+t.timeSpent;},0);});
-  var iniTime = {}; initiatives.forEach(function(i){iniTime[i.id]=tasks.filter(function(t){return t.initiativeId===i.id;}).reduce(function(s,t){return s+t.timeSpent;},0);});
-  var stratTime = tasks.filter(function(t){var ini=getIni(t.initiativeId);return ['Iniciativa Estratégica','Oportunidad','Partner'].indexOf(ini.type)>=0;}).reduce(function(s,t){return s+t.timeSpent;},0);
-  var maxAT = Math.max.apply(null,Object.values(areaTime).concat([1]));
-  var maxIT = Math.max.apply(null,Object.values(iniTime).concat([1]));
-  var pipeline = initiatives.reduce(function(s,i){return s+(i.value||0);},0);
+// ===== REPORT =====
+function vReport(){
+  var fin=tasks.filter(function(t){return t.status==='Finalizada';});
+  var totT=tasks.reduce(function(s,t){return s+t.spent;},0);
+  var aT={};AREAS.forEach(function(a){aT[a]=tasks.filter(function(t){return t.area===a;}).reduce(function(s,t){return s+t.spent;},0);});
+  var iT={};initiatives.forEach(function(i){iT[i.id]=tasks.filter(function(t){return t.iid===i.id;}).reduce(function(s,t){return s+t.spent;},0);});
+  var sT=tasks.filter(function(t){var ini=getIni(t.iid);return ['Iniciativa Estratégica','Oportunidad','Partner'].indexOf(ini.type)>=0;}).reduce(function(s,t){return s+t.spent;},0);
+  var mAT=Math.max.apply(null,Object.values(aT).concat([1]));
+  var mIT=Math.max.apply(null,Object.values(iT).concat([1]));
+  var pip=initiatives.reduce(function(s,i){return s+(i.value||0);},0);
 
-  var areaRows = AREAS.filter(function(a){return areaTime[a]>0;}).sort(function(a,b){return areaTime[b]-areaTime[a];}).map(function(a){
-    return '<div class="report-row"><div style="display:flex;align-items:center;gap:8px;min-width:110px"><div style="width:9px;height:9px;border-radius:50%;background:'+areaColor(a)+'"></div><span>'+a+'</span></div><div style="flex:1;margin:0 12px"><div class="bar-h" style="width:'+Math.round(areaTime[a]/maxAT*140)+'px;background:'+areaColor(a)+'"></div></div><span style="font-size:12px;color:var(--text2);min-width:36px;text-align:right">'+areaTime[a].toFixed(1)+'h</span></div>';
-  }).join('') || '<div style="color:var(--text3);padding:8px 0">Sin datos de tiempo registrados</div>';
+  var arRows=AREAS.filter(function(a){return aT[a]>0;}).sort(function(a,b){return aT[b]-aT[a];}).map(function(a){
+    return '<div class="rrow"><div style="display:flex;align-items:center;gap:8px;min-width:110px"><div style="width:9px;height:9px;border-radius:50%;background:'+aclr(a)+'"></div><span>'+a+'</span></div><div style="flex:1;margin:0 12px"><div class="barh" style="width:'+Math.round(aT[a]/mAT*140)+'px;background:'+aclr(a)+'"></div></div><span style="font-size:12px;color:var(--text2);min-width:36px;text-align:right">'+aT[a].toFixed(1)+'h</span></div>';
+  }).join('')||'<div style="color:var(--text3);padding:8px 0">Sin datos de tiempo</div>';
 
-  var iniRows = initiatives.filter(function(i){return iniTime[i.id]>0;}).sort(function(a,b){return iniTime[b.id]-iniTime[a.id];}).map(function(i){
-    return '<div class="report-row"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;margin-right:8px">'+i.name+'</span><div style="width:80px;margin-right:8px"><div class="bar-h" style="width:'+Math.round(iniTime[i.id]/maxIT*80)+'px;background:var(--blue)"></div></div><span style="font-size:12px;min-width:36px;text-align:right">'+iniTime[i.id].toFixed(1)+'h</span></div>';
-  }).join('') || '<div style="color:var(--text3);padding:8px 0">Sin datos</div>';
+  var iRows=initiatives.filter(function(i){return iT[i.id]>0;}).sort(function(a,b){return iT[b.id]-iT[a.id];}).map(function(i){
+    return '<div class="rrow"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;margin-right:8px">'+i.name+'</span><div style="width:80px;margin-right:8px"><div class="barh" style="width:'+Math.round(iT[i.id]/mIT*80)+'px"></div></div><span style="font-size:12px;min-width:36px;text-align:right">'+iT[i.id].toFixed(1)+'h</span></div>';
+  }).join('')||'<div style="color:var(--text3);padding:8px 0">Sin datos</div>';
 
-  var statusRows = TASK_STATUSES.map(function(s){var c=tasks.filter(function(t){return t.status===s;}).length;return c?'<div class="report-row"><span>'+s+'</span><div style="display:flex;align-items:center;gap:8px"><div class="bar-h" style="width:'+Math.round(c/Math.max(tasks.length,1)*100)+'px"></div><strong>'+c+'</strong></div></div>':'';}).join('');
+  var stRows=STATUSES.map(function(s){var c=tasks.filter(function(t){return t.status===s;}).length;return c?'<div class="rrow"><span>'+s+'</span><div style="display:flex;align-items:center;gap:8px"><div class="barh" style="width:'+Math.round(c/Math.max(tasks.length,1)*100)+'px"></div><strong>'+c+'</strong></div></div>':'';}).join('');
 
-  var blockRows = tasks.filter(function(t){return ['Bloqueada','En espera de terceros'].indexOf(t.status)>=0;}).map(function(t){
-    return '<div class="report-row" style="cursor:pointer" onclick="openTask(\''+t.id+'\')"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+t.deps+'</div></div>'+sbadge(t.status)+'</div>';
-  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px">Sin bloqueos</div>';
+  var blkRows=tasks.filter(function(t){return ['Bloqueada','En espera de terceros'].indexOf(t.status)>=0;}).map(function(t){
+    return '<div class="rrow" style="cursor:pointer" onclick="openTask(\''+t.id+'\')"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+t.deps+'</div></div>'+sbdg(t.status)+'</div>';
+  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px">Sin bloqueos</div>';
 
   set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'+
     '<div style="font-size:16px;font-weight:700">📈 Reporting ejecutivo</div>'+
-    '<button class="btn btn-primary" onclick="execSummary()">📋 Resumen ejecutivo</button></div>'+
-    '<div class="grid-4" style="margin-bottom:16px">'+
-    '<div class="metric-card"><div class="metric-label">Horas invertidas</div><div class="metric-value">'+totalTime.toFixed(1)+'h</div></div>'+
-    '<div class="metric-card"><div class="metric-label">Completadas</div><div class="metric-value">'+fin.length+'</div><div class="metric-sub">de '+tasks.length+' totales</div></div>'+
-    '<div class="metric-card"><div class="metric-label">Trabajo estratégico</div><div class="metric-value">'+stratTime.toFixed(1)+'h</div><div class="metric-sub">'+(totalTime?Math.round(stratTime/totalTime*100):0)+'% del total</div></div>'+
-    '<div class="metric-card"><div class="metric-label">Pipeline activo</div><div class="metric-value" style="font-size:18px">€'+pipeline.toLocaleString('es-ES')+'</div></div>'+
+    '<button class="btn btnp" onclick="showExecSummary()">📋 Resumen ejecutivo</button></div>'+
+    '<div class="g4" style="margin-bottom:16px">'+
+    '<div class="mcard"><div class="mlbl">Horas invertidas</div><div class="mval">'+totT.toFixed(1)+'h</div></div>'+
+    '<div class="mcard"><div class="mlbl">Completadas</div><div class="mval">'+fin.length+'</div><div class="msub">de '+tasks.length+' totales</div></div>'+
+    '<div class="mcard"><div class="mlbl">Trabajo estratégico</div><div class="mval">'+sT.toFixed(1)+'h</div><div class="msub">'+(totT?Math.round(sT/totT*100):0)+'% del total</div></div>'+
+    '<div class="mcard"><div class="mlbl">Pipeline activo</div><div class="mval" style="font-size:18px">€'+pip.toLocaleString('es-ES')+'</div></div>'+
     '</div>'+
-    '<div class="grid-2" style="margin-bottom:16px">'+
-    '<div class="card"><div class="card-title">Tiempo por área</div>'+areaRows+'</div>'+
-    '<div class="card"><div class="card-title">Tiempo por iniciativa</div>'+iniRows+'</div>'+
-    '</div>'+
-    '<div class="grid-2">'+
-    '<div class="card"><div class="card-title">Tareas por estado</div>'+statusRows+'</div>'+
-    '<div class="card"><div class="card-title">Bloqueadas & en espera</div>'+blockRows+'</div>'+
-    '</div>'
+    '<div class="g2" style="margin-bottom:16px"><div class="card"><div class="ctitle">Tiempo por área</div>'+arRows+'</div><div class="card"><div class="ctitle">Tiempo por iniciativa</div>'+iRows+'</div></div>'+
+    '<div class="g2"><div class="card"><div class="ctitle">Tareas por estado</div>'+stRows+'</div><div class="card"><div class="ctitle">Bloqueadas & en espera</div>'+blkRows+'</div></div>'
   );
 }
 
-function execSummary() {
-  var fin = tasks.filter(function(t){return t.status==='Finalizada';});
-  var active = tasks.filter(function(t){return t.status!=='Finalizada';});
-  var blocked = tasks.filter(function(t){return t.status==='Bloqueada';});
-  var totalTime = tasks.reduce(function(s,t){return s+t.timeSpent;},0);
-  var pipeline = initiatives.reduce(function(s,i){return s+(i.value||0);},0);
-  var dateStr = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
-  var top3 = sorted(active).slice(0,3);
-  document.getElementById('modal-body').innerHTML =
-    '<div class="modal-header"><div><div class="modal-title">Resumen Ejecutivo BD</div><div style="font-size:12px;color:var(--text3)">'+dateStr+' · Cegid HR</div></div><button class="close-btn" onclick="closeModal()">✕</button></div>'+
-    '<div class="grid-3" style="margin-bottom:16px">'+
-    '<div class="metric-card"><div class="metric-label">Iniciativas</div><div class="metric-value">'+initiatives.length+'</div></div>'+
-    '<div class="metric-card"><div class="metric-label">Tareas activas</div><div class="metric-value">'+active.length+'</div></div>'+
-    '<div class="metric-card"><div class="metric-label">Pipeline</div><div class="metric-value" style="font-size:17px">€'+pipeline.toLocaleString('es-ES')+'</div></div>'+
+// ===== EXEC SUMMARY =====
+function showExecSummary(){
+  var fin=tasks.filter(function(t){return t.status==='Finalizada';});
+  var active=tasks.filter(function(t){return t.status!=='Finalizada';});
+  var blk=tasks.filter(function(t){return t.status==='Bloqueada';});
+  var totT=tasks.reduce(function(s,t){return s+t.spent;},0);
+  var pip=initiatives.reduce(function(s,i){return s+(i.value||0);},0);
+  var ds=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  var top3=srt(active).slice(0,3);
+  document.getElementById('modal').innerHTML=
+    '<div class="mhdr"><div><div class="mtitle">Resumen Ejecutivo BD</div><div style="font-size:12px;color:var(--text3)">'+ds+' · Cegid HR</div></div><button class="xbtn" onclick="closeModal()">✕</button></div>'+
+    '<div class="g3" style="margin-bottom:16px">'+
+    '<div class="mcard"><div class="mlbl">Iniciativas</div><div class="mval">'+initiatives.length+'</div></div>'+
+    '<div class="mcard"><div class="mlbl">Tareas activas</div><div class="mval">'+active.length+'</div></div>'+
+    '<div class="mcard"><div class="mlbl">Pipeline</div><div class="mval" style="font-size:17px">€'+pip.toLocaleString('es-ES')+'</div></div>'+
     '</div>'+
     '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">ACTIVIDAD</div><div style="font-size:13px;line-height:2">'+
-    '<div>· '+totalTime.toFixed(1)+'h invertidas</div>'+
+    '<div>· '+totT.toFixed(1)+'h invertidas</div>'+
     '<div>· '+fin.length+' tareas completadas de '+tasks.length+' ('+Math.round(fin.length/Math.max(tasks.length,1)*100)+'%)</div>'+
-    (blocked.length?'<div style="color:var(--red);font-weight:600">· ⛔ '+blocked.length+' bloqueada'+(blocked.length>1?'s':'')+' — requiere atención</div>':'<div style="color:var(--green)">· Sin bloqueos activos</div>')+
+    (blk.length?'<div style="color:var(--red);font-weight:600">· ⛔ '+blk.length+' bloqueada'+(blk.length>1?'s':'')+' — requiere atención</div>':'<div style="color:var(--green)">· Sin bloqueos activos</div>')+
     '</div></div>'+
     '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">TOP PRIORIDADES</div>'+
-    top3.map(function(t,i){return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><strong style="color:var(--text3)">'+(i+1)+'.</strong><div style="flex:1">'+t.title+'<div style="font-size:11px;color:var(--text3)">'+t.stakeholder+' · Score '+scoreDisplay(t)+'/100</div></div>'+sbadge(t.status)+'</div>';}).join('')+
+    top3.map(function(t,i){return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><strong style="color:var(--text3)">'+(i+1)+'.</strong><div style="flex:1">'+t.title+'<div style="font-size:11px;color:var(--text3)">'+t.sh+' · Score '+scoreN(t)+'/100</div></div>'+sbdg(t.status)+'</div>';}).join('')+
     '</div>'+
     '<div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Cerrar</button></div>';
-  document.getElementById('modal-overlay').classList.remove('hidden');
+  document.getElementById('overlay').classList.remove('hidden');
 }
 
-// ---------- TASK DETAIL ----------
-function openTask(id) {
-  var t = null;
-  for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){t=tasks[i];break;}}
-  if(!t) return;
-  var ini = getIni(t.initiativeId);
-  var dl = daysLeft(t.dueDate);
-  var dlBadge = dl<0?'<span class="badge badge-red">Vencida '+Math.abs(dl)+'d</span>':dl===0?'<span class="badge badge-red">Vence HOY</span>':dl<=3?'<span class="badge badge-amber">En '+dl+'d</span>':'<span class="badge badge-gray">'+fmtDate(t.dueDate)+'</span>';
-
-  document.getElementById('modal-body').innerHTML =
-    '<div class="modal-header">'+
-    '<div style="flex:1;min-width:0"><div class="modal-title">'+t.title+'</div><div style="font-size:12px;color:var(--text3);margin-top:2px">'+ini.name+'</div></div>'+
-    '<div style="display:flex;gap:8px;align-items:center"><span class="score-badge" style="font-size:13px;padding:4px 10px">Score '+scoreDisplay(t)+'</span><button class="close-btn" onclick="closeModal()">✕</button></div>'+
-    '</div>'+
+// ===== TASK DETAIL =====
+function openTask(id){
+  var t=null;for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){t=tasks[i];break;}}if(!t)return;
+  var ini=getIni(t.iid), d=dl(t.dd);
+  var dlB=d<0?bdg('br','Vencida '+Math.abs(d)+'d'):d===0?bdg('br','Vence HOY'):d<=3?bdg('ba','En '+d+'d'):bdg('bx',fmt(t.dd));
+  document.getElementById('modal').innerHTML=
+    '<div class="mhdr"><div style="flex:1;min-width:0"><div class="mtitle">'+t.title+'</div><div style="font-size:12px;color:var(--text3);margin-top:2px">'+ini.name+'</div></div>'+
+    '<div style="display:flex;gap:8px;align-items:center"><span class="sbadge" style="font-size:13px;padding:4px 10px">Score '+scoreN(t)+'</span><button class="xbtn" onclick="closeModal()">✕</button></div></div>'+
     '<div style="font-size:13px;color:var(--text2);margin-bottom:14px;padding:11px;background:var(--bg3);border-radius:8px">'+t.desc+'</div>'+
-    '<div class="form-row" style="margin-bottom:12px">'+
-    '<div><div class="form-label">Estado</div><select class="form-select" onchange="updateField(\''+id+'\',\'status\',this.value)">'+TASK_STATUSES.map(function(s){return '<option'+(t.status===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'+
-    '<div><div class="form-label">Progreso <span id="prog-lbl">'+t.progress+'%</span></div><input type="range" min="0" max="100" value="'+t.progress+'" style="width:100%;margin-top:8px" oninput="document.getElementById(\'prog-lbl\').textContent=this.value+\'%\';updateField(\''+id+'\',\'progress\',parseInt(this.value))"></div>'+
+    '<div class="frow" style="margin-bottom:12px">'+
+    '<div><label class="flbl">Estado</label><select class="fsel" onchange="updTask(\''+id+'\',\'status\',this.value)">'+STATUSES.map(function(s){return '<option'+(t.status===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'+
+    '<div><label class="flbl">Progreso <span id="plbl">'+t.prog+'%</span></label><input type="range" min="0" max="100" value="'+t.prog+'" style="width:100%;margin-top:8px" oninput="document.getElementById(\'plbl\').textContent=this.value+\'%\';updTask(\''+id+'\',\'prog\',parseInt(this.value))"></div>'+
     '</div>'+
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+sbadge(t.status)+abadge(t.area)+pbadge(t.priority)+ibadge(t.businessImpact)+dlBadge+'</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+sbdg(t.status)+abdg(t.area)+pbdg(t.prio)+ibdg(t.impact)+dlB+'</div>'+
     '<div style="display:flex;gap:16px;margin-bottom:14px;font-size:13px;background:var(--bg3);padding:10px;border-radius:8px">'+
     '<div><span style="color:var(--text3)">Esfuerzo:</span> <strong>'+t.effort+'h</strong></div>'+
-    '<div><span style="color:var(--text3)">Invertido:</span> <strong>'+t.timeSpent+'h</strong></div>'+
-    '<div><span style="color:var(--text3)">Restante:</span> <strong>'+Math.max(0,t.effort-t.timeSpent)+'h</strong></div>'+
-    '<div><span style="color:var(--text3)">Stakeholder:</span> <strong>'+t.stakeholder+'</strong></div>'+
+    '<div><span style="color:var(--text3)">Invertido:</span> <strong>'+t.spent+'h</strong></div>'+
+    '<div><span style="color:var(--text3)">Restante:</span> <strong>'+Math.max(0,t.effort-t.spent)+'h</strong></div>'+
+    '<div><span style="color:var(--text3)">Stakeholder:</span> <strong>'+t.sh+'</strong></div>'+
     '</div>'+
-    (t.deps?'<div style="margin-bottom:12px"><div class="form-label">Dependencias</div><div style="font-size:13px;padding:9px;background:var(--amber-bg);border-radius:7px;color:var(--amber-text)">⏳ '+t.deps+'</div></div>':'')+
-    '<div style="margin-bottom:12px"><div class="form-label">Próxima acción</div><input class="form-input" value="'+t.nextAction+'" onchange="updateField(\''+id+'\',\'nextAction\',this.value)" placeholder="Siguiente paso concreto"></div>'+
-    '<div class="form-row">'+
-    '<div><div class="form-label">Tiempo invertido (h)</div><input type="number" class="form-input" value="'+t.timeSpent+'" min="0" step="0.5" onchange="updateField(\''+id+'\',\'timeSpent\',parseFloat(this.value)||0)"></div>'+
-    '<div><div class="form-label">Categoría</div><select class="form-select" onchange="updateField(\''+id+'\',\'category\',this.value)">'+TASK_CATEGORIES.map(function(c){return '<option'+(t.category===c?' selected':'')+'>'+c+'</option>';}).join('')+'</select></div>'+
-    '</div>'+
+    (t.deps?'<div style="margin-bottom:12px"><label class="flbl">Dependencias</label><div style="font-size:13px;padding:9px;background:var(--amber-bg);border-radius:7px;color:var(--amber-text)">⏳ '+t.deps+'</div></div>':'')+
+    '<div style="margin-bottom:12px"><label class="flbl">Próxima acción</label><input class="finput" value="'+t.next+'" onchange="updTask(\''+id+'\',\'next\',this.value)" placeholder="Siguiente paso concreto"></div>'+
+    '<div class="frow"><div><label class="flbl">Tiempo invertido (h)</label><input type="number" class="finput" value="'+t.spent+'" min="0" step="0.5" onchange="updTask(\''+id+'\',\'spent\',parseFloat(this.value)||0)"></div>'+
+    '<div><label class="flbl">Categoría</label><select class="fsel" onchange="updTask(\''+id+'\',\'cat\',this.value)">'+CAT.map(function(c){return '<option'+(t.cat===c?' selected':'')+'>'+c+'</option>';}).join('')+'</select></div></div>'+
     '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">'+
-    '<button class="btn btn-danger" onclick="removeTask(\''+id+'\')">🗑 Eliminar</button>'+
-    '<button class="btn" onclick="closeModal()">Cerrar</button>'+
-    '</div>';
-  document.getElementById('modal-overlay').classList.remove('hidden');
+    '<button class="btn btnd" onclick="delTask(\''+id+'\')">🗑 Eliminar</button>'+
+    '<button class="btn" onclick="closeModal()">Cerrar</button></div>';
+  document.getElementById('overlay').classList.remove('hidden');
 }
-
-function updateField(id, field, val) {
+function updTask(id,field,val){
   for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){tasks[i][field]=val;break;}}
-  save();
-  updateCounts();
+  save();updateCounts();
+}
+function delTask(id){
+  tasks=tasks.filter(function(t){return t.id!==id;});
+  save();closeModal();redraw();
 }
 
-function removeTask(id) {
-  tasks = tasks.filter(function(t){return t.id!==id;});
-  save();
-  closeModal();
-  refresh();
+// ===== NEW TASK MODAL =====
+function showTaskModal(){
+  document.getElementById('modal').innerHTML=
+    '<div class="mhdr"><div class="mtitle">Nueva tarea</div><button class="xbtn" onclick="closeModal()">✕</button></div>'+
+    '<div class="hint hint-b"><strong>¿Cuándo crear una tarea?</strong> Cuando tienes una acción concreta que ejecutar: una llamada, un análisis, una reunión, una propuesta. Asóciala a una iniciativa para darle contexto estratégico.</div>'+
+    '<div class="fg"><label class="flbl">Título *</label><input class="finput" id="nt-title" placeholder="¿Qué tienes que hacer?"></div>'+
+    '<div class="fg"><label class="flbl">Descripción</label><textarea class="finput" id="nt-desc" rows="2" placeholder="Contexto y objetivo"></textarea></div>'+
+    '<div class="frow"><div><label class="flbl">Iniciativa</label><select class="fsel" id="nt-ini"><option value="">— Sin iniciativa —</option>'+initiatives.map(function(i){return '<option value="'+i.id+'">'+i.name+'</option>';}).join('')+'</select></div>'+
+    '<div><label class="flbl">Área solicitante</label><select class="fsel" id="nt-area"><option value="">Seleccionar</option>'+AREAS.map(function(a){return '<option>'+a+'</option>';}).join('')+'</select></div></div>'+
+    '<div class="frow"><div><label class="flbl">Categoría</label><select class="fsel" id="nt-cat">'+CAT.map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></div>'+
+    '<div><label class="flbl">Stakeholder</label><input class="finput" id="nt-sh" placeholder="Nombre (Rol)"></div></div>'+
+    '<div class="frow"><div><label class="flbl">Fecha inicio</label><input type="date" class="finput" id="nt-sd" value="'+todayStr()+'"></div>'+
+    '<div><label class="flbl">Fecha límite *</label><input type="date" class="finput" id="nt-dd"></div></div>'+
+    '<div class="frow"><div><label class="flbl">Prioridad</label><select class="fsel" id="nt-prio"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>'+
+    '<div><label class="flbl">Criticidad</label><select class="fsel" id="nt-crit"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div></div>'+
+    '<div class="frow"><div><label class="flbl">Impacto negocio</label><select class="fsel" id="nt-imp"><option>Alto</option><option selected>Medio</option><option>Bajo</option></select></div>'+
+    '<div><label class="flbl">Esfuerzo (h)</label><input type="number" class="finput" id="nt-effort" value="2" min="0.5" step="0.5"></div></div>'+
+    '<div class="fg"><label class="flbl">Dependencias</label><input class="finput" id="nt-deps" placeholder="¿Qué necesitas de terceros?"></div>'+
+    '<div class="fg"><label class="flbl">Próxima acción</label><input class="finput" id="nt-next" placeholder="¿Cuál es el primer paso concreto?"></div>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><input type="checkbox" id="nt-exec"><label for="nt-exec" style="font-size:13px;color:var(--text2)">Visibilidad ejecutiva (aparece en resumen a dirección)</label></div>'+
+    '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btnp" onclick="doSaveTask()">Guardar tarea</button></div>';
+  document.getElementById('overlay').classList.remove('hidden');
 }
-
-// ---------- NEW TASK MODAL ----------
-function openModal(type) {
-  var html = '';
-  if (type === 'task') {
-    html = '<div class="modal-header"><div class="modal-title">Nueva tarea</div><button class="close-btn" onclick="closeModal()">✕</button></div>'+
-      '<div style="background:var(--blue-bg);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--blue-text);line-height:1.6">'+
-      '<strong>¿Cuándo crear una tarea?</strong> Cuando tienes una acción concreta que ejecutar: una llamada, un análisis, una propuesta, una reunión. Asóciala siempre a una iniciativa para que tenga contexto estratégico.'+
-      '</div>'+
-      '<div class="form-group"><div class="form-label">Título *</div><input class="form-input" id="nt-title" placeholder="Título de la tarea"></div>'+
-      '<div class="form-group"><div class="form-label">Descripción</div><textarea class="form-input" id="nt-desc" rows="2" placeholder="Contexto y objetivo"></textarea></div>'+
-      '<div class="form-row">'+
-      '<div><div class="form-label">Iniciativa</div><select class="form-select" id="nt-ini"><option value="">— Sin iniciativa —</option>'+initiatives.map(function(i){return '<option value="'+i.id+'">'+i.name+'</option>';}).join('')+'</select></div>'+
-      '<div><div class="form-label">Área solicitante</div><select class="form-select" id="nt-area"><option value="">Seleccionar</option>'+AREAS.map(function(a){return '<option>'+a+'</option>';}).join('')+'</select></div>'+
-      '</div>'+
-      '<div class="form-row">'+
-      '<div><div class="form-label">Categoría</div><select class="form-select" id="nt-cat">'+TASK_CATEGORIES.map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></div>'+
-      '<div><div class="form-label">Stakeholder</div><input class="form-input" id="nt-stake" placeholder="Nombre (Rol)"></div>'+
-      '</div>'+
-      '<div class="form-row">'+
-      '<div><div class="form-label">Fecha inicio</div><input type="date" class="form-input" id="nt-start" value="'+todayStr()+'"></div>'+
-      '<div><div class="form-label">Fecha límite *</div><input type="date" class="form-input" id="nt-due"></div>'+
-      '</div>'+
-      '<div class="form-row">'+
-      '<div><div class="form-label">Prioridad</div><select class="form-select" id="nt-pri"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>'+
-      '<div><div class="form-label">Criticidad</div><select class="form-select" id="nt-crit"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>'+
-      '</div>'+
-      '<div class="form-row">'+
-      '<div><div class="form-label">Impacto negocio</div><select class="form-select" id="nt-imp"><option>Alto</option><option selected>Medio</option><option>Bajo</option></select></div>'+
-      '<div><div class="form-label">Esfuerzo (h)</div><input type="number" class="form-input" id="nt-effort" value="2" min="0.5" step="0.5"></div>'+
-      '</div>'+
-      '<div class="form-group"><div class="form-label">Dependencias</div><input class="form-input" id="nt-deps" placeholder="¿Qué necesitas de terceros?"></div>'+
-      '<div class="form-group"><div class="form-label">Próxima acción</div><input class="form-input" id="nt-next" placeholder="¿Cuál es el primer paso?"></div>'+
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><input type="checkbox" id="nt-exec"><label for="nt-exec" style="font-size:13px;color:var(--text2)">Visibilidad ejecutiva</label></div>'+
-      '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="doSaveTask()">Guardar tarea</button></div>';
-  } else {
-    html = '<div class="modal-header"><div class="modal-title">Nueva iniciativa</div><button class="close-btn" onclick="closeModal()">✕</button></div>'+
-      '<div style="background:var(--green-bg);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--green-text);line-height:1.6">'+
-      '<strong>¿Cuándo crear una iniciativa?</strong> Cuando tienes un objetivo de negocio con horizonte temporal: cerrar un deal, lanzar un GTM, certificar un partner. Las tareas son los pasos concretos que la hacen avanzar.'+
-      '</div>'+
-      '<div class="form-group"><div class="form-label">Nombre *</div><input class="form-input" id="ni-name" placeholder="Nombre de la iniciativa"></div>'+
-      '<div class="form-group"><div class="form-label">Objetivo de negocio</div><input class="form-input" id="ni-obj" placeholder="¿Qué resultado persigue?"></div>'+
-      '<div class="form-row">'+
-      '<div><div class="form-label">Tipo</div><select class="form-select" id="ni-type">'+INITIATIVE_TYPES.map(function(t){return '<option>'+t+'</option>';}).join('')+'</select></div>'+
-      '<div><div class="form-label">Área principal</div><select class="form-select" id="ni-area">'+AREAS.map(function(a){return '<option>'+a+'</option>';}).join('')+'</select></div>'+
-      '</div>'+
-      '<div class="form-row">'+
-      '<div><div class="form-label">Valor estimado (€)</div><input type="number" class="form-input" id="ni-val" placeholder="0" min="0"></div>'+
-      '<div><div class="form-label">Importancia</div><select class="form-select" id="ni-imp"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>'+
-      '</div>'+
-      '<div class="form-row">'+
-      '<div><div class="form-label">Fecha inicio</div><input type="date" class="form-input" id="ni-start" value="'+todayStr()+'"></div>'+
-      '<div><div class="form-label">Fecha objetivo</div><input type="date" class="form-input" id="ni-target"></div>'+
-      '</div>'+
-      '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="doSaveIni()">Guardar iniciativa</button></div>';
-  }
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-
-function doSaveTask() {
-  var title = document.getElementById('nt-title').value.trim();
-  var due = document.getElementById('nt-due').value;
-  if (!title || !due) { alert('Título y fecha límite son obligatorios'); return; }
+function doSaveTask(){
+  var title=document.getElementById('nt-title').value.trim();
+  var due=document.getElementById('nt-dd').value;
+  if(!title||!due){alert('Título y fecha límite son obligatorios');return;}
   tasks.push({
-    id: 't'+Date.now(), title: title, desc: document.getElementById('nt-desc').value,
-    initiativeId: document.getElementById('nt-ini').value, category: document.getElementById('nt-cat').value,
-    area: document.getElementById('nt-area').value || 'Ventas', stakeholder: document.getElementById('nt-stake').value,
-    startDate: document.getElementById('nt-start').value, dueDate: due, status: 'Pendiente',
-    priority: document.getElementById('nt-pri').value, criticality: document.getElementById('nt-crit').value,
-    businessImpact: document.getElementById('nt-imp').value, effort: parseFloat(document.getElementById('nt-effort').value)||2,
-    timeSpent: 0, progress: 0, deps: document.getElementById('nt-deps').value,
-    nextAction: document.getElementById('nt-next').value, execVisibility: document.getElementById('nt-exec').checked
+    id:'t'+Date.now(),title:title,desc:document.getElementById('nt-desc').value,
+    iid:document.getElementById('nt-ini').value,cat:document.getElementById('nt-cat').value,
+    area:document.getElementById('nt-area').value||'Ventas',sh:document.getElementById('nt-sh').value,
+    sd:document.getElementById('nt-sd').value,dd:due,status:'Pendiente',
+    prio:document.getElementById('nt-prio').value,crit:document.getElementById('nt-crit').value,
+    impact:document.getElementById('nt-imp').value,effort:parseFloat(document.getElementById('nt-effort').value)||2,
+    spent:0,prog:0,deps:document.getElementById('nt-deps').value,
+    next:document.getElementById('nt-next').value,exec:document.getElementById('nt-exec').checked
   });
-  save();
-  closeModal();
-  refresh();
-  toast('Tarea guardada ✓');
+  save();closeModal();redraw();toast('Tarea guardada ✓');
 }
 
-function doSaveIni() {
-  var name = document.getElementById('ni-name').value.trim();
-  if (!name) { alert('El nombre es obligatorio'); return; }
+// ===== NEW INITIATIVE MODAL =====
+function showIniModal(){
+  document.getElementById('modal').innerHTML=
+    '<div class="mhdr"><div class="mtitle">Nueva iniciativa</div><button class="xbtn" onclick="closeModal()">✕</button></div>'+
+    '<div class="hint hint-g"><strong>¿Cuándo crear una iniciativa?</strong> Cuando tienes un objetivo de negocio con horizonte temporal: cerrar un deal, lanzar un GTM, certificar un partner. Las tareas son los pasos concretos que la hacen avanzar.</div>'+
+    '<div class="fg"><label class="flbl">Nombre *</label><input class="finput" id="ni-name" placeholder="Nombre de la iniciativa"></div>'+
+    '<div class="fg"><label class="flbl">Objetivo de negocio</label><input class="finput" id="ni-obj" placeholder="¿Qué resultado persigue?"></div>'+
+    '<div class="frow"><div><label class="flbl">Tipo</label><select class="fsel" id="ni-type">'+INI_TYPES.map(function(t){return '<option>'+t+'</option>';}).join('')+'</select></div>'+
+    '<div><label class="flbl">Área principal</label><select class="fsel" id="ni-area">'+AREAS.map(function(a){return '<option>'+a+'</option>';}).join('')+'</select></div></div>'+
+    '<div class="frow"><div><label class="flbl">Valor estimado (€)</label><input type="number" class="finput" id="ni-val" placeholder="0" min="0"></div>'+
+    '<div><label class="flbl">Importancia estratégica</label><select class="fsel" id="ni-imp"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div></div>'+
+    '<div class="frow"><div><label class="flbl">Fecha inicio</label><input type="date" class="finput" id="ni-sd" value="'+todayStr()+'"></div>'+
+    '<div><label class="flbl">Fecha objetivo</label><input type="date" class="finput" id="ni-td"></div></div>'+
+    '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btnp" onclick="doSaveIni()">Guardar iniciativa</button></div>';
+  document.getElementById('overlay').classList.remove('hidden');
+}
+function doSaveIni(){
+  var name=document.getElementById('ni-name').value.trim();
+  if(!name){alert('El nombre es obligatorio');return;}
   initiatives.push({
-    id: 'i'+Date.now(), name: name, type: document.getElementById('ni-type').value,
-    area: document.getElementById('ni-area').value, otherAreas: [],
-    objective: document.getElementById('ni-obj').value,
-    value: parseInt(document.getElementById('ni-val').value)||0,
-    importance: document.getElementById('ni-imp').value,
-    startDate: document.getElementById('ni-start').value,
-    targetDate: document.getElementById('ni-target').value, status: 'En curso'
+    id:'i'+Date.now(),name:name,type:document.getElementById('ni-type').value,
+    area:document.getElementById('ni-area').value,otherAreas:[],
+    objective:document.getElementById('ni-obj').value,
+    value:parseInt(document.getElementById('ni-val').value)||0,
+    importance:document.getElementById('ni-imp').value,
+    startDate:document.getElementById('ni-sd').value,
+    targetDate:document.getElementById('ni-td').value,status:'En curso'
   });
-  save();
-  closeModal();
-  refresh();
-  toast('Iniciativa guardada ✓');
+  save();closeModal();redraw();toast('Iniciativa guardada ✓');
 }
 
-function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
-
-// ===================== PWA =====================
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(function(){});
+// ===== AREAS MODAL =====
+function showAreasModal(){
+  function buildRows(){
+    return AREAS.map(function(a,i){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">'+
+        '<div style="width:12px;height:12px;border-radius:50%;background:'+aclr(a)+';flex-shrink:0"></div>'+
+        '<span style="flex:1;font-size:13px">'+a+'</span>'+
+        '<button class="btn" style="padding:3px 8px;font-size:11px" onclick="editArea('+i+')">Editar</button>'+
+        '<button class="btn btnd" style="padding:3px 8px;font-size:11px" onclick="delArea('+i+')">✕</button>'+
+        '</div>';
+    }).join('');
+  }
+  document.getElementById('modal').innerHTML=
+    '<div class="mhdr"><div class="mtitle">⚙️ Gestionar áreas</div><button class="xbtn" onclick="closeModal()">✕</button></div>'+
+    '<div style="font-size:12px;color:var(--text3);margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:8px">Las áreas representan los equipos o departamentos implicados en tus tareas.</div>'+
+    '<div id="areas-list">'+buildRows()+'</div>'+
+    '<div style="display:flex;gap:8px;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">'+
+    '<input class="finput" id="new-area" placeholder="Nueva área..." style="flex:1">'+
+    '<button class="btn btnp" onclick="addArea()">+ Añadir</button></div>'+
+    '<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn" onclick="closeModal()">Cerrar</button></div>';
+  document.getElementById('overlay').classList.remove('hidden');
+}
+function addArea(){
+  var inp=document.getElementById('new-area');
+  var name=inp.value.trim();
+  if(!name)return;
+  if(AREAS.indexOf(name)>=0){alert('Esa área ya existe');return;}
+  AREAS.push(name);save();renderSidebar();showAreasModal();toast('Área "'+name+'" añadida ✓');
+}
+function editArea(i){
+  var cur=AREAS[i];
+  var nw=prompt('Nuevo nombre para "'+cur+'":', cur);
+  if(!nw||!nw.trim()||nw.trim()===cur)return;
+  nw=nw.trim();
+  if(AREAS.indexOf(nw)>=0){alert('Esa área ya existe');return;}
+  tasks.forEach(function(t){if(t.area===cur)t.area=nw;});
+  initiatives.forEach(function(ini){if(ini.area===cur)ini.area=nw;ini.otherAreas=ini.otherAreas.map(function(a){return a===cur?nw:a;});});
+  AREAS[i]=nw;
+  if(areaFilter===cur)areaFilter=nw;
+  save();renderSidebar();showAreasModal();toast('Área renombrada a "'+nw+'" ✓');
+}
+function delArea(i){
+  var name=AREAS[i];
+  var inUse=tasks.filter(function(t){return t.area===name;}).length;
+  var msg=inUse>0?'El área "'+name+'" tiene '+inUse+' tareas asignadas. ¿Eliminar igualmente?':'¿Eliminar el área "'+name+'"?';
+  if(!confirm(msg))return;
+  if(inUse>0)tasks.forEach(function(t){if(t.area===name)t.area='';});
+  AREAS.splice(i,1);
+  if(areaFilter===name)areaFilter='all';
+  save();renderSidebar();showAreasModal();toast('Área eliminada');
 }
 
-// ===================== INIT =====================
-loadFromStorage();
+function closeModal(){document.getElementById('overlay').classList.add('hidden');}
+
+// ===== PWA =====
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){});}
+
+// ===== INIT =====
+load();
 renderSidebar();
-refresh();
-setTimeout(function(){ toast('BDFlow listo ✓'); }, 500);
+redraw();
+setTimeout(function(){toast('BDFlow listo ✓');},500);
 </script>
 </body>
 </html>
