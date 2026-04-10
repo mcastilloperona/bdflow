@@ -214,7 +214,15 @@ function loadAll(){
     if(Array.isArray(tR))tasks=tR.map(function(r){return r.data;}).filter(Boolean);
     if(Array.isArray(iR))initiatives=iR.map(function(r){return r.data;}).filter(Boolean);
     if(Array.isArray(sR))sR.forEach(function(r){
-      if(r.key==='areas'&&Array.isArray(r.value)&&r.value.length)AREAS=r.value;
+      if(r.key==='areas'&&Array.isArray(r.value)&&r.value.length){
+        var loaded=r.value;
+        if(loaded.length&&typeof loaded[0]==='string'){
+          var defColors=['#3b6d11','#ba7517','#534ab7','#993c1d','#0f6e56','#e24b4a','#8a8a84','#185fa5','#9c3d8f','#c07a00'];
+          AREAS=loaded.map(function(n,i){return{name:n,color:defColors[i%defColors.length]};});
+        } else {
+          AREAS=loaded.filter(function(a){return a&&a.name;});
+        }
+      }
       if(r.key==='capacity'){CAP=parseInt(r.value)||6;var el=document.getElementById('cap-input');if(el)el.value=CAP;}
     });
     setSS('ok');updateNotifBadge();redraw();
