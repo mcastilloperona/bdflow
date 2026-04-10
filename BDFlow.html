@@ -31,7 +31,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ntab{padding:7px 13px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);border:none;background:none;white-space:nowrap;font-family:inherit}
 .ntab:hover{background:var(--bg3)}
 .ntab.on{background:var(--blue-bg);color:var(--blue);font-weight:600}
-.tactions{display:flex;gap:8px;margin-left:auto}
+.tactions{display:flex;gap:8px;margin-left:auto;align-items:center}
 .btn{padding:7px 13px;border-radius:7px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;font-weight:500}
 .btn:hover{background:var(--bg3)}
 .btnp{background:var(--blue);color:#fff;border-color:var(--blue)}
@@ -118,13 +118,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .hint{border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;line-height:1.6}
 .hint-b{background:var(--blue-bg);color:var(--blue-text)}
 .hint-g{background:var(--green-bg);color:var(--green-text)}
+#sync-status{font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600}
+.sync-ok{background:var(--green-bg);color:var(--green-text)}
+.sync-saving{background:var(--amber-bg);color:var(--amber-text)}
+.sync-err{background:var(--red-bg);color:var(--red-text)}
 </style>
 </head>
 <body>
 <div style="display:flex;flex-direction:column;height:100vh">
 <div class="topbar">
   <div class="logo">BD<span>Flow</span></div>
-  <div class="navtabs" id="navtabs">
+  <div class="navtabs">
     <button class="ntab on" onclick="showView('dashboard')">📊 Dashboard</button>
     <button class="ntab" onclick="showView('daily')">☀️ Hoy</button>
     <button class="ntab" onclick="showView('weekly')">📅 Semana</button>
@@ -133,6 +137,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button class="ntab" onclick="showView('report')">📈 Reporting</button>
   </div>
   <div class="tactions">
+    <span id="sync-status" class="sync-ok">● Sincronizado</span>
     <button class="btn" onclick="showTaskModal()">+ Tarea</button>
     <button class="btn btnp" onclick="showIniModal()">+ Iniciativa</button>
   </div>
@@ -166,16 +171,42 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="modal" onclick="event.stopPropagation()" id="modal"></div>
 </div>
 <script>
+// ===== SUPABASE CONFIG =====
+var SB_URL = 'https://jljaejkmbnfnhcbjcjnm.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsamFlamttYm5mbmhjYmpjam5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTEyMDksImV4cCI6MjA5MTM4NzIwOX0.7Ey8qKDlDcvOQq77rqBeH9goGWI1whrL9WiefHOp3XI';
+
+function sbHeaders() {
+  return {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+}
+
+function sbGet(table) {
+  return fetch(SB_URL+'/rest/v1/'+table+'?select=*', {headers:sbHeaders()})
+    .then(function(r){return r.json();});
+}
+
+function sbUpsert(table, row) {
+  return fetch(SB_URL+'/rest/v1/'+table, {
+    method:'POST',
+    headers:Object.assign({},sbHeaders(),{'Prefer':'resolution=merge-duplicates'}),
+    body:JSON.stringify(row)
+  });
+}
+
+function sbDelete(table, id) {
+  return fetch(SB_URL+'/rest/v1/'+table+'?id=eq.'+id, {
+    method:'DELETE', headers:sbHeaders()
+  });
+}
+
 // ===== STATE =====
 var CAP = 6;
 var areaFilter = 'all';
 var statusFilter = null;
 var view = 'dashboard';
+var saving = false;
 
-var AREA_PALETTE = ['#3b6d11','#ba7517','#534ab7','#993c1d','#0f6e56','#e24b4a','#8a8a84','#185fa5','#9c3d8f','#c07a00','#0e7490','#b45309'];
-var DEFAULT_AREAS = ['Ventas','Preventa','Producto','Marketing','Partners','Dirección','Operaciones'];
-var AREAS = DEFAULT_AREAS.slice();
-
+var AREA_PALETTE = ['#3b6d11','#ba7517','#534ab7','#993c1d','#0f6e56','#e24b4a','#8a8a84','#185fa5','#9c3d8f','#c07a00'];
+var AREAS = ['Ventas','Preventa','Producto','Marketing','Partners','Dirección','Operaciones'];
 var CAT = ['Reunión','Seguimiento','Análisis','Coordinación','Propuesta','Presentación','Reporte','Escalado','Ejecución','Bloqueo'];
 var STATUSES = ['Pendiente','En curso','Bloqueada','En espera de terceros','Finalizada'];
 var INI_TYPES = ['Oportunidad','Partner','Cliente','Iniciativa Estratégica','Soporte Interno','Marketing','Producto','Dirección'];
@@ -198,41 +229,98 @@ var DEMO_TASKS = [
   {id:'t4',title:'Análisis gap funcional HR Mid-Market',desc:'Benchmark vs SAP SuccessFactors y Workday',iid:'i3',cat:'Análisis',area:'Marketing',sh:'Ana Gómez (PMM)',sd:'2025-04-08',dd:'2025-04-22',status:'En curso',prio:'Media',crit:'Media',impact:'Medio',effort:12,spent:4,prog:35,deps:'',next:'Finalizar matriz comparativa competencia',exec:false},
   {id:'t5',title:'Follow-up activación módulo Talent Mutua',desc:'Verificar avance onboarding semana 2',iid:'i5',cat:'Seguimiento',area:'Operaciones',sh:'Laura Sánchez (IT Manager)',sd:'2025-04-09',dd:'2025-04-11',status:'En espera de terceros',prio:'Media',crit:'Alta',impact:'Alto',effort:1,spent:0.5,prog:50,deps:'Confirmación SSO configurado por IT Mutua',next:'Llamar a Laura si no hay respuesta en 24h',exec:false},
   {id:'t6',title:'Presentación QBR Dirección Q1',desc:'Resumen actividad BD, pipeline, próximas iniciativas',iid:'i3',cat:'Presentación',area:'Dirección',sh:'Carlos Prieto (VP Sales)',sd:'2025-04-01',dd:'2025-04-08',status:'En curso',prio:'Alta',crit:'Alta',impact:'Alto',effort:5,spent:4,prog:80,deps:'',next:'Incorporar datos pipeline y enviar draft',exec:true},
-  {id:'t7',title:'Coordinar traducción collateral DACH',desc:'Adaptar one-pager y case studies al mercado alemán',iid:'i1',cat:'Coordinación',area:'Marketing',sh:'Sophie Weber (Marketing EMEA)',sd:'2025-04-05',dd:'2025-04-25',status:'En espera de terceros',prio:'Baja',crit:'Baja',impact:'Medio',effort:3,spent:0.5,prog:20,deps:'Aprobación copy por Legal',next:'Seguimiento con Legal por validación trademark',exec:false},
-  {id:'t8',title:'Demo técnica Bankinter módulo Analytics',desc:'Sesión con equipo técnico cliente - escenarios nómina',iid:'i2',cat:'Reunión',area:'Preventa',sh:'Equipo Técnico Bankinter',sd:'2025-04-15',dd:'2025-04-15',status:'Pendiente',prio:'Alta',crit:'Alta',impact:'Alto',effort:3,spent:0,prog:0,deps:'Entorno sandbox actualizado por Preventa',next:'Confirmar sandbox y enviar invitación',exec:true},
+  {id:'t7',title:'Coordinar traducción collateral DACH',desc:'Adaptar one-pager al mercado alemán',iid:'i1',cat:'Coordinación',area:'Marketing',sh:'Sophie Weber (Marketing EMEA)',sd:'2025-04-05',dd:'2025-04-25',status:'En espera de terceros',prio:'Baja',crit:'Baja',impact:'Medio',effort:3,spent:0.5,prog:20,deps:'Aprobación copy por Legal',next:'Seguimiento con Legal por validación trademark',exec:false},
+  {id:'t8',title:'Demo técnica Bankinter módulo Analytics',desc:'Sesión con equipo técnico cliente',iid:'i2',cat:'Reunión',area:'Preventa',sh:'Equipo Técnico Bankinter',sd:'2025-04-15',dd:'2025-04-15',status:'Pendiente',prio:'Alta',crit:'Alta',impact:'Alto',effort:3,spent:0,prog:0,deps:'Entorno sandbox actualizado por Preventa',next:'Confirmar sandbox y enviar invitación',exec:true},
   {id:'t9',title:'Informe mensual BD para CEO',desc:'Resumen ejecutivo iniciativas, KPIs, pipeline y riesgos',iid:'i3',cat:'Reporte',area:'Dirección',sh:'Alejandro Torres (CEO)',sd:'2025-04-28',dd:'2025-04-30',status:'Pendiente',prio:'Media',crit:'Media',impact:'Medio',effort:4,spent:0,prog:0,deps:'',next:'Preparar estructura y recopilar datos KPI',exec:true},
-  {id:'t10',title:'Negociación contrato Partner Framework',desc:'Revisión términos comerciales y SLA con nuevo partner',iid:'i1',cat:'Ejecución',area:'Partners',sh:'Legal + Klaus Müller',sd:'2025-04-14',dd:'2025-04-28',status:'Pendiente',prio:'Alta',crit:'Media',impact:'Alto',effort:6,spent:0,prog:0,deps:'Revisión Legal del borrador',next:'Solicitar draft inicial a Legal',exec:false}
+  {id:'t10',title:'Negociación contrato Partner Framework',desc:'Revisión términos comerciales y SLA',iid:'i1',cat:'Ejecución',area:'Partners',sh:'Legal + Klaus Müller',sd:'2025-04-14',dd:'2025-04-28',status:'Pendiente',prio:'Alta',crit:'Media',impact:'Alto',effort:6,spent:0,prog:0,deps:'Revisión Legal del borrador',next:'Solicitar draft inicial a Legal',exec:false}
 ];
 
-// ===== STORAGE =====
-function save() {
-  try {
-    localStorage.setItem('bdflow_t', JSON.stringify(tasks));
-    localStorage.setItem('bdflow_i', JSON.stringify(initiatives));
-    localStorage.setItem('bdflow_c', String(CAP));
-    localStorage.setItem('bdflow_a', JSON.stringify(AREAS));
-  } catch(e) {}
+// ===== SYNC STATUS =====
+function setSyncStatus(s) {
+  var el = document.getElementById('sync-status');
+  if (!el) return;
+  if (s === 'ok') { el.className='sync-ok'; el.textContent='● Sincronizado'; }
+  else if (s === 'saving') { el.className='sync-saving'; el.textContent='● Guardando...'; }
+  else { el.className='sync-err'; el.textContent='● Error de red'; }
 }
-function load() {
-  try {
-    var t=localStorage.getItem('bdflow_t'), i=localStorage.getItem('bdflow_i'), c=localStorage.getItem('bdflow_c'), a=localStorage.getItem('bdflow_a');
-    if(t){var p=JSON.parse(t);if(p&&p.length)tasks=p;}
-    if(i){var p=JSON.parse(i);if(p&&p.length)initiatives=p;}
-    if(c){CAP=parseInt(c)||6;}
-    if(a){var p=JSON.parse(a);if(p&&p.length)AREAS=p;}
-  } catch(e) {}
+
+// ===== CLOUD SAVE =====
+function saveTask(t) {
+  setSyncStatus('saving');
+  return sbUpsert('tasks', {id:t.id, data:t})
+    .then(function(){setSyncStatus('ok');})
+    .catch(function(){setSyncStatus('err');});
 }
+function saveInitiative(ini) {
+  setSyncStatus('saving');
+  return sbUpsert('initiatives', {id:ini.id, data:ini})
+    .then(function(){setSyncStatus('ok');})
+    .catch(function(){setSyncStatus('err');});
+}
+function saveSettings() {
+  setSyncStatus('saving');
+  return Promise.all([
+    sbUpsert('settings', {key:'areas', value:AREAS}),
+    sbUpsert('settings', {key:'capacity', value:CAP})
+  ]).then(function(){setSyncStatus('ok');})
+    .catch(function(){setSyncStatus('err');});
+}
+
+// ===== LOAD FROM CLOUD =====
+function loadAll() {
+  set('<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text3);font-size:14px">Cargando datos...</div>');
+  return Promise.all([
+    sbGet('tasks'),
+    sbGet('initiatives'),
+    sbGet('settings')
+  ]).then(function(results) {
+    var tRows = results[0], iRows = results[1], sRows = results[2];
+    if (Array.isArray(tRows)) tasks = tRows.map(function(r){return r.data;}).filter(Boolean);
+    if (Array.isArray(iRows)) initiatives = iRows.map(function(r){return r.data;}).filter(Boolean);
+    if (Array.isArray(sRows)) {
+      sRows.forEach(function(r) {
+        if (r.key === 'areas' && Array.isArray(r.value) && r.value.length) AREAS = r.value;
+        if (r.key === 'capacity') { CAP = parseInt(r.value) || 6; var el=document.getElementById('cap-input');if(el)el.value=CAP; }
+      });
+    }
+    setSyncStatus('ok');
+    redraw();
+  }).catch(function(e) {
+    console.warn('load error', e);
+    setSyncStatus('err');
+    redraw();
+  });
+}
+
 function loadDemo() {
-  if(!confirm('Cargar datos de ejemplo. ¿Continuar?'))return;
-  tasks=JSON.parse(JSON.stringify(DEMO_TASKS));
-  initiatives=JSON.parse(JSON.stringify(DEMO_INI));
-  save(); redraw(); toast('Datos demo cargados ✓');
+  if (!confirm('Cargar datos de ejemplo. Esto reemplazará los datos actuales en la nube. ¿Continuar?')) return;
+  setSyncStatus('saving');
+  var allOps = DEMO_TASKS.map(function(t){return sbUpsert('tasks',{id:t.id,data:t});})
+    .concat(DEMO_INI.map(function(i){return sbUpsert('initiatives',{id:i.id,data:i});}));
+  Promise.all(allOps).then(function(){
+    tasks = JSON.parse(JSON.stringify(DEMO_TASKS));
+    initiatives = JSON.parse(JSON.stringify(DEMO_INI));
+    setSyncStatus('ok');
+    redraw();
+    toast('Datos demo cargados ✓');
+  }).catch(function(){setSyncStatus('err');});
 }
+
 function clearAll() {
-  if(!confirm('Borrar TODOS los datos. ¿Continuar?'))return;
-  tasks=[];initiatives=[];save();redraw();toast('Datos borrados');
+  if (!confirm('Borrar TODOS los datos de la nube. ¿Continuar?')) return;
+  setSyncStatus('saving');
+  var delOps = tasks.map(function(t){return sbDelete('tasks',t.id);})
+    .concat(initiatives.map(function(i){return sbDelete('initiatives',i.id);}));
+  Promise.all(delOps).then(function(){
+    tasks=[];initiatives=[];setSyncStatus('ok');redraw();toast('Datos borrados');
+  }).catch(function(){setSyncStatus('err');});
 }
-function setCap(v){CAP=parseInt(v)||6;save();redraw();}
+
+function setCap(v) {
+  CAP = parseInt(v)||6;
+  saveSettings();
+  redraw();
+}
 
 // ===== TOAST =====
 function toast(msg) {
@@ -247,9 +335,9 @@ function toast(msg) {
 function score(t) {
   var im={Alto:3,Medio:2,Bajo:1},pr={Alta:3,Media:2,Baja:1};
   var td=new Date();td.setHours(0,0,0,0);
-  var dd=new Date(t.dd+'T12:00:00');dd.setHours(0,0,0,0);
-  var dl=Math.ceil((dd-td)/86400000);
-  var urg=dl<=2?3:dl<=7?2:1;
+  var due=new Date(t.dd+'T12:00:00');due.setHours(0,0,0,0);
+  var d=Math.ceil((due-td)/86400000);
+  var urg=d<=2?3:d<=7?2:1;
   var blk=t.status==='Bloqueada'?3:t.status==='En espera de terceros'?2:1;
   var dep=(t.deps&&t.deps.trim())?2:1;
   var vis=t.exec?2:1;
@@ -262,7 +350,7 @@ function dd(s){var d=new Date(s+'T12:00:00');d.setHours(0,0,0,0);return d;}
 function dl(s){return Math.ceil((dd(s)-today())/86400000);}
 function overdue(t){return t.status!=='Finalizada'&&dl(t.dd)<0;}
 function thisWeek(t){var d=dl(t.dd);return d>=0&&d<=7&&t.status!=='Finalizada';}
-function getIni(id){for(var i=0;i<initiatives.length;i++){if(initiatives[i].id===id)return initiatives[i];}return {name:'Sin iniciativa',type:''};}
+function getIni(id){for(var i=0;i<initiatives.length;i++){if(initiatives[i].id===id)return initiatives[i];}return{name:'Sin iniciativa',type:''};}
 function fmt(s){if(!s)return'—';var d=new Date(s+'T12:00:00');return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'});}
 function todayStr(){return new Date().toISOString().split('T')[0];}
 function aclr(a){var def={Ventas:'#3b6d11',Preventa:'#ba7517',Producto:'#534ab7',Marketing:'#993c1d',Partners:'#0f6e56',Dirección:'#e24b4a',Operaciones:'#8a8a84'};if(def[a])return def[a];var i=AREAS.indexOf(a);return AREA_PALETTE[i%AREA_PALETTE.length]||'#185fa5';}
@@ -272,8 +360,6 @@ function filtered(){
   if(statusFilter)t=t.filter(function(x){return x.status===statusFilter;});
   return t;
 }
-
-// badge helpers
 function bdg(cls,txt){return '<span class="badge '+cls+'">'+txt+'</span>';}
 function pbdg(p){return bdg(p==='Alta'?'br':p==='Media'?'ba':'bg',p);}
 function sbdg(s){var m={Pendiente:'bx','En curso':'bb',Bloqueada:'br','En espera de terceros':'ba',Finalizada:'bg'};return bdg(m[s]||'bx',s);}
@@ -298,17 +384,8 @@ function updateCounts() {
   s('cnt-Espera',tasks.filter(function(t){return t.status==='En espera de terceros';}).length);
   s('cnt-Finalizada',tasks.filter(function(t){return t.status==='Finalizada';}).length);
 }
-function fArea(a,el){
-  areaFilter=a;statusFilter=null;
-  document.querySelectorAll('.sitem').forEach(function(e){e.classList.remove('on');});
-  el.classList.add('on');
-  renderContent();
-}
-function fStatus(s,el){
-  if(statusFilter===s){statusFilter=null;el.classList.remove('on');}
-  else{statusFilter=s;document.querySelectorAll('.sitem').forEach(function(e){e.classList.remove('on');});el.classList.add('on');}
-  renderContent();
-}
+function fArea(a,el){areaFilter=a;statusFilter=null;document.querySelectorAll('.sitem').forEach(function(e){e.classList.remove('on');});el.classList.add('on');renderContent();}
+function fStatus(s,el){if(statusFilter===s){statusFilter=null;el.classList.remove('on');}else{statusFilter=s;document.querySelectorAll('.sitem').forEach(function(e){e.classList.remove('on');});el.classList.add('on');}renderContent();}
 
 // ===== VIEWS =====
 function showView(v){
@@ -331,107 +408,41 @@ function renderContent(){
 
 // ===== DASHBOARD =====
 function vDashboard(){
-  var all=filtered(), active=all.filter(function(t){return t.status!=='Finalizada';});
+  var all=filtered(),active=all.filter(function(t){return t.status!=='Finalizada';});
   var blk=all.filter(function(t){return t.status==='Bloqueada';});
-  var ovd=all.filter(overdue), wk=all.filter(thisWeek);
-  var cap=CAP*5, hrs=active.reduce(function(s,t){return s+Math.max(0,t.effort-t.spent);},0);
+  var ovd=all.filter(overdue),wk=all.filter(thisWeek);
+  var cap=CAP*5,hrs=active.reduce(function(s,t){return s+Math.max(0,t.effort-t.spent);},0);
   var wp=Math.min(100,Math.round(hrs/cap*100));
   var wc=wp>100?'var(--red)':wp>75?'var(--amber)':'var(--blue)';
   var top=srt(active).slice(0,5);
-  var strat=tasks.filter(function(t){var ini=getIni(t.iid);return ['Iniciativa Estratégica','Oportunidad','Partner'].indexOf(ini.type)>=0&&t.status!=='Finalizada';}).length;
+  var strat=tasks.filter(function(t){var ini=getIni(t.iid);return['Iniciativa Estratégica','Oportunidad','Partner'].indexOf(ini.type)>=0&&t.status!=='Finalizada';}).length;
   var tot=tasks.filter(function(t){return t.status!=='Finalizada';}).length;
   var rs=tot?Math.round(strat/tot*100):0;
-
   var al='';
   if(ovd.length)al+='<div class="alert alert-r"><span>⚠️</span><div><strong>'+ovd.length+' tarea'+(ovd.length>1?'s':'')+' vencida'+(ovd.length>1?'s':'')+'</strong> — atención inmediata</div></div>';
   if(blk.length)al+='<div class="alert alert-r"><span>⛔</span><div><strong>'+blk.length+' bloqueada'+(blk.length>1?'s':'')+'</strong> — desbloquear para continuar</div></div>';
   if(hrs>cap)al+='<div class="alert alert-a"><span>⚡</span><div><strong>Sobrecarga</strong> — '+hrs.toFixed(0)+'h planificadas vs '+cap+'h capacidad semanal</div></div>';
   if(!al)al='<div class="alert alert-g"><span>✅</span>Carga dentro de rango. Sin bloqueos activos.</div>';
-
-  var arH=AREAS.map(function(a){
-    var h=active.filter(function(t){return t.area===a;}).reduce(function(s,t){return s+Math.max(0,t.effort-t.spent);},0);
-    if(!h)return'';
-    var p=Math.min(100,Math.round(h/cap*100));
-    return '<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px"><span>'+a+'</span><span>'+h.toFixed(0)+'h</span></div><div class="wtrack"><div class="wfill" style="width:'+p+'%;background:'+aclr(a)+'"></div></div></div>';
-  }).join('');
-
-  var topH=top.map(function(t,i){
-    return '<div class="trow'+(t.status==='Bloqueada'?' blk':t.status==='En espera de terceros'?' wait':'')+'" onclick="openTask(\''+t.id+'\')">'+
-      '<span style="font-size:12px;font-weight:700;color:var(--text3);width:16px">'+(i+1)+'</span>'+
-      '<div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'"></div>'+
-      '<span class="ttitle">'+t.title+'</span>'+
-      '<div style="display:flex;align-items:center;gap:6px"><span class="sbadge">'+scoreN(t)+'</span>'+sbdg(t.status)+'</div></div>';
-  }).join('')||'<div style="color:var(--text3);padding:12px 0">Sin tareas. Usa "Cargar datos demo" en el panel izquierdo.</div>';
-
-  var critH=all.filter(function(t){return t.crit==='Alta'&&thisWeek(t);}).map(function(t){
-    return '<div class="trow" onclick="openTask(\''+t.id+'\')"><div class="pdot ph"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+abdg(t.area)+' '+fmt(t.dd)+'</div></div>'+sbdg(t.status)+'</div>';
-  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin críticas esta semana 🎉</div>';
-
-  var blkH=all.filter(function(t){return t.status==='Bloqueada'||t.status==='En espera de terceros';}).map(function(t){
-    return '<div class="trow'+(t.status==='Bloqueada'?' blk':' wait')+'" onclick="openTask(\''+t.id+'\')"><div class="pdot '+(t.status==='Bloqueada'?'ph':'pm')+'"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">→ '+t.next+'</div></div>'+sbdg(t.status)+'</div>';
-  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin bloqueos activos</div>';
-
-  set(al+
-    '<div class="g4" style="margin-bottom:14px">'+
-    '<div class="mcard"><div class="mlbl">Tareas activas</div><div class="mval">'+active.length+'</div><div class="msub">'+ovd.length+' vencidas</div></div>'+
-    '<div class="mcard"><div class="mlbl">Esta semana</div><div class="mval">'+wk.length+'</div><div class="msub">vencimiento próximo</div></div>'+
-    '<div class="mcard"><div class="mlbl">Bloqueadas</div><div class="mval" style="color:'+(blk.length?'var(--red)':'inherit')+'">'+blk.length+'</div><div class="msub">requieren acción</div></div>'+
-    '<div class="mcard"><div class="mlbl">Ratio estratégico</div><div class="mval">'+rs+'%</div><div class="msub">vs reactivo</div></div>'+
-    '</div>'+
-    '<div class="g2" style="margin-bottom:14px">'+
-    '<div class="card"><div class="sh"><div class="ctitle">Carga semanal</div><span style="font-size:12px;color:var(--text3)">'+hrs.toFixed(0)+'h / '+cap+'h</span></div><div class="wtrack" style="margin-bottom:12px"><div class="wfill" style="width:'+wp+'%;background:'+wc+'"></div></div>'+arH+'</div>'+
-    '<div class="card"><div class="ctitle">🏆 Ranking prioridades</div>'+topH+'</div>'+
-    '</div>'+
-    '<div class="g2">'+
-    '<div><div class="sh"><div class="stitle">⚡ Críticas esta semana</div></div>'+critH+'</div>'+
-    '<div><div class="sh"><div class="stitle">🔴 Bloqueadas & En espera</div></div>'+blkH+'</div>'+
-    '</div>'
-  );
+  var arH=AREAS.map(function(a){var h=active.filter(function(t){return t.area===a;}).reduce(function(s,t){return s+Math.max(0,t.effort-t.spent);},0);if(!h)return'';var p=Math.min(100,Math.round(h/cap*100));return'<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px"><span>'+a+'</span><span>'+h.toFixed(0)+'h</span></div><div class="wtrack"><div class="wfill" style="width:'+p+'%;background:'+aclr(a)+'"></div></div></div>';}).join('');
+  var topH=top.map(function(t,i){return'<div class="trow'+(t.status==='Bloqueada'?' blk':t.status==='En espera de terceros'?' wait':'')+'" onclick="openTask(\''+t.id+'\')"><span style="font-size:12px;font-weight:700;color:var(--text3);width:16px">'+(i+1)+'</span><div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'"></div><span class="ttitle">'+t.title+'</span><div style="display:flex;align-items:center;gap:6px"><span class="sbadge">'+scoreN(t)+'</span>'+sbdg(t.status)+'</div></div>';}).join('')||'<div style="color:var(--text3);padding:12px 0">Sin tareas. Usa "Cargar datos demo".</div>';
+  var critH=all.filter(function(t){return t.crit==='Alta'&&thisWeek(t);}).map(function(t){return'<div class="trow" onclick="openTask(\''+t.id+'\')"><div class="pdot ph"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+abdg(t.area)+' '+fmt(t.dd)+'</div></div>'+sbdg(t.status)+'</div>';}).join('')||'<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin críticas esta semana 🎉</div>';
+  var blkH=all.filter(function(t){return t.status==='Bloqueada'||t.status==='En espera de terceros';}).map(function(t){return'<div class="trow'+(t.status==='Bloqueada'?' blk':' wait')+'" onclick="openTask(\''+t.id+'\')"><div class="pdot '+(t.status==='Bloqueada'?'ph':'pm')+'"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">→ '+t.next+'</div></div>'+sbdg(t.status)+'</div>';}).join('')||'<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin bloqueos activos</div>';
+  set(al+'<div class="g4" style="margin-bottom:14px"><div class="mcard"><div class="mlbl">Tareas activas</div><div class="mval">'+active.length+'</div><div class="msub">'+ovd.length+' vencidas</div></div><div class="mcard"><div class="mlbl">Esta semana</div><div class="mval">'+wk.length+'</div><div class="msub">vencimiento próximo</div></div><div class="mcard"><div class="mlbl">Bloqueadas</div><div class="mval" style="color:'+(blk.length?'var(--red)':'inherit')+'">'+blk.length+'</div><div class="msub">requieren acción</div></div><div class="mcard"><div class="mlbl">Ratio estratégico</div><div class="mval">'+rs+'%</div><div class="msub">vs reactivo</div></div></div><div class="g2" style="margin-bottom:14px"><div class="card"><div class="sh"><div class="ctitle">Carga semanal</div><span style="font-size:12px;color:var(--text3)">'+hrs.toFixed(0)+'h / '+cap+'h</span></div><div class="wtrack" style="margin-bottom:12px"><div class="wfill" style="width:'+wp+'%;background:'+wc+'"></div></div>'+arH+'</div><div class="card"><div class="ctitle">🏆 Ranking prioridades</div>'+topH+'</div></div><div class="g2"><div><div class="sh"><div class="stitle">⚡ Críticas esta semana</div></div>'+critH+'</div><div><div class="sh"><div class="stitle">🔴 Bloqueadas & En espera</div></div>'+blkH+'</div></div>');
 }
 
 // ===== DAILY =====
 function vDaily(){
-  var all=filtered(), active=all.filter(function(t){return t.status!=='Finalizada';});
+  var all=filtered(),active=all.filter(function(t){return t.status!=='Finalizada';});
   var top=srt(active).slice(0,7);
   var urg=active.filter(function(t){return dl(t.dd)<=2;});
   var wait=active.filter(function(t){return t.status==='En espera de terceros';});
   var est=top.reduce(function(s,t){return s+Math.max(0,(t.effort-t.spent)/2);},0);
   var ol=est>CAP;
   var df=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
-
-  var topH=top.map(function(t,i){
-    var d=dl(t.dd),uf=d<0?bdg('br','Vencida'):d===0?bdg('br','Hoy'):d<=3?bdg('ba','En '+d+'d'):'';
-    return '<div class="trow'+(t.status==='Bloqueada'?' blk':t.status==='En espera de terceros'?' wait':'')+'" onclick="openTask(\''+t.id+'\')">'+
-      '<span style="font-size:14px;font-weight:700;color:var(--text3);min-width:22px">'+(i+1)+'</span>'+
-      '<div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'"></div>'+
-      '<div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div>'+
-      '<div style="font-size:11px;color:var(--text3);margin-top:3px">→ '+t.next+'</div>'+
-      '<div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">'+abdg(t.area)+sbdg(t.status)+uf+'</div></div>'+
-      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span class="sbadge">'+scoreN(t)+'</span><span style="font-size:11px;color:var(--text3)">'+Math.max(0,t.effort-t.spent)+'h rest.</span></div>'+
-      '</div>';
-  }).join('')||'<div style="color:var(--text3);padding:12px 0">Sin tareas activas.</div>';
-
-  var urgH=urg.map(function(t){
-    return '<div class="trow blk" onclick="openTask(\''+t.id+'\')"><div class="pdot ph"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+fmt(t.dd)+' — '+t.sh+'</div></div>'+ibdg(t.impact)+'</div>';
-  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin urgencias</div>';
-
-  var waitH=wait.map(function(t){
-    return '<div class="trow wait" onclick="openTask(\''+t.id+'\')"><div class="pdot pm"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+t.deps+'</div></div>'+sbdg(t.status)+'</div>';
-  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin esperas activas</div>';
-
-  set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'+
-    '<div><div style="font-size:20px;font-weight:700;text-transform:capitalize">'+df+'</div>'+
-    '<div style="font-size:13px;color:var(--text3);margin-top:3px">Capacidad: '+CAP+'h — Est. hoy: '+est.toFixed(1)+'h</div></div>'+
-    (ol?bdg('br','⚡ Sobrecarga'):bdg('bg','✅ Carga OK'))+
-    '</div>'+
-    (ol?'<div class="alert alert-a"><span>⚡</span>Más trabajo del que puedes asumir hoy.</div>':'')+
-    '<div class="sh"><div class="stitle">☀️ Foco de hoy</div><span style="font-size:12px;color:var(--text3)">Por score de prioridad</span></div>'+
-    topH+
-    '<div class="g2" style="margin-top:16px">'+
-    '<div><div class="sh"><div class="stitle">🔴 Urgentes (≤48h)</div></div>'+urgH+'</div>'+
-    '<div><div class="sh"><div class="stitle">⏳ En espera de terceros</div></div>'+waitH+'</div>'+
-    '</div>'
-  );
+  var topH=top.map(function(t,i){var d=dl(t.dd),uf=d<0?bdg('br','Vencida'):d===0?bdg('br','Hoy'):d<=3?bdg('ba','En '+d+'d'):'';return'<div class="trow'+(t.status==='Bloqueada'?' blk':t.status==='En espera de terceros'?' wait':'')+'" onclick="openTask(\''+t.id+'\')"><span style="font-size:14px;font-weight:700;color:var(--text3);min-width:22px">'+(i+1)+'</span><div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:3px">→ '+t.next+'</div><div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">'+abdg(t.area)+sbdg(t.status)+uf+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span class="sbadge">'+scoreN(t)+'</span><span style="font-size:11px;color:var(--text3)">'+Math.max(0,t.effort-t.spent)+'h rest.</span></div></div>';}).join('')||'<div style="color:var(--text3);padding:12px 0">Sin tareas activas.</div>';
+  var urgH=urg.map(function(t){return'<div class="trow blk" onclick="openTask(\''+t.id+'\')"><div class="pdot ph"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+fmt(t.dd)+' — '+t.sh+'</div></div>'+ibdg(t.impact)+'</div>';}).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin urgencias</div>';
+  var waitH=wait.map(function(t){return'<div class="trow wait" onclick="openTask(\''+t.id+'\')"><div class="pdot pm"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+t.deps+'</div></div>'+sbdg(t.status)+'</div>';}).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin esperas activas</div>';
+  set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div><div style="font-size:20px;font-weight:700;text-transform:capitalize">'+df+'</div><div style="font-size:13px;color:var(--text3);margin-top:3px">Capacidad: '+CAP+'h — Est. hoy: '+est.toFixed(1)+'h</div></div>'+(ol?bdg('br','⚡ Sobrecarga'):bdg('bg','✅ Carga OK'))+'</div>'+(ol?'<div class="alert alert-a"><span>⚡</span>Más trabajo del que puedes asumir hoy.</div>':'')+'<div class="sh"><div class="stitle">☀️ Foco de hoy</div><span style="font-size:12px;color:var(--text3)">Por score de prioridad</span></div>'+topH+'<div class="g2" style="margin-top:16px"><div><div class="sh"><div class="stitle">🔴 Urgentes (≤48h)</div></div>'+urgH+'</div><div><div class="sh"><div class="stitle">⏳ En espera de terceros</div></div>'+waitH+'</div></div>');
 }
 
 // ===== WEEKLY =====
@@ -442,40 +453,19 @@ function vWeekly(){
   var dates=days.map(function(_,i){var d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
   var all=filtered().filter(function(t){return t.status!=='Finalizada';});
   var totH=all.reduce(function(s,t){return s+Math.max(0,t.effort-t.spent);},0);
-  var cap=CAP*5, wp=Math.min(100,Math.round(totH/cap*100));
-
+  var cap=CAP*5,wp=Math.min(100,Math.round(totH/cap*100));
   var cols=dates.map(function(d,i){
-    var dt=srt(all.filter(function(t){
-      var due=dd(t.dd),start=dd(t.sd);
-      return due.getTime()===d.getTime()||(start<=d&&due>=d);
-    })).slice(0,5);
+    var dt=srt(all.filter(function(t){var due=dd(t.dd),start=dd(t.sd);return due.getTime()===d.getTime()||(start<=d&&due>=d);})).slice(0,5);
     var dh=dt.reduce(function(s,t){return s+Math.max(0,t.effort-t.spent)/Math.max(1,Math.ceil((dd(t.dd)-dd(t.sd))/86400000)+1);},0);
     var isTd=d.getTime()===td.getTime();
-    return '<div class="dcol" style="'+(isTd?'border:2px solid var(--blue)':'')+'">'+
-      '<div class="dhdr" style="color:'+(isTd?'var(--blue)':'var(--text2)')+'">'+days[i]+' '+d.getDate()+'</div>'+
-      (dt.length?dt.map(function(t){return '<div class="dtask '+(t.prio==='Alta'?'alta':t.prio==='Media'?'media':'')+'" onclick="openTask(\''+t.id+'\')" title="'+t.title+'"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">'+t.title+'</div><div style="color:var(--text3);margin-top:2px">'+t.area+'</div></div>';}).join(''):'<div style="color:var(--text3);font-size:11px;text-align:center;padding:14px 0;opacity:.6">Libre</div>')+
-      '<div style="font-size:10px;text-align:center;margin-top:6px;color:'+(dh>CAP?'var(--red)':'var(--text3)')+'">'+dh.toFixed(1)+'h est.</div></div>';
-  }).join('');
-
-  var allRows=srt(all.filter(function(t){return dd(t.dd)>=mon&&dd(t.sd)<=dates[4];})).map(function(t){
-    return '<div class="trow'+(t.status==='Bloqueada'?' blk':t.status==='En espera de terceros'?' wait':'')+'" onclick="openTask(\''+t.id+'\')">'+
-      '<div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'"></div>'+
-      '<div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+t.sh+' · '+getIni(t.iid).name+'</div></div>'+
-      '<div style="display:flex;align-items:center;gap:6px">'+abdg(t.area)+sbdg(t.status)+'<span style="font-size:11px;color:var(--text3)">'+fmt(t.dd)+'</span></div></div>';
-  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin tareas esta semana</div>';
-
-  set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'+
-    '<div style="font-size:16px;font-weight:700">Semana '+mon.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+' – '+new Date(mon.getTime()+4*86400000).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+'</div>'+
-    '<div style="font-size:13px;color:'+(totH>cap?'var(--red)':'var(--text2)')+'">'+totH.toFixed(0)+'h / '+cap+'h</div></div>'+
-    '<div style="margin-bottom:14px"><div class="wtrack" style="height:10px"><div class="wfill" style="width:'+wp+'%;background:'+(totH>cap?'var(--red)':totH>cap*.75?'var(--amber)':'var(--blue)')+'"></div></div><div style="font-size:11px;color:var(--text3);margin-top:3px">'+wp+'% de capacidad semanal</div></div>'+
-    '<div class="wgrid">'+cols+'</div>'+
-    '<div style="margin-top:16px"><div class="sh"><div class="stitle">Todas las tareas de la semana</div></div>'+allRows+'</div>'
-  );
+    return'<div class="dcol" style="'+(isTd?'border:2px solid var(--blue)':'')+'"><div class="dhdr" style="color:'+(isTd?'var(--blue)':'var(--text2)')+'">'+days[i]+' '+d.getDate()+'</div>'+(dt.length?dt.map(function(t){return'<div class="dtask '+(t.prio==='Alta'?'alta':t.prio==='Media'?'media':'')+'" onclick="openTask(\''+t.id+'\')" title="'+t.title+'"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">'+t.title+'</div><div style="color:var(--text3);margin-top:2px">'+t.area+'</div></div>';}).join(''):'<div style="color:var(--text3);font-size:11px;text-align:center;padding:14px 0;opacity:.6">Libre</div>')+'<div style="font-size:10px;text-align:center;margin-top:6px;color:'+(dh>CAP?'var(--red)':'var(--text3)')+'">'+dh.toFixed(1)+'h est.</div></div>';}).join('');
+  var allRows=srt(all.filter(function(t){return dd(t.dd)>=mon&&dd(t.sd)<=dates[4];})).map(function(t){return'<div class="trow'+(t.status==='Bloqueada'?' blk':t.status==='En espera de terceros'?' wait':'')+'" onclick="openTask(\''+t.id+'\')"><div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'"></div><div style="flex:1;min-width:0"><div class="ttitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+t.sh+' · '+getIni(t.iid).name+'</div></div><div style="display:flex;align-items:center;gap:6px">'+abdg(t.area)+sbdg(t.status)+'<span style="font-size:11px;color:var(--text3)">'+fmt(t.dd)+'</span></div></div>';}).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin tareas esta semana</div>';
+  set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div style="font-size:16px;font-weight:700">Semana '+mon.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+' – '+new Date(mon.getTime()+4*86400000).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+'</div><div style="font-size:13px;color:'+(totH>cap?'var(--red)':'var(--text2)')+'">'+totH.toFixed(0)+'h / '+cap+'h</div></div><div style="margin-bottom:14px"><div class="wtrack" style="height:10px"><div class="wfill" style="width:'+wp+'%;background:'+(totH>cap?'var(--red)':totH>cap*.75?'var(--amber)':'var(--blue)')+'"></div></div><div style="font-size:11px;color:var(--text3);margin-top:3px">'+wp+'% de capacidad semanal</div></div><div class="wgrid">'+cols+'</div><div style="margin-top:16px"><div class="sh"><div class="stitle">Todas las tareas de la semana</div></div>'+allRows+'</div>');
 }
 
 // ===== INITIATIVES =====
 function vInitiatives(){
-  var INI_TC={Oportunidad:'bb',Partner:'bt','Iniciativa Estratégica':'bp',Cliente:'bg',Marketing:'bc',Producto:'ba','Soporte Interno':'bx',Dirección:'br'};
+  var TC={Oportunidad:'bb',Partner:'bt','Iniciativa Estratégica':'bp',Cliente:'bg',Marketing:'bc',Producto:'ba','Soporte Interno':'bx',Dirección:'br'};
   var cards=initiatives.map(function(ini){
     var it=tasks.filter(function(t){return t.iid===ini.id;});
     var done=it.filter(function(t){return t.status==='Finalizada';}).length;
@@ -483,16 +473,7 @@ function vInitiatives(){
     var blk=it.filter(function(t){return t.status==='Bloqueada';}).length;
     var wt=it.filter(function(t){return t.status==='En espera de terceros';}).length;
     var nxt=srt(it.filter(function(t){return t.status!=='Finalizada';})).slice(0,2);
-    return '<div class="icard">'+
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">'+
-      '<div><div style="font-size:15px;font-weight:700">'+ini.name+'</div><div style="font-size:12px;color:var(--text3);margin-top:3px">'+ini.objective+'</div></div>'+
-      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+(ini.value?'<span style="font-size:14px;font-weight:700;color:var(--green)">€'+ini.value.toLocaleString('es-ES')+'</span>':'')+bdg(ini.importance==='Alta'?'br':ini.importance==='Media'?'ba':'bg',ini.importance)+'</div>'+
-      '</div>'+
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+bdg(INI_TC[ini.type]||'bx',ini.type)+abdg(ini.area)+ini.otherAreas.slice(0,2).map(abdg).join('')+bdg('bx','📅 '+fmt(ini.startDate)+' → '+fmt(ini.targetDate))+'</div>'+
-      '<div style="display:flex;gap:14px;font-size:12px;color:var(--text3);margin-bottom:10px"><span>'+it.length+' tareas · '+done+' completadas</span>'+(blk?'<span style="color:var(--red);font-weight:600">⛔ '+blk+' bloqueada'+(blk>1?'s':'')+'</span>':'')+(wt?'<span style="color:var(--amber);font-weight:600">⏳ '+wt+' en espera</span>':'')+'</div>'+
-      '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--text3);min-width:32px">'+pct+'%</span><div class="ipbar"><div class="ipfill" style="width:'+pct+'%"></div></div><span style="font-size:11px;color:var(--text3)">'+done+'/'+it.length+'</span></div>'+
-      (nxt.length?'<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Próximas acciones</div>'+
-      nxt.map(function(t){return '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px"><div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'" style="margin-top:4px"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">→ '+t.next+'</div></div>'+sbdg(t.status)+'</div>';}).join('')+'</div>':'')+'</div>';
+    return'<div class="icard"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px"><div><div style="font-size:15px;font-weight:700">'+ini.name+'</div><div style="font-size:12px;color:var(--text3);margin-top:3px">'+ini.objective+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+(ini.value?'<span style="font-size:14px;font-weight:700;color:var(--green)">€'+ini.value.toLocaleString('es-ES')+'</span>':'')+bdg(ini.importance==='Alta'?'br':ini.importance==='Media'?'ba':'bg',ini.importance)+'</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+bdg(TC[ini.type]||'bx',ini.type)+abdg(ini.area)+ini.otherAreas.slice(0,2).map(abdg).join('')+bdg('bx','📅 '+fmt(ini.startDate)+' → '+fmt(ini.targetDate))+'</div><div style="display:flex;gap:14px;font-size:12px;color:var(--text3);margin-bottom:10px"><span>'+it.length+' tareas · '+done+' completadas</span>'+(blk?'<span style="color:var(--red);font-weight:600">⛔ '+blk+' bloqueada'+(blk>1?'s':'')+'</span>':'')+(wt?'<span style="color:var(--amber);font-weight:600">⏳ '+wt+' en espera</span>':'')+'</div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--text3);min-width:32px">'+pct+'%</span><div class="ipbar"><div class="ipfill" style="width:'+pct+'%"></div></div><span style="font-size:11px;color:var(--text3)">'+done+'/'+it.length+'</span></div>'+(nxt.length?'<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Próximas acciones</div>'+nxt.map(function(t){return'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px"><div class="pdot '+(t.prio==='Alta'?'ph':t.prio==='Media'?'pm':'pl')+'" style="margin-top:4px"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">→ '+t.next+'</div></div>'+sbdg(t.status)+'</div>';}).join('')+'</div>':'')+'</div>';
   }).join('')||'<div style="color:var(--text3);padding:20px 0">Sin iniciativas. Crea una con el botón "+ Iniciativa".</div>';
   set('<div class="sh"><div class="stitle">🎯 Iniciativas ('+initiatives.length+')</div></div>'+cards);
 }
@@ -501,18 +482,7 @@ function vInitiatives(){
 function vKanban(){
   var all=filtered();
   var cols=[{k:'Pendiente',c:'var(--text3)'},{k:'En curso',c:'var(--blue)'},{k:'En espera de terceros',lb:'En espera',c:'var(--amber)'},{k:'Bloqueada',c:'var(--red)'},{k:'Finalizada',c:'var(--green)'}];
-  var board=cols.map(function(col){
-    var ct=srt(all.filter(function(t){return t.status===col.k;}));
-    return '<div class="kcol">'+
-      '<div class="khead"><div style="width:9px;height:9px;border-radius:50%;background:'+col.c+';flex-shrink:0"></div>'+(col.lb||col.k)+bdg('bx',ct.length)+'</div>'+
-      ct.map(function(t){return '<div class="kcard" onclick="openTask(\''+t.id+'\')">'+
-        '<div class="kctitle">'+t.title+'</div>'+
-        '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">'+getIni(t.iid).name+'</div>'+
-        '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px">'+abdg(t.area)+pbdg(t.prio)+'</div>'+
-        '<div style="display:flex;align-items:center;gap:7px"><div class="pbar"><div class="pfill" style="width:'+t.prog+'%"></div></div><span style="font-size:10px;color:var(--text3)">'+t.prog+'%</span><span style="font-size:10px;color:var(--text3);margin-left:auto">'+fmt(t.dd)+'</span></div>'+
-        (t.next?'<div style="margin-top:6px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:5px">→ '+t.next+'</div>':'')+
-        '</div>';}).join('')+'</div>';
-  }).join('');
+  var board=cols.map(function(col){var ct=srt(all.filter(function(t){return t.status===col.k;}));return'<div class="kcol"><div class="khead"><div style="width:9px;height:9px;border-radius:50%;background:'+col.c+';flex-shrink:0"></div>'+(col.lb||col.k)+bdg('bx',ct.length)+'</div>'+ct.map(function(t){return'<div class="kcard" onclick="openTask(\''+t.id+'\')"><div class="kctitle">'+t.title+'</div><div style="font-size:11px;color:var(--text3);margin-bottom:8px">'+getIni(t.iid).name+'</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px">'+abdg(t.area)+pbdg(t.prio)+'</div><div style="display:flex;align-items:center;gap:7px"><div class="pbar"><div class="pfill" style="width:'+t.prog+'%"></div></div><span style="font-size:10px;color:var(--text3)">'+t.prog+'%</span><span style="font-size:10px;color:var(--text3);margin-left:auto">'+fmt(t.dd)+'</span></div>'+(t.next?'<div style="margin-top:6px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:5px">→ '+t.next+'</div>':'')+'</div>';}).join('')+'</div>';}).join('');
   set('<div class="kboard">'+board+'</div>');
 }
 
@@ -522,37 +492,15 @@ function vReport(){
   var totT=tasks.reduce(function(s,t){return s+t.spent;},0);
   var aT={};AREAS.forEach(function(a){aT[a]=tasks.filter(function(t){return t.area===a;}).reduce(function(s,t){return s+t.spent;},0);});
   var iT={};initiatives.forEach(function(i){iT[i.id]=tasks.filter(function(t){return t.iid===i.id;}).reduce(function(s,t){return s+t.spent;},0);});
-  var sT=tasks.filter(function(t){var ini=getIni(t.iid);return ['Iniciativa Estratégica','Oportunidad','Partner'].indexOf(ini.type)>=0;}).reduce(function(s,t){return s+t.spent;},0);
+  var sT=tasks.filter(function(t){var ini=getIni(t.iid);return['Iniciativa Estratégica','Oportunidad','Partner'].indexOf(ini.type)>=0;}).reduce(function(s,t){return s+t.spent;},0);
   var mAT=Math.max.apply(null,Object.values(aT).concat([1]));
   var mIT=Math.max.apply(null,Object.values(iT).concat([1]));
   var pip=initiatives.reduce(function(s,i){return s+(i.value||0);},0);
-
-  var arRows=AREAS.filter(function(a){return aT[a]>0;}).sort(function(a,b){return aT[b]-aT[a];}).map(function(a){
-    return '<div class="rrow"><div style="display:flex;align-items:center;gap:8px;min-width:110px"><div style="width:9px;height:9px;border-radius:50%;background:'+aclr(a)+'"></div><span>'+a+'</span></div><div style="flex:1;margin:0 12px"><div class="barh" style="width:'+Math.round(aT[a]/mAT*140)+'px;background:'+aclr(a)+'"></div></div><span style="font-size:12px;color:var(--text2);min-width:36px;text-align:right">'+aT[a].toFixed(1)+'h</span></div>';
-  }).join('')||'<div style="color:var(--text3);padding:8px 0">Sin datos de tiempo</div>';
-
-  var iRows=initiatives.filter(function(i){return iT[i.id]>0;}).sort(function(a,b){return iT[b.id]-iT[a.id];}).map(function(i){
-    return '<div class="rrow"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;margin-right:8px">'+i.name+'</span><div style="width:80px;margin-right:8px"><div class="barh" style="width:'+Math.round(iT[i.id]/mIT*80)+'px"></div></div><span style="font-size:12px;min-width:36px;text-align:right">'+iT[i.id].toFixed(1)+'h</span></div>';
-  }).join('')||'<div style="color:var(--text3);padding:8px 0">Sin datos</div>';
-
+  var arRows=AREAS.filter(function(a){return aT[a]>0;}).sort(function(a,b){return aT[b]-aT[a];}).map(function(a){return'<div class="rrow"><div style="display:flex;align-items:center;gap:8px;min-width:110px"><div style="width:9px;height:9px;border-radius:50%;background:'+aclr(a)+'"></div><span>'+a+'</span></div><div style="flex:1;margin:0 12px"><div class="barh" style="width:'+Math.round(aT[a]/mAT*140)+'px;background:'+aclr(a)+'"></div></div><span style="font-size:12px;color:var(--text2);min-width:36px;text-align:right">'+aT[a].toFixed(1)+'h</span></div>';}).join('')||'<div style="color:var(--text3);padding:8px 0">Sin datos de tiempo</div>';
+  var iRows=initiatives.filter(function(i){return iT[i.id]>0;}).sort(function(a,b){return iT[b.id]-iT[a.id];}).map(function(i){return'<div class="rrow"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;margin-right:8px">'+i.name+'</span><div style="width:80px;margin-right:8px"><div class="barh" style="width:'+Math.round(iT[i.id]/mIT*80)+'px"></div></div><span style="font-size:12px;min-width:36px;text-align:right">'+iT[i.id].toFixed(1)+'h</span></div>';}).join('')||'<div style="color:var(--text3);padding:8px 0">Sin datos</div>';
   var stRows=STATUSES.map(function(s){var c=tasks.filter(function(t){return t.status===s;}).length;return c?'<div class="rrow"><span>'+s+'</span><div style="display:flex;align-items:center;gap:8px"><div class="barh" style="width:'+Math.round(c/Math.max(tasks.length,1)*100)+'px"></div><strong>'+c+'</strong></div></div>':'';}).join('');
-
-  var blkRows=tasks.filter(function(t){return ['Bloqueada','En espera de terceros'].indexOf(t.status)>=0;}).map(function(t){
-    return '<div class="rrow" style="cursor:pointer" onclick="openTask(\''+t.id+'\')"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+t.deps+'</div></div>'+sbdg(t.status)+'</div>';
-  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px">Sin bloqueos</div>';
-
-  set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'+
-    '<div style="font-size:16px;font-weight:700">📈 Reporting ejecutivo</div>'+
-    '<button class="btn btnp" onclick="showExecSummary()">📋 Resumen ejecutivo</button></div>'+
-    '<div class="g4" style="margin-bottom:16px">'+
-    '<div class="mcard"><div class="mlbl">Horas invertidas</div><div class="mval">'+totT.toFixed(1)+'h</div></div>'+
-    '<div class="mcard"><div class="mlbl">Completadas</div><div class="mval">'+fin.length+'</div><div class="msub">de '+tasks.length+' totales</div></div>'+
-    '<div class="mcard"><div class="mlbl">Trabajo estratégico</div><div class="mval">'+sT.toFixed(1)+'h</div><div class="msub">'+(totT?Math.round(sT/totT*100):0)+'% del total</div></div>'+
-    '<div class="mcard"><div class="mlbl">Pipeline activo</div><div class="mval" style="font-size:18px">€'+pip.toLocaleString('es-ES')+'</div></div>'+
-    '</div>'+
-    '<div class="g2" style="margin-bottom:16px"><div class="card"><div class="ctitle">Tiempo por área</div>'+arRows+'</div><div class="card"><div class="ctitle">Tiempo por iniciativa</div>'+iRows+'</div></div>'+
-    '<div class="g2"><div class="card"><div class="ctitle">Tareas por estado</div>'+stRows+'</div><div class="card"><div class="ctitle">Bloqueadas & en espera</div>'+blkRows+'</div></div>'
-  );
+  var blkRows=tasks.filter(function(t){return['Bloqueada','En espera de terceros'].indexOf(t.status)>=0;}).map(function(t){return'<div class="rrow" style="cursor:pointer" onclick="openTask(\''+t.id+'\')"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.title+'</div><div style="font-size:11px;color:var(--text3)">'+t.deps+'</div></div>'+sbdg(t.status)+'</div>';}).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px">Sin bloqueos</div>';
+  set('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:16px;font-weight:700">📈 Reporting ejecutivo</div><button class="btn btnp" onclick="showExecSummary()">📋 Resumen ejecutivo</button></div><div class="g4" style="margin-bottom:16px"><div class="mcard"><div class="mlbl">Horas invertidas</div><div class="mval">'+totT.toFixed(1)+'h</div></div><div class="mcard"><div class="mlbl">Completadas</div><div class="mval">'+fin.length+'</div><div class="msub">de '+tasks.length+' totales</div></div><div class="mcard"><div class="mlbl">Trabajo estratégico</div><div class="mval">'+sT.toFixed(1)+'h</div><div class="msub">'+(totT?Math.round(sT/totT*100):0)+'% del total</div></div><div class="mcard"><div class="mlbl">Pipeline activo</div><div class="mval" style="font-size:18px">€'+pip.toLocaleString('es-ES')+'</div></div></div><div class="g2" style="margin-bottom:16px"><div class="card"><div class="ctitle">Tiempo por área</div>'+arRows+'</div><div class="card"><div class="ctitle">Tiempo por iniciativa</div>'+iRows+'</div></div><div class="g2"><div class="card"><div class="ctitle">Tareas por estado</div>'+stRows+'</div><div class="card"><div class="ctitle">Bloqueadas & en espera</div>'+blkRows+'</div></div>');
 }
 
 // ===== EXEC SUMMARY =====
@@ -564,184 +512,81 @@ function showExecSummary(){
   var pip=initiatives.reduce(function(s,i){return s+(i.value||0);},0);
   var ds=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
   var top3=srt(active).slice(0,3);
-  document.getElementById('modal').innerHTML=
-    '<div class="mhdr"><div><div class="mtitle">Resumen Ejecutivo BD</div><div style="font-size:12px;color:var(--text3)">'+ds+' · Cegid HR</div></div><button class="xbtn" onclick="closeModal()">✕</button></div>'+
-    '<div class="g3" style="margin-bottom:16px">'+
-    '<div class="mcard"><div class="mlbl">Iniciativas</div><div class="mval">'+initiatives.length+'</div></div>'+
-    '<div class="mcard"><div class="mlbl">Tareas activas</div><div class="mval">'+active.length+'</div></div>'+
-    '<div class="mcard"><div class="mlbl">Pipeline</div><div class="mval" style="font-size:17px">€'+pip.toLocaleString('es-ES')+'</div></div>'+
-    '</div>'+
-    '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">ACTIVIDAD</div><div style="font-size:13px;line-height:2">'+
-    '<div>· '+totT.toFixed(1)+'h invertidas</div>'+
-    '<div>· '+fin.length+' tareas completadas de '+tasks.length+' ('+Math.round(fin.length/Math.max(tasks.length,1)*100)+'%)</div>'+
-    (blk.length?'<div style="color:var(--red);font-weight:600">· ⛔ '+blk.length+' bloqueada'+(blk.length>1?'s':'')+' — requiere atención</div>':'<div style="color:var(--green)">· Sin bloqueos activos</div>')+
-    '</div></div>'+
-    '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">TOP PRIORIDADES</div>'+
-    top3.map(function(t,i){return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><strong style="color:var(--text3)">'+(i+1)+'.</strong><div style="flex:1">'+t.title+'<div style="font-size:11px;color:var(--text3)">'+t.sh+' · Score '+scoreN(t)+'/100</div></div>'+sbdg(t.status)+'</div>';}).join('')+
-    '</div>'+
-    '<div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Cerrar</button></div>';
+  document.getElementById('modal').innerHTML='<div class="mhdr"><div><div class="mtitle">Resumen Ejecutivo BD</div><div style="font-size:12px;color:var(--text3)">'+ds+' · Cegid HR</div></div><button class="xbtn" onclick="closeModal()">✕</button></div><div class="g3" style="margin-bottom:16px"><div class="mcard"><div class="mlbl">Iniciativas</div><div class="mval">'+initiatives.length+'</div></div><div class="mcard"><div class="mlbl">Tareas activas</div><div class="mval">'+active.length+'</div></div><div class="mcard"><div class="mlbl">Pipeline</div><div class="mval" style="font-size:17px">€'+pip.toLocaleString('es-ES')+'</div></div></div><div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">ACTIVIDAD</div><div style="font-size:13px;line-height:2"><div>· '+totT.toFixed(1)+'h invertidas</div><div>· '+fin.length+' tareas completadas de '+tasks.length+' ('+Math.round(fin.length/Math.max(tasks.length,1)*100)+'%)</div>'+(blk.length?'<div style="color:var(--red);font-weight:600">· ⛔ '+blk.length+' bloqueada'+(blk.length>1?'s':'')+' — requiere atención</div>':'<div style="color:var(--green)">· Sin bloqueos activos</div>')+'</div></div><div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">TOP PRIORIDADES</div>'+top3.map(function(t,i){return'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><strong style="color:var(--text3)">'+(i+1)+'.</strong><div style="flex:1">'+t.title+'<div style="font-size:11px;color:var(--text3)">'+t.sh+' · Score '+scoreN(t)+'/100</div></div>'+sbdg(t.status)+'</div>';}).join('')+'</div><div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Cerrar</button></div>';
   document.getElementById('overlay').classList.remove('hidden');
 }
 
 // ===== TASK DETAIL =====
 function openTask(id){
   var t=null;for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){t=tasks[i];break;}}if(!t)return;
-  var ini=getIni(t.iid), d=dl(t.dd);
+  var ini=getIni(t.iid),d=dl(t.dd);
   var dlB=d<0?bdg('br','Vencida '+Math.abs(d)+'d'):d===0?bdg('br','Vence HOY'):d<=3?bdg('ba','En '+d+'d'):bdg('bx',fmt(t.dd));
-  document.getElementById('modal').innerHTML=
-    '<div class="mhdr"><div style="flex:1;min-width:0"><div class="mtitle">'+t.title+'</div><div style="font-size:12px;color:var(--text3);margin-top:2px">'+ini.name+'</div></div>'+
-    '<div style="display:flex;gap:8px;align-items:center"><span class="sbadge" style="font-size:13px;padding:4px 10px">Score '+scoreN(t)+'</span><button class="xbtn" onclick="closeModal()">✕</button></div></div>'+
-    '<div style="font-size:13px;color:var(--text2);margin-bottom:14px;padding:11px;background:var(--bg3);border-radius:8px">'+t.desc+'</div>'+
-    '<div class="frow" style="margin-bottom:12px">'+
-    '<div><label class="flbl">Estado</label><select class="fsel" onchange="updTask(\''+id+'\',\'status\',this.value)">'+STATUSES.map(function(s){return '<option'+(t.status===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'+
-    '<div><label class="flbl">Progreso <span id="plbl">'+t.prog+'%</span></label><input type="range" min="0" max="100" value="'+t.prog+'" style="width:100%;margin-top:8px" oninput="document.getElementById(\'plbl\').textContent=this.value+\'%\';updTask(\''+id+'\',\'prog\',parseInt(this.value))"></div>'+
-    '</div>'+
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+sbdg(t.status)+abdg(t.area)+pbdg(t.prio)+ibdg(t.impact)+dlB+'</div>'+
-    '<div style="display:flex;gap:16px;margin-bottom:14px;font-size:13px;background:var(--bg3);padding:10px;border-radius:8px">'+
-    '<div><span style="color:var(--text3)">Esfuerzo:</span> <strong>'+t.effort+'h</strong></div>'+
-    '<div><span style="color:var(--text3)">Invertido:</span> <strong>'+t.spent+'h</strong></div>'+
-    '<div><span style="color:var(--text3)">Restante:</span> <strong>'+Math.max(0,t.effort-t.spent)+'h</strong></div>'+
-    '<div><span style="color:var(--text3)">Stakeholder:</span> <strong>'+t.sh+'</strong></div>'+
-    '</div>'+
-    (t.deps?'<div style="margin-bottom:12px"><label class="flbl">Dependencias</label><div style="font-size:13px;padding:9px;background:var(--amber-bg);border-radius:7px;color:var(--amber-text)">⏳ '+t.deps+'</div></div>':'')+
-    '<div style="margin-bottom:12px"><label class="flbl">Próxima acción</label><input class="finput" value="'+t.next+'" onchange="updTask(\''+id+'\',\'next\',this.value)" placeholder="Siguiente paso concreto"></div>'+
-    '<div class="frow"><div><label class="flbl">Tiempo invertido (h)</label><input type="number" class="finput" value="'+t.spent+'" min="0" step="0.5" onchange="updTask(\''+id+'\',\'spent\',parseFloat(this.value)||0)"></div>'+
-    '<div><label class="flbl">Categoría</label><select class="fsel" onchange="updTask(\''+id+'\',\'cat\',this.value)">'+CAT.map(function(c){return '<option'+(t.cat===c?' selected':'')+'>'+c+'</option>';}).join('')+'</select></div></div>'+
-    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">'+
-    '<button class="btn btnd" onclick="delTask(\''+id+'\')">🗑 Eliminar</button>'+
-    '<button class="btn" onclick="closeModal()">Cerrar</button></div>';
+  document.getElementById('modal').innerHTML='<div class="mhdr"><div style="flex:1;min-width:0"><div class="mtitle">'+t.title+'</div><div style="font-size:12px;color:var(--text3);margin-top:2px">'+ini.name+'</div></div><div style="display:flex;gap:8px;align-items:center"><span class="sbadge" style="font-size:13px;padding:4px 10px">Score '+scoreN(t)+'</span><button class="xbtn" onclick="closeModal()">✕</button></div></div><div style="font-size:13px;color:var(--text2);margin-bottom:14px;padding:11px;background:var(--bg3);border-radius:8px">'+t.desc+'</div><div class="frow" style="margin-bottom:12px"><div><label class="flbl">Estado</label><select class="fsel" onchange="updTask(\''+id+'\',\'status\',this.value)">'+STATUSES.map(function(s){return'<option'+(t.status===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div><div><label class="flbl">Progreso <span id="plbl">'+t.prog+'%</span></label><input type="range" min="0" max="100" value="'+t.prog+'" style="width:100%;margin-top:8px" oninput="document.getElementById(\'plbl\').textContent=this.value+\'%\';updTask(\''+id+'\',\'prog\',parseInt(this.value))"></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+sbdg(t.status)+abdg(t.area)+pbdg(t.prio)+ibdg(t.impact)+dlB+'</div><div style="display:flex;gap:16px;margin-bottom:14px;font-size:13px;background:var(--bg3);padding:10px;border-radius:8px"><div><span style="color:var(--text3)">Esfuerzo:</span> <strong>'+t.effort+'h</strong></div><div><span style="color:var(--text3)">Invertido:</span> <strong>'+t.spent+'h</strong></div><div><span style="color:var(--text3)">Restante:</span> <strong>'+Math.max(0,t.effort-t.spent)+'h</strong></div><div><span style="color:var(--text3)">Stakeholder:</span> <strong>'+t.sh+'</strong></div></div>'+(t.deps?'<div style="margin-bottom:12px"><label class="flbl">Dependencias</label><div style="font-size:13px;padding:9px;background:var(--amber-bg);border-radius:7px;color:var(--amber-text)">⏳ '+t.deps+'</div></div>':'')+'<div style="margin-bottom:12px"><label class="flbl">Próxima acción</label><input class="finput" value="'+t.next+'" onchange="updTask(\''+id+'\',\'next\',this.value)" placeholder="Siguiente paso concreto"></div><div class="frow"><div><label class="flbl">Tiempo invertido (h)</label><input type="number" class="finput" value="'+t.spent+'" min="0" step="0.5" onchange="updTask(\''+id+'\',\'spent\',parseFloat(this.value)||0)"></div><div><label class="flbl">Categoría</label><select class="fsel" onchange="updTask(\''+id+'\',\'cat\',this.value)">'+CAT.map(function(c){return'<option'+(t.cat===c?' selected':'')+'>'+c+'</option>';}).join('')+'</select></div></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;border-top:1px solid var(--border);padding-top:14px"><button class="btn btnd" onclick="delTask(\''+id+'\')">🗑 Eliminar</button><button class="btn" onclick="closeModal()">Cerrar</button></div>';
   document.getElementById('overlay').classList.remove('hidden');
 }
 function updTask(id,field,val){
-  for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){tasks[i][field]=val;break;}}
-  save();updateCounts();
+  for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){tasks[i][field]=val;saveTask(tasks[i]);break;}}
+  updateCounts();
 }
 function delTask(id){
+  sbDelete('tasks',id);
   tasks=tasks.filter(function(t){return t.id!==id;});
-  save();closeModal();redraw();
+  closeModal();redraw();
 }
 
-// ===== NEW TASK MODAL =====
+// ===== NEW TASK =====
 function showTaskModal(){
-  document.getElementById('modal').innerHTML=
-    '<div class="mhdr"><div class="mtitle">Nueva tarea</div><button class="xbtn" onclick="closeModal()">✕</button></div>'+
-    '<div class="hint hint-b"><strong>¿Cuándo crear una tarea?</strong> Cuando tienes una acción concreta que ejecutar: una llamada, un análisis, una reunión, una propuesta. Asóciala a una iniciativa para darle contexto estratégico.</div>'+
-    '<div class="fg"><label class="flbl">Título *</label><input class="finput" id="nt-title" placeholder="¿Qué tienes que hacer?"></div>'+
-    '<div class="fg"><label class="flbl">Descripción</label><textarea class="finput" id="nt-desc" rows="2" placeholder="Contexto y objetivo"></textarea></div>'+
-    '<div class="frow"><div><label class="flbl">Iniciativa</label><select class="fsel" id="nt-ini"><option value="">— Sin iniciativa —</option>'+initiatives.map(function(i){return '<option value="'+i.id+'">'+i.name+'</option>';}).join('')+'</select></div>'+
-    '<div><label class="flbl">Área solicitante</label><select class="fsel" id="nt-area"><option value="">Seleccionar</option>'+AREAS.map(function(a){return '<option>'+a+'</option>';}).join('')+'</select></div></div>'+
-    '<div class="frow"><div><label class="flbl">Categoría</label><select class="fsel" id="nt-cat">'+CAT.map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></div>'+
-    '<div><label class="flbl">Stakeholder</label><input class="finput" id="nt-sh" placeholder="Nombre (Rol)"></div></div>'+
-    '<div class="frow"><div><label class="flbl">Fecha inicio</label><input type="date" class="finput" id="nt-sd" value="'+todayStr()+'"></div>'+
-    '<div><label class="flbl">Fecha límite *</label><input type="date" class="finput" id="nt-dd"></div></div>'+
-    '<div class="frow"><div><label class="flbl">Prioridad</label><select class="fsel" id="nt-prio"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>'+
-    '<div><label class="flbl">Criticidad</label><select class="fsel" id="nt-crit"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div></div>'+
-    '<div class="frow"><div><label class="flbl">Impacto negocio</label><select class="fsel" id="nt-imp"><option>Alto</option><option selected>Medio</option><option>Bajo</option></select></div>'+
-    '<div><label class="flbl">Esfuerzo (h)</label><input type="number" class="finput" id="nt-effort" value="2" min="0.5" step="0.5"></div></div>'+
-    '<div class="fg"><label class="flbl">Dependencias</label><input class="finput" id="nt-deps" placeholder="¿Qué necesitas de terceros?"></div>'+
-    '<div class="fg"><label class="flbl">Próxima acción</label><input class="finput" id="nt-next" placeholder="¿Cuál es el primer paso concreto?"></div>'+
-    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><input type="checkbox" id="nt-exec"><label for="nt-exec" style="font-size:13px;color:var(--text2)">Visibilidad ejecutiva (aparece en resumen a dirección)</label></div>'+
-    '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btnp" onclick="doSaveTask()">Guardar tarea</button></div>';
+  document.getElementById('modal').innerHTML='<div class="mhdr"><div class="mtitle">Nueva tarea</div><button class="xbtn" onclick="closeModal()">✕</button></div><div class="hint hint-b"><strong>¿Cuándo crear una tarea?</strong> Cuando tienes una acción concreta que ejecutar: una llamada, un análisis, una reunión, una propuesta. Asóciala a una iniciativa para darle contexto estratégico.</div><div class="fg"><label class="flbl">Título *</label><input class="finput" id="nt-title" placeholder="¿Qué tienes que hacer?"></div><div class="fg"><label class="flbl">Descripción</label><textarea class="finput" id="nt-desc" rows="2" placeholder="Contexto y objetivo"></textarea></div><div class="frow"><div><label class="flbl">Iniciativa</label><select class="fsel" id="nt-ini"><option value="">— Sin iniciativa —</option>'+initiatives.map(function(i){return'<option value="'+i.id+'">'+i.name+'</option>';}).join('')+'</select></div><div><label class="flbl">Área solicitante</label><select class="fsel" id="nt-area"><option value="">Seleccionar</option>'+AREAS.map(function(a){return'<option>'+a+'</option>';}).join('')+'</select></div></div><div class="frow"><div><label class="flbl">Categoría</label><select class="fsel" id="nt-cat">'+CAT.map(function(c){return'<option>'+c+'</option>';}).join('')+'</select></div><div><label class="flbl">Stakeholder</label><input class="finput" id="nt-sh" placeholder="Nombre (Rol)"></div></div><div class="frow"><div><label class="flbl">Fecha inicio</label><input type="date" class="finput" id="nt-sd" value="'+todayStr()+'"></div><div><label class="flbl">Fecha límite *</label><input type="date" class="finput" id="nt-dd"></div></div><div class="frow"><div><label class="flbl">Prioridad</label><select class="fsel" id="nt-prio"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div><div><label class="flbl">Criticidad</label><select class="fsel" id="nt-crit"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div></div><div class="frow"><div><label class="flbl">Impacto negocio</label><select class="fsel" id="nt-imp"><option>Alto</option><option selected>Medio</option><option>Bajo</option></select></div><div><label class="flbl">Esfuerzo (h)</label><input type="number" class="finput" id="nt-effort" value="2" min="0.5" step="0.5"></div></div><div class="fg"><label class="flbl">Dependencias</label><input class="finput" id="nt-deps" placeholder="¿Qué necesitas de terceros?"></div><div class="fg"><label class="flbl">Próxima acción</label><input class="finput" id="nt-next" placeholder="¿Cuál es el primer paso concreto?"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><input type="checkbox" id="nt-exec"><label for="nt-exec" style="font-size:13px;color:var(--text2)">Visibilidad ejecutiva</label></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btnp" onclick="doSaveTask()">Guardar tarea</button></div>';
   document.getElementById('overlay').classList.remove('hidden');
 }
 function doSaveTask(){
   var title=document.getElementById('nt-title').value.trim();
   var due=document.getElementById('nt-dd').value;
   if(!title||!due){alert('Título y fecha límite son obligatorios');return;}
-  tasks.push({
-    id:'t'+Date.now(),title:title,desc:document.getElementById('nt-desc').value,
-    iid:document.getElementById('nt-ini').value,cat:document.getElementById('nt-cat').value,
-    area:document.getElementById('nt-area').value||'Ventas',sh:document.getElementById('nt-sh').value,
-    sd:document.getElementById('nt-sd').value,dd:due,status:'Pendiente',
-    prio:document.getElementById('nt-prio').value,crit:document.getElementById('nt-crit').value,
-    impact:document.getElementById('nt-imp').value,effort:parseFloat(document.getElementById('nt-effort').value)||2,
-    spent:0,prog:0,deps:document.getElementById('nt-deps').value,
-    next:document.getElementById('nt-next').value,exec:document.getElementById('nt-exec').checked
-  });
-  save();closeModal();redraw();toast('Tarea guardada ✓');
+  var t={id:'t'+Date.now(),title:title,desc:document.getElementById('nt-desc').value,iid:document.getElementById('nt-ini').value,cat:document.getElementById('nt-cat').value,area:document.getElementById('nt-area').value||'Ventas',sh:document.getElementById('nt-sh').value,sd:document.getElementById('nt-sd').value,dd:due,status:'Pendiente',prio:document.getElementById('nt-prio').value,crit:document.getElementById('nt-crit').value,impact:document.getElementById('nt-imp').value,effort:parseFloat(document.getElementById('nt-effort').value)||2,spent:0,prog:0,deps:document.getElementById('nt-deps').value,next:document.getElementById('nt-next').value,exec:document.getElementById('nt-exec').checked};
+  tasks.push(t);saveTask(t);closeModal();redraw();toast('Tarea guardada ✓');
 }
 
-// ===== NEW INITIATIVE MODAL =====
+// ===== NEW INITIATIVE =====
 function showIniModal(){
-  document.getElementById('modal').innerHTML=
-    '<div class="mhdr"><div class="mtitle">Nueva iniciativa</div><button class="xbtn" onclick="closeModal()">✕</button></div>'+
-    '<div class="hint hint-g"><strong>¿Cuándo crear una iniciativa?</strong> Cuando tienes un objetivo de negocio con horizonte temporal: cerrar un deal, lanzar un GTM, certificar un partner. Las tareas son los pasos concretos que la hacen avanzar.</div>'+
-    '<div class="fg"><label class="flbl">Nombre *</label><input class="finput" id="ni-name" placeholder="Nombre de la iniciativa"></div>'+
-    '<div class="fg"><label class="flbl">Objetivo de negocio</label><input class="finput" id="ni-obj" placeholder="¿Qué resultado persigue?"></div>'+
-    '<div class="frow"><div><label class="flbl">Tipo</label><select class="fsel" id="ni-type">'+INI_TYPES.map(function(t){return '<option>'+t+'</option>';}).join('')+'</select></div>'+
-    '<div><label class="flbl">Área principal</label><select class="fsel" id="ni-area">'+AREAS.map(function(a){return '<option>'+a+'</option>';}).join('')+'</select></div></div>'+
-    '<div class="frow"><div><label class="flbl">Valor estimado (€)</label><input type="number" class="finput" id="ni-val" placeholder="0" min="0"></div>'+
-    '<div><label class="flbl">Importancia estratégica</label><select class="fsel" id="ni-imp"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div></div>'+
-    '<div class="frow"><div><label class="flbl">Fecha inicio</label><input type="date" class="finput" id="ni-sd" value="'+todayStr()+'"></div>'+
-    '<div><label class="flbl">Fecha objetivo</label><input type="date" class="finput" id="ni-td"></div></div>'+
-    '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btnp" onclick="doSaveIni()">Guardar iniciativa</button></div>';
+  document.getElementById('modal').innerHTML='<div class="mhdr"><div class="mtitle">Nueva iniciativa</div><button class="xbtn" onclick="closeModal()">✕</button></div><div class="hint hint-g"><strong>¿Cuándo crear una iniciativa?</strong> Cuando tienes un objetivo de negocio con horizonte temporal: cerrar un deal, lanzar un GTM, certificar un partner. Las tareas son los pasos concretos que la hacen avanzar.</div><div class="fg"><label class="flbl">Nombre *</label><input class="finput" id="ni-name" placeholder="Nombre de la iniciativa"></div><div class="fg"><label class="flbl">Objetivo de negocio</label><input class="finput" id="ni-obj" placeholder="¿Qué resultado persigue?"></div><div class="frow"><div><label class="flbl">Tipo</label><select class="fsel" id="ni-type">'+INI_TYPES.map(function(t){return'<option>'+t+'</option>';}).join('')+'</select></div><div><label class="flbl">Área principal</label><select class="fsel" id="ni-area">'+AREAS.map(function(a){return'<option>'+a+'</option>';}).join('')+'</select></div></div><div class="frow"><div><label class="flbl">Valor estimado (€)</label><input type="number" class="finput" id="ni-val" placeholder="0" min="0"></div><div><label class="flbl">Importancia estratégica</label><select class="fsel" id="ni-imp"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div></div><div class="frow"><div><label class="flbl">Fecha inicio</label><input type="date" class="finput" id="ni-sd" value="'+todayStr()+'"></div><div><label class="flbl">Fecha objetivo</label><input type="date" class="finput" id="ni-td"></div></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btnp" onclick="doSaveIni()">Guardar iniciativa</button></div>';
   document.getElementById('overlay').classList.remove('hidden');
 }
 function doSaveIni(){
   var name=document.getElementById('ni-name').value.trim();
   if(!name){alert('El nombre es obligatorio');return;}
-  initiatives.push({
-    id:'i'+Date.now(),name:name,type:document.getElementById('ni-type').value,
-    area:document.getElementById('ni-area').value,otherAreas:[],
-    objective:document.getElementById('ni-obj').value,
-    value:parseInt(document.getElementById('ni-val').value)||0,
-    importance:document.getElementById('ni-imp').value,
-    startDate:document.getElementById('ni-sd').value,
-    targetDate:document.getElementById('ni-td').value,status:'En curso'
-  });
-  save();closeModal();redraw();toast('Iniciativa guardada ✓');
+  var ini={id:'i'+Date.now(),name:name,type:document.getElementById('ni-type').value,area:document.getElementById('ni-area').value,otherAreas:[],objective:document.getElementById('ni-obj').value,value:parseInt(document.getElementById('ni-val').value)||0,importance:document.getElementById('ni-imp').value,startDate:document.getElementById('ni-sd').value,targetDate:document.getElementById('ni-td').value,status:'En curso'};
+  initiatives.push(ini);saveInitiative(ini);closeModal();redraw();toast('Iniciativa guardada ✓');
 }
 
 // ===== AREAS MODAL =====
 function showAreasModal(){
-  function buildRows(){
-    return AREAS.map(function(a,i){
-      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">'+
-        '<div style="width:12px;height:12px;border-radius:50%;background:'+aclr(a)+';flex-shrink:0"></div>'+
-        '<span style="flex:1;font-size:13px">'+a+'</span>'+
-        '<button class="btn" style="padding:3px 8px;font-size:11px" onclick="editArea('+i+')">Editar</button>'+
-        '<button class="btn btnd" style="padding:3px 8px;font-size:11px" onclick="delArea('+i+')">✕</button>'+
-        '</div>';
-    }).join('');
-  }
-  document.getElementById('modal').innerHTML=
-    '<div class="mhdr"><div class="mtitle">⚙️ Gestionar áreas</div><button class="xbtn" onclick="closeModal()">✕</button></div>'+
-    '<div style="font-size:12px;color:var(--text3);margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:8px">Las áreas representan los equipos o departamentos implicados en tus tareas.</div>'+
-    '<div id="areas-list">'+buildRows()+'</div>'+
-    '<div style="display:flex;gap:8px;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">'+
-    '<input class="finput" id="new-area" placeholder="Nueva área..." style="flex:1">'+
-    '<button class="btn btnp" onclick="addArea()">+ Añadir</button></div>'+
-    '<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn" onclick="closeModal()">Cerrar</button></div>';
+  function rows(){return AREAS.map(function(a,i){return'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)"><div style="width:12px;height:12px;border-radius:50%;background:'+aclr(a)+';flex-shrink:0"></div><span style="flex:1;font-size:13px">'+a+'</span><button class="btn" style="padding:3px 8px;font-size:11px" onclick="editArea('+i+')">Editar</button><button class="btn btnd" style="padding:3px 8px;font-size:11px" onclick="delArea('+i+')">✕</button></div>';}).join('');}
+  document.getElementById('modal').innerHTML='<div class="mhdr"><div class="mtitle">⚙️ Gestionar áreas</div><button class="xbtn" onclick="closeModal()">✕</button></div><div style="font-size:12px;color:var(--text3);margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:8px">Las áreas representan los equipos o departamentos implicados en tus tareas.</div><div id="areas-list">'+rows()+'</div><div style="display:flex;gap:8px;margin-top:14px;border-top:1px solid var(--border);padding-top:14px"><input class="finput" id="new-area" placeholder="Nueva área..." style="flex:1"><button class="btn btnp" onclick="addArea()">+ Añadir</button></div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn" onclick="closeModal()">Cerrar</button></div>';
   document.getElementById('overlay').classList.remove('hidden');
 }
 function addArea(){
-  var inp=document.getElementById('new-area');
-  var name=inp.value.trim();
+  var inp=document.getElementById('new-area'),name=inp.value.trim();
   if(!name)return;
   if(AREAS.indexOf(name)>=0){alert('Esa área ya existe');return;}
-  AREAS.push(name);save();renderSidebar();showAreasModal();toast('Área "'+name+'" añadida ✓');
+  AREAS.push(name);saveSettings();renderSidebar();showAreasModal();toast('Área "'+name+'" añadida ✓');
 }
 function editArea(i){
-  var cur=AREAS[i];
-  var nw=prompt('Nuevo nombre para "'+cur+'":', cur);
+  var cur=AREAS[i],nw=prompt('Nuevo nombre para "'+cur+'":', cur);
   if(!nw||!nw.trim()||nw.trim()===cur)return;
   nw=nw.trim();
   if(AREAS.indexOf(nw)>=0){alert('Esa área ya existe');return;}
-  tasks.forEach(function(t){if(t.area===cur)t.area=nw;});
-  initiatives.forEach(function(ini){if(ini.area===cur)ini.area=nw;ini.otherAreas=ini.otherAreas.map(function(a){return a===cur?nw:a;});});
-  AREAS[i]=nw;
-  if(areaFilter===cur)areaFilter=nw;
-  save();renderSidebar();showAreasModal();toast('Área renombrada a "'+nw+'" ✓');
+  tasks.forEach(function(t){if(t.area===cur){t.area=nw;saveTask(t);}});
+  initiatives.forEach(function(ini){if(ini.area===cur){ini.area=nw;saveInitiative(ini);}ini.otherAreas=ini.otherAreas.map(function(a){return a===cur?nw:a;});});
+  AREAS[i]=nw;if(areaFilter===cur)areaFilter=nw;
+  saveSettings();renderSidebar();showAreasModal();toast('Área renombrada ✓');
 }
 function delArea(i){
-  var name=AREAS[i];
-  var inUse=tasks.filter(function(t){return t.area===name;}).length;
-  var msg=inUse>0?'El área "'+name+'" tiene '+inUse+' tareas asignadas. ¿Eliminar igualmente?':'¿Eliminar el área "'+name+'"?';
-  if(!confirm(msg))return;
-  if(inUse>0)tasks.forEach(function(t){if(t.area===name)t.area='';});
-  AREAS.splice(i,1);
-  if(areaFilter===name)areaFilter='all';
-  save();renderSidebar();showAreasModal();toast('Área eliminada');
+  var name=AREAS[i],inUse=tasks.filter(function(t){return t.area===name;}).length;
+  if(!confirm(inUse>0?'El área "'+name+'" tiene '+inUse+' tareas. ¿Eliminar igualmente?':'¿Eliminar el área "'+name+'"?'))return;
+  if(inUse>0)tasks.forEach(function(t){if(t.area===name){t.area='';saveTask(t);}});
+  AREAS.splice(i,1);if(areaFilter===name)areaFilter='all';
+  saveSettings();renderSidebar();showAreasModal();toast('Área eliminada');
 }
 
 function closeModal(){document.getElementById('overlay').classList.add('hidden');}
@@ -750,10 +595,8 @@ function closeModal(){document.getElementById('overlay').classList.add('hidden')
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){});}
 
 // ===== INIT =====
-load();
 renderSidebar();
-redraw();
-setTimeout(function(){toast('BDFlow listo ✓');},500);
+loadAll();
 </script>
 </body>
 </html>
