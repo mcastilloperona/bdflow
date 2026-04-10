@@ -173,6 +173,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <script>
 var SB_URL='https://jljaejkmbnfnhcbjcjnm.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsamFlamttYm5mbmhjYmpjam5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTEyMDksImV4cCI6MjA5MTM4NzIwOX0.7Ey8qKDlDcvOQq77rqBeH9goGWI1whrL9WiefHOp3XI';
+var GEMINI_KEY='AIzaSyAk2h_tpyyDnVDXnOafUopQe564Zu3LSRk';
+var GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+GEMINI_KEY;
+
+function callGemini(prompt) {
+  return fetch(GEMINI_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({contents:[{parts:[{text: prompt}]}]})
+  }).then(function(r){return r.json();}).then(function(d){
+    return d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]?d.candidates[0].content.parts[0].text:'';
+  });
+}
 function sbH(){return{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};}
 function sbGet(t){return fetch(SB_URL+'/rest/v1/'+t+'?select=*',{headers:sbH()}).then(function(r){return r.json();});}
 function sbUpsert(t,row){return fetch(SB_URL+'/rest/v1/'+t,{method:'POST',headers:Object.assign({},sbH(),{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify(row)});}
@@ -302,40 +314,77 @@ var QUICK_TEMPLATES=[
 ];
 
 function showQuickCreate(){
-  var chips=QUICK_TEMPLATES.map(function(t){return '<span class="quick-chip" onclick="applyTemplate(\''+t.label+'\')">'+t.label+'</span>';}).join('');
+  var chips=QUICK_TEMPLATES.map(function(t){return'<span class="quick-chip" onclick="applyTemplate(''+t.label+'')">'+t.label+'</span>';}).join('');
   document.getElementById('modal').innerHTML=
-    '<div class="mhdr"><div class="mtitle">Creación rápida</div><button class="xbtn" onclick="closeModal()">✕</button></div>'+
-    '<div class="hint hint-b">Escribe lo que necesitas hacer en lenguaje natural y pulsa Enter, o elige un tipo de tarea.</div>'+
-    '<div class="fg"><label class="flbl">Describe la tarea</label>'+
-    '<input class="finput" id="qc-input" placeholder="Ej: Reunión con Bankinter el viernes para revisar propuesta" onkeydown="if(event.key===\'Enter\')parseQuick()">'+
+    '<div class="mhdr"><div class="mtitle">Creaci\u00f3n r\u00e1pida con IA</div><button class="xbtn" onclick="closeModal()">\u2715</button></div>'+
+    '<div class="hint hint-b"><strong>Describe en lenguaje natural</strong> lo que necesitas hacer. La IA detectar\u00e1 autom\u00e1ticamente a qu\u00e9 iniciativa pertenece, el tipo, fecha y stakeholder.</div>'+
+    '<div class="fg"><label class="flbl">\u00bfQu\u00e9 necesitas hacer?</label>'+
+    '<textarea class="finput" id="qc-input" rows="3" placeholder="Ej: Ma\u00f1ana reuni\u00f3n con Pedro de Bankinter para revisar la propuesta del m\u00f3dulo HR\nEj: Preparar deck para direcci\u00f3n sobre GTM RRHH antes del viernes\nEj: Seguimiento con Laura de Mutua, lleva 3 d\u00edas sin responder"></textarea>'+
     '</div>'+
-    '<div style="margin-bottom:14px"><div class="flbl">O elige tipo rápido</div>'+chips+'</div>'+
+    '<div style="margin-bottom:14px"><div class="flbl" style="margin-bottom:6px">O elige tipo r\u00e1pido</div>'+chips+'</div>'+
+    '<div id="qc-ai-result" class="hidden" style="margin-bottom:14px"></div>'+
     '<div id="qc-form" class="hidden">'+
-    '<div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">'+
-    '<div class="frow">'+
-    '<div><label class="flbl">Título detectado</label><input class="finput" id="qc-title"></div>'+
-    '<div><label class="flbl">Fecha límite *</label><input type="date" class="finput" id="qc-dd"></div>'+
-    '</div>'+
-    '<div class="frow">'+
-    '<div><label class="flbl">Área</label><select class="fsel" id="qc-area"><option value="">Seleccionar</option></select></div>'+
-    '<div><label class="flbl">Iniciativa</label><select class="fsel" id="qc-ini"><option value="">— Sin iniciativa —</option></select></div>'+
-    '</div>'+
-    '<div class="frow">'+
-    '<div><label class="flbl">Categoría</label><select class="fsel" id="qc-cat">'+CAT.map(function(c){return'<option>'+c+'</option>';}).join('')+'</select></div>'+
-    '<div><label class="flbl">Prioridad</label><select class="fsel" id="qc-prio"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>'+
-    '</div>'+
-    '<div class="fg"><label class="flbl">Stakeholder</label><input class="finput" id="qc-sh" placeholder="Nombre (Rol)"></div>'+
-    '<div class="fg"><label class="flbl">Próxima acción</label><input class="finput" id="qc-next" placeholder="Primer paso concreto"></div>'+
-    '</div>'+
-    '</div>'+
+    '<div style="border-top:1px solid var(--border);padding-top:14px">'+
+    '<div class="frow"><div><label class="flbl">T\u00edtulo</label><input class="finput" id="qc-title"></div><div><label class="flbl">Fecha l\u00edmite</label><input type="date" class="finput" id="qc-dd"></div></div>'+
+    '<div class="frow"><div><label class="flbl">\u00c1rea</label><select class="fsel" id="qc-area"><option value="">Seleccionar</option></select></div><div><label class="flbl">Iniciativa</label><select class="fsel" id="qc-ini"><option value="">\u2014 Sin iniciativa \u2014</option></select></div></div>'+
+    '<div class="frow"><div><label class="flbl">Categor\u00eda</label><select class="fsel" id="qc-cat">'+CAT.map(function(c){return'<option>'+c+'</option>';}).join('')+'</select></div><div><label class="flbl">Prioridad</label><select class="fsel" id="qc-prio"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div></div>'+
+    '<div class="frow"><div><label class="flbl">Stakeholder</label><input class="finput" id="qc-sh" placeholder="Nombre (Rol)"></div><div><label class="flbl">Impacto negocio</label><select class="fsel" id="qc-imp"><option>Alto</option><option selected>Medio</option><option>Bajo</option></select></div></div>'+
+    '<div class="fg"><label class="flbl">Pr\u00f3xima acci\u00f3n</label><input class="finput" id="qc-next" placeholder="Primer paso concreto"></div>'+
+    '</div></div>'+
     '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">'+
     '<button class="btn" onclick="closeModal()">Cancelar</button>'+
-    '<button class="btn btnp" onclick="parseQuick()">Analizar</button>'+
+    '<button class="btn btnp" id="qc-analyze-btn" onclick="analyzeWithAI()">Analizar con IA</button>'+
     '<button class="btn btnp hidden" id="qc-save-btn" onclick="doQuickSave()">Guardar tarea</button>'+
     '</div>';
   document.getElementById('overlay').classList.remove('hidden');
   populateQCSelects();
-  document.getElementById('qc-input').focus();
+  setTimeout(function(){var el=document.getElementById('qc-input');if(el)el.focus();},100);
+}
+
+function analyzeWithAI(){
+  var input=document.getElementById('qc-input').value.trim();
+  if(!input){alert('Escribe qu\u00e9 necesitas hacer');return;}
+  var btn=document.getElementById('qc-analyze-btn');
+  btn.textContent='Analizando...';btn.disabled=true;
+  var iniList=initiatives.map(function(i){return'- ID:'+i.id+' | Nombre:'+i.name+' | Tipo:'+i.type+' | \u00c1rea:'+i.area;}).join('\n')||'(sin iniciativas)';
+  var areaList=AREAS.map(function(a){return a.name;}).join(', ');
+  var today=new Date().toISOString().split('T')[0];
+  var prompt='Eres un asistente de gesti\u00f3n de trabajo para Business Development en SaaS B2B de RRHH (Cegid HR).\n\nEl usuario ha escrito: "'+input+'"\n\nIniciativas existentes:\n'+iniList+'\n\n\u00c1reas disponibles: '+areaList+'\nCategor\u00edas: Reuni\u00f3n, Seguimiento, An\u00e1lisis, Coordinaci\u00f3n, Propuesta, Presentaci\u00f3n, Reporte, Escalado, Ejecuci\u00f3n, Bloqueo\nHoy es: '+today+'\n\nAnaliza el texto y devuelve SOLO un JSON v\u00e1lido sin markdown:\n{\n  "titulo": "t\u00edtulo claro de la tarea",\n  "categoria": "una de las categor\u00edas",\n  "area": "una de las \u00e1reas disponibles",\n  "iniciativaId": "ID exacto de la iniciativa relacionada o null",\n  "nuevaIniciativa": null,\n  "stakeholder": "nombre y empresa/rol si se menciona",\n  "fechaLimite": "YYYY-MM-DD inferida del texto o hoy+3 si no se menciona",\n  "prioridad": "Alta, Media o Baja",\n  "impacto": "Alto, Medio o Bajo",\n  "proximaAccion": "primer paso concreto accionable",\n  "razonamiento": "frase breve explicando qu\u00e9 has detectado y por qu\u00e9 esa iniciativa"\n}\nSi describe una nueva iniciativa que no existe, en nuevaIniciativa pon: {"nombre":"...","tipo":"Oportunidad|Cliente|Partner|Iniciativa Estrat\u00e9gica","objetivo":"..."}\nResponde SOLO el JSON.';
+  callGemini(prompt).then(function(raw){
+    btn.textContent='Analizar con IA';btn.disabled=false;
+    var clean=raw.replace(/```json/g,'').replace(/```/g,'').trim();
+    var r;try{r=JSON.parse(clean);}catch(e){
+      document.getElementById('qc-ai-result').innerHTML='<div class="alert alert-a"><span>\u26a0\ufe0f</span>No se pudo interpretar la IA. Rellena el formulario.</div>';
+      document.getElementById('qc-ai-result').classList.remove('hidden');
+      document.getElementById('qc-form').classList.remove('hidden');
+      document.getElementById('qc-save-btn').classList.remove('hidden');
+      populateQCSelects();return;
+    }
+    var ini=r.iniciativaId?initiatives.filter(function(i){return i.id===r.iniciativaId;})[0]:null;
+    var rBox='<div style="background:var(--green-bg);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px">';
+    rBox+='<div style="font-weight:700;color:var(--green-text);margin-bottom:5px">IA ha analizado tu texto</div>';
+    rBox+='<div style="color:var(--green-text);line-height:1.6">'+r.razonamiento+'</div>';
+    if(ini)rBox+='<div style="margin-top:6px;font-size:12px;color:var(--green-text)">Iniciativa: <strong>'+ini.name+'</strong></div>';
+    if(r.nuevaIniciativa)rBox+='<div style="margin-top:6px;font-size:12px;background:var(--amber-bg);color:var(--amber-text);padding:6px 10px;border-radius:6px">Nueva iniciativa detectada: <strong>'+r.nuevaIniciativa.nombre+'</strong> ('+r.nuevaIniciativa.tipo+'). Pu\u00e9dala crear desde "+ Iniciativa".</div>';
+    rBox+='</div>';
+    document.getElementById('qc-ai-result').innerHTML=rBox;
+    document.getElementById('qc-ai-result').classList.remove('hidden');
+    document.getElementById('qc-form').classList.remove('hidden');
+    document.getElementById('qc-save-btn').classList.remove('hidden');
+    populateQCSelects();
+    function setV(id,v){var el=document.getElementById(id);if(el&&v)el.value=v;}
+    function setSel(id,v){var el=document.getElementById(id);if(el&&v){for(var i=0;i<el.options.length;i++){if(el.options[i].value===v||el.options[i].text===v){el.selectedIndex=i;break;}}}}
+    setV('qc-title',r.titulo);setV('qc-dd',r.fechaLimite);setV('qc-sh',r.stakeholder);setV('qc-next',r.proximaAccion);
+    setSel('qc-cat',r.categoria);setSel('qc-prio',r.prioridad);setSel('qc-imp',r.impacto);setSel('qc-area',r.area);
+    if(r.iniciativaId)setSel('qc-ini',r.iniciativaId);
+  }).catch(function(){
+    btn.textContent='Analizar con IA';btn.disabled=false;
+    document.getElementById('qc-ai-result').innerHTML='<div class="alert alert-r"><span>\u26a0\ufe0f</span>Error de conexi\u00f3n con la IA. Rellena el formulario manualmente.</div>';
+    document.getElementById('qc-ai-result').classList.remove('hidden');
+    document.getElementById('qc-form').classList.remove('hidden');
+    document.getElementById('qc-save-btn').classList.remove('hidden');
+    populateQCSelects();
+  });
 }
 
 function populateQCSelects(){
@@ -395,7 +444,7 @@ function doQuickSave(){
   var due=document.getElementById('qc-dd').value;
   if(!title){alert('El título es obligatorio');return;}
   if(!due){due=new Date().toISOString().split('T')[0];}
-  var t={id:'t'+Date.now(),title:title,desc:'',iid:document.getElementById('qc-ini').value,cat:document.getElementById('qc-cat').value,area:document.getElementById('qc-area').value||AREAS[0].name,sh:document.getElementById('qc-sh').value,sd:new Date().toISOString().split('T')[0],dd:due,status:'Pendiente',prio:document.getElementById('qc-prio').value,crit:'Media',impact:'Medio',effort:1,spent:0,prog:0,deps:'',next:document.getElementById('qc-next').value,exec:false,diary:[]};
+  var impEl=document.getElementById('qc-imp');var impVal=impEl?impEl.value:'Medio';var t={id:'t'+Date.now(),title:title,desc:'',iid:document.getElementById('qc-ini').value,cat:document.getElementById('qc-cat').value,area:document.getElementById('qc-area').value||AREAS[0].name,sh:document.getElementById('qc-sh').value,sd:new Date().toISOString().split('T')[0],dd:due,status:'Pendiente',prio:document.getElementById('qc-prio').value,crit:'Media',impact:impVal,effort:1,spent:0,prog:0,deps:'',next:document.getElementById('qc-next').value,exec:false,diary:[]};
   tasks.push(t);saveTask(t);closeModal();redraw();toast('Tarea creada');updateNotifBadge();}
 
 // ===== HELPERS =====
