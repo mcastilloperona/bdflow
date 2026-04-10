@@ -272,7 +272,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 var SB_URL='https://jljaejkmbnfnhcbjcjnm.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsamFlamttYm5mbmhjYmpjam5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTEyMDksImV4cCI6MjA5MTM4NzIwOX0.7Ey8qKDlDcvOQq77rqBeH9goGWI1whrL9WiefHOp3XI';
 var GEMINI_KEY='AIzaSyAk2h_tpyyDnVDXnOafUopQe564Zu3LSRk';
-var GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+GEMINI_KEY;
+var GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+GEMINI_KEY;
 
 // ===== SUPABASE =====
 function sbH(){return{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};}
@@ -282,9 +282,26 @@ function sbDelete(t,id){return fetch(SB_URL+'/rest/v1/'+t+'?id=eq.'+encodeURICom
 
 // ===== GEMINI =====
 function callGemini(prompt){
-  return fetch(GEMINI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})})
-    .then(function(r){return r.json();})
-    .then(function(d){return d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]?d.candidates[0].content.parts[0].text:'';});
+  return fetch(GEMINI_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      contents:[{parts:[{text:prompt}]}],
+      generationConfig:{temperature:0.1,maxOutputTokens:1024}
+    })
+  })
+  .then(function(r){
+    if(!r.ok){throw new Error('HTTP '+r.status);}
+    return r.json();
+  })
+  .then(function(d){
+    console.log('Gemini response:',JSON.stringify(d).substring(0,500));
+    if(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]){
+      return d.candidates[0].content.parts[0].text;
+    }
+    if(d.error){throw new Error(d.error.message);}
+    return '';
+  });
 }
 
 // ===== STATE =====
@@ -795,36 +812,77 @@ function analyzeWithAI(){
   if(!input){alert('Escribe qué necesitas hacer');return;}
   var btn=document.getElementById('qc-analyze-btn');
   btn.textContent='Analizando...';btn.disabled=true;
-  var iniList=initiatives.map(function(i){return'ID:'+i.id+'|'+i.name+'|'+i.type+'|'+i.area;}).join('\n')||'(sin iniciativas creadas)';
-  var areaList=AREAS.map(function(a){return a.name;}).join(', ');
-  var today=new Date().toISOString().split('T')[0];
-  var prompt='Eres asistente de gestión de trabajo para Business Development en SaaS B2B de RRHH (Cegid HR).\n\nEl usuario escribe: "'+input+'"\n\nIniciativas existentes:\n'+iniList+'\n\nÁreas disponibles: '+areaList+'\nCategorías: Reunión, Seguimiento, Análisis, Coordinación, Propuesta, Presentación, Reporte, Escalado, Ejecución, Bloqueo\nHoy: '+today+'\n\nAnaliza y devuelve SOLO JSON sin markdown:\n{"titulo":"título claro","categoria":"categoría exacta de la lista","area":"área exacta de la lista","iniciativaId":"ID exacto o null","nuevaIniciativa":null,"stakeholder":"nombre empresa/rol si se menciona o vacío","fechaLimite":"YYYY-MM-DD inferida o hoy+3","prioridad":"Alta|Media|Baja","impacto":"Alto|Medio|Bajo","proximaAccion":"paso concreto accionable","razonamiento":"frase breve explicando la clasificación"}\n\nSi es nueva iniciativa: nuevaIniciativa:{"nombre":"...","tipo":"Oportunidad|Cliente|Partner|Iniciativa Estratégica","objetivo":"..."}\nSOLO el JSON.';
+
+  var iniList=initiatives.map(function(i){return i.id+'::'+i.name+'::'+i.type+'::'+i.area;}).join('|')||'ninguna';
+  var areaList=AREAS.map(function(a){return a.name;}).join(',');
+  var todayD=new Date().toISOString().split('T')[0];
+
+  var prompt='Eres un asistente para gestión de trabajo en Business Development SaaS B2B RRHH.
+'+
+    'Texto del usuario: '+input+'
+'+
+    'Iniciativas (id::nombre::tipo::area): '+iniList+'
+'+
+    'Areas disponibles: '+areaList+'
+'+
+    'Categorias: Reunión,Seguimiento,Análisis,Coordinación,Propuesta,Presentación,Reporte,Escalado,Ejecución,Bloqueo
+'+
+    'Fecha hoy: '+todayD+'
+
+'+
+    'Responde UNICAMENTE con este JSON (sin texto adicional, sin markdown, sin explicaciones):
+'+
+    '{"titulo":"...","categoria":"...","area":"...","iniciativaId":"ID o null","stakeholder":"...","fechaLimite":"YYYY-MM-DD","prioridad":"Alta o Media o Baja","impacto":"Alto o Medio o Bajo","proximaAccion":"...","razonamiento":"..."}';
 
   callGemini(prompt).then(function(raw){
     btn.textContent='✨ Analizar con IA';btn.disabled=false;
-    var clean=raw.replace(/```json/g,'').replace(/```/g,'').trim();
-    var r;try{r=JSON.parse(clean);}catch(e){
-      showQCError('No se pudo interpretar la respuesta. Rellena el formulario manualmente.');return;
+    console.log('RAW GEMINI:', raw);
+    if(!raw||raw.trim()===''){
+      showQCError('La IA no devolvió respuesta. Inténtalo de nuevo.');return;
     }
-    var ini=r.iniciativaId?initiatives.filter(function(i){return i.id===r.iniciativaId;})[0]:null;
+    var clean=raw.trim();
+    // Extract JSON - try multiple strategies
+    var r=null;
+    // Strategy 1: direct parse
+    try{r=JSON.parse(clean);}catch(e1){
+      // Strategy 2: find {...} block
+      var m=clean.match(/\{[\s\S]*?\}/);
+      if(m){try{r=JSON.parse(m[0]);}catch(e2){
+        // Strategy 3: find largest {...} block
+        var m2=clean.match(/\{[\s\S]*\}/);
+        if(m2){try{r=JSON.parse(m2[0]);}catch(e3){r=null;}}
+      }}
+    }
+    if(!r){
+      console.error('Could not parse JSON from:', clean);
+      showQCError('La IA respondió en formato incorrecto. Rellena el formulario manualmente.');return;
+    }
+    console.log('PARSED:', r);
+    var ini=r.iniciativaId&&r.iniciativaId!=='null'?initiatives.filter(function(i){return i.id===r.iniciativaId;})[0]:null;
     var resHtml='<div class="ai-result-box" style="margin-bottom:14px">'+
       '<div class="ai-result-title">✨ IA ha analizado tu texto</div>'+
-      '<div class="ai-result-text">'+r.razonamiento+'</div>'+
-      (ini?'<div style="margin-top:8px;font-size:12px;font-weight:600;color:var(--green-d);background:rgba(22,163,74,.1);padding:5px 10px;border-radius:6px;display:inline-block">Iniciativa: '+ini.name+'</div>':'')+
-      (r.nuevaIniciativa?'<div style="margin-top:8px;font-size:12px;font-weight:600;background:var(--amber-l);color:var(--amber-d);padding:6px 10px;border-radius:6px;border:1px solid rgba(217,119,6,.2)">Nueva iniciativa detectada: <strong>'+r.nuevaIniciativa.nombre+'</strong> ('+r.nuevaIniciativa.tipo+'). Puedes crearla desde "+ Iniciativa".</div>':'')+
+      '<div class="ai-result-text">'+(r.razonamiento||'Análisis completado.')+'</div>'+
+      (ini?'<div style="margin-top:8px;font-size:12px;font-weight:600;color:var(--green-d);background:rgba(22,163,74,.1);padding:5px 10px;border-radius:6px;display:inline-block">Iniciativa detectada: '+ini.name+'</div>':'')+
       '</div>';
     document.getElementById('qc-ai-result').innerHTML=resHtml;
     document.getElementById('qc-ai-result').classList.remove('hidden');
     document.getElementById('qc-form').classList.remove('hidden');
     document.getElementById('qc-save-btn').classList.remove('hidden');
-    function setV(id,v){var el=document.getElementById(id);if(el&&v!==undefined&&v!==null&&v!=='')el.value=v;}
-    function setSel(id,v){var el=document.getElementById(id);if(el&&v){for(var i=0;i<el.options.length;i++){if(el.options[i].value===v||el.options[i].text===v){el.selectedIndex=i;break;}}}}
-    setV('qc-title',r.titulo);setV('qc-dd',r.fechaLimite);setV('qc-sh',r.stakeholder);setV('qc-next',r.proximaAccion);
-    setSel('qc-cat',r.categoria);setSel('qc-prio',r.prioridad);setSel('qc-imp',r.impacto);setSel('qc-area',r.area);
-    if(r.iniciativaId)setSel('qc-ini',r.iniciativaId);
+    function setV(id,v){var el=document.getElementById(id);if(el&&v!==undefined&&v!==null&&String(v).trim()!==''&&v!=='null')el.value=v;}
+    function setSel(id,v){var el=document.getElementById(id);if(!el||!v||v==='null')return;for(var i=0;i<el.options.length;i++){if(el.options[i].value===v||el.options[i].text===v){el.selectedIndex=i;break;}}}
+    setV('qc-title',r.titulo);
+    setV('qc-dd',r.fechaLimite);
+    setV('qc-sh',r.stakeholder);
+    setV('qc-next',r.proximaAccion);
+    setSel('qc-cat',r.categoria);
+    setSel('qc-prio',r.prioridad);
+    setSel('qc-imp',r.impacto);
+    setSel('qc-area',r.area);
+    if(r.iniciativaId&&r.iniciativaId!=='null')setSel('qc-ini',r.iniciativaId);
   }).catch(function(e){
     btn.textContent='✨ Analizar con IA';btn.disabled=false;
-    showQCError('Error de conexión con la IA. Revisa tu conexión e inténtalo de nuevo.');
+    console.error('Gemini fetch error:',e);
+    showQCError('Error de conexión: '+e.message+'. Revisa la consola del navegador.');
   });
 }
 
