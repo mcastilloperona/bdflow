@@ -173,7 +173,7 @@ a,button,input,select,textarea{font-family:inherit}
 var SBU='https://jljaejkmbnfnhcbjcjnm.supabase.co';
 var SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsamFlamttYm5mbmhjYmpjam5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTEyMDksImV4cCI6MjA5MTM4NzIwOX0.7Ey8qKDlDcvOQq77rqBeH9goGWI1whrL9WiefHOp3XI';
 var GMK='AIzaSyAk2h_tpyyDnVDXnOafUopQe564Zu3LSRk';
-var GMU='https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+GMK;
+var GMU='https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=AIzaSyAk2h_tpyyDnVDXnOafUopQe564Zu3LSRk';
 
 function sh(id,n){var e=document.getElementById(id);if(e)e.textContent=n;}
 function ge(id){return document.getElementById(id);}
@@ -182,9 +182,27 @@ function sbGet(t){return fetch(SBU+'/rest/v1/'+t+'?select=*',{headers:sbH()}).th
 function sbUp(t,row){return fetch(SBU+'/rest/v1/'+t,{method:'POST',headers:Object.assign({},sbH(),{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify(row)});}
 function sbDel(t,id){return fetch(SBU+'/rest/v1/'+t+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:sbH()});}
 function callGemini(p){
-  return fetch(GMU,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:p}]}],generationConfig:{temperature:0.1,maxOutputTokens:800}})})
-    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-    .then(function(d){return d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts[0]?d.candidates[0].content.parts[0].text:'';});
+  console.log('Calling Gemini:', GMU.substring(0,80)+'...');
+  return fetch(GMU,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:p}]}],generationConfig:{temperature:0.1,maxOutputTokens:800}})
+  }).then(function(r){
+    console.log('Gemini HTTP status:', r.status);
+    if(!r.ok){
+      return r.json().then(function(e){
+        var msg=e.error?e.error.message:'HTTP '+r.status;
+        throw new Error(msg);
+      }).catch(function(){throw new Error('HTTP '+r.status);});
+    }
+    return r.json();
+  }).then(function(d){
+    console.log('Gemini response ok');
+    if(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]){
+      return d.candidates[0].content.parts[0].text;
+    }
+    throw new Error('Respuesta vacía de la IA');
+  });
 }
 
 var CAP=6,AF='all',SF=null,VW='dash';
