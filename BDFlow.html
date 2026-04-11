@@ -3,48 +3,115 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 2.0</title>
+  <title>BDFlow Ver. 2.1</title>
   <style>
     :root{
       --bg:#f3f6fb;--panel:#ffffff;--panel-2:#f8faff;--border:#dbe4f0;--text:#0f172a;--muted:#64748b;
       --blue:#1a56db;--blue-2:#eaf1ff;--green:#16a34a;--green-2:#ecfdf3;--amber:#d97706;--amber-2:#fff7e8;
       --red:#dc2626;--red-2:#fff0f0;--chip:#eef3fb;--shadow:0 8px 24px rgba(15,23,42,.06);--radius:16px;
     }
-    *{box-sizing:border-box} html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
-    button,input,select,textarea{font:inherit} body{min-height:100vh}
-    .app{display:flex;min-height:100vh}.sidebar{width:270px;background:var(--panel);border-right:1px solid var(--border);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto}
-    .brand{padding:6px 8px 18px 8px;border-bottom:1px solid var(--border);margin-bottom:18px}.brand-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-    .logo{font-size:28px;font-weight:800;letter-spacing:-.03em}.logo b{color:var(--blue)} .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+    button,input,select,textarea{font:inherit}
+    body{min-height:100vh}
+    .app{display:flex;min-height:100vh}
+    .sidebar{width:270px;background:var(--panel);border-right:1px solid var(--border);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+    .brand{padding:6px 8px 18px 8px;border-bottom:1px solid var(--border);margin-bottom:18px}
+    .brand-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .logo{font-size:28px;font-weight:800;letter-spacing:-.03em}
+    .logo b{color:var(--blue)}
+    .sub{font-size:12px;color:var(--muted);margin-top:2px}
     .version{display:inline-flex;align-items:center;background:var(--blue-2);color:var(--blue);border:1px solid #cfe0ff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap}
     .section-label{font-size:11px;font-weight:800;letter-spacing:.08em;color:#94a3b8;text-transform:uppercase;margin:18px 8px 10px}
-    .nav{display:flex;flex-direction:column;gap:6px}.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border:none;border-radius:12px;background:transparent;color:#334155;cursor:pointer;text-align:left;font-weight:600}
-    .nav-btn:hover{background:var(--panel-2)} .nav-btn.active{background:var(--blue-2);color:var(--blue)} .nav-dot{width:9px;height:9px;border-radius:50%;background:var(--blue)}
-    .side-card{background:var(--panel-2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:10px}.side-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.side-row:last-child{margin-bottom:0}
-    .side-k{font-size:13px;color:var(--muted)} .side-v{font-size:13px;font-weight:700}.main{flex:1;min-width:0;padding:18px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}.title h1{margin:0;font-size:28px;letter-spacing:-.03em}.title p{margin:6px 0 0;color:var(--muted)}
-    .actions{display:flex;gap:10px;flex-wrap:wrap}.search{flex:1;min-width:220px;background:white;border:1px solid var(--border);border-radius:12px;padding:11px 12px}.select{background:white;border:1px solid var(--border);border-radius:12px;padding:11px 12px;min-width:180px}
-    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.metric{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
-    .metric .k{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;font-weight:800}.metric .v{margin-top:10px;font-size:30px;font-weight:800;letter-spacing:-.03em}.metric .s{margin-top:6px;color:var(--muted);font-size:13px}
-    .layout{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.today-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-    .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)} .panel-head{padding:18px 18px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
-    .panel-head h2{margin:0;font-size:18px}.panel-head p{margin:5px 0 0;color:var(--muted);font-size:14px}.panel-body{padding:0 18px 18px}
-    .alert{padding:12px 14px;border-radius:14px;border:1px solid var(--border);margin-bottom:10px;font-size:14px}.alert.red{background:var(--red-2);border-color:#fecaca}.alert.amber{background:var(--amber-2);border-color:#fde3b4}.alert.green{background:var(--green-2);border-color:#bbf7d0}
-    .lane{border:1px solid var(--border);border-radius:16px;background:var(--panel-2);min-height:320px}.lane-head{padding:14px 14px 8px;border-bottom:1px solid var(--border)}.lane-head h3{margin:0;font-size:15px}.lane-head p{margin:5px 0 0;color:var(--muted);font-size:13px}.lane-body{padding:12px}
-    .task{background:white;border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(15,23,42,.04)} .task:last-child{margin-bottom:0}
-    .task-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.task-title{font-weight:800;font-size:15px;line-height:1.35}.task-sub{margin-top:4px;color:var(--muted);font-size:13px}
-    .badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--chip);color:#334155}
-    .badge.red{background:var(--red-2);color:var(--red)} .badge.amber{background:var(--amber-2);color:var(--amber)} .badge.green{background:var(--green-2);color:var(--green)} .badge.blue{background:var(--blue-2);color:var(--blue)}
-    .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.meta .m{background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:10px}.meta .m .mk{font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:800;letter-spacing:.07em}.meta .m .mv{margin-top:5px;font-size:13px;font-weight:700}
-    .qa{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)} .qbtn{border:none;border-radius:10px;padding:8px 10px;cursor:pointer;font-weight:700;font-size:12px}
-    .qbtn.done{background:var(--green-2);color:var(--green)} .qbtn.block{background:var(--red-2);color:var(--red)} .qbtn.tom{background:var(--amber-2);color:var(--amber)} .qbtn.time{background:var(--blue-2);color:var(--blue)}
-    .score{min-width:64px;text-align:center;border:1px solid #cfe0ff;background:var(--blue-2);color:var(--blue);border-radius:14px;padding:10px 8px}.score b{display:block;font-size:22px;line-height:1}.score span{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-    .list{display:flex;flex-direction:column;gap:12px}.rank-row{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--border);background:white;border-radius:14px}.rank-num{width:56px;height:56px;border-radius:14px;background:var(--blue);color:white;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800}.rank-row h4{margin:0 0 4px 0;font-size:15px}.rank-row p{margin:0;color:var(--muted);font-size:13px}
-    .kcol{background:var(--panel-2);border:1px solid var(--border);border-radius:16px;min-height:300px}.khead{padding:14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#475569}.kbody{padding:12px}
-    .initiative{padding:14px;border:1px solid var(--border);background:white;border-radius:14px;margin-bottom:12px}.initiative h4{margin:0 0 6px;font-size:16px}.initiative p{margin:0;color:var(--muted);font-size:13px}.initiative-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.progress{height:10px;background:#edf2fa;border-radius:999px;overflow:hidden;margin-top:10px}.progress>div{height:100%;background:var(--blue);border-radius:999px}
-    .empty{border:1px dashed var(--border);border-radius:14px;background:var(--panel-2);padding:22px;text-align:center;color:var(--muted)} .mobile-toggle{display:none}
-    .overlay{position:fixed;inset:0;background:rgba(15,23,42,.36);z-index:30;display:none}.overlay.show{display:block}
+    .nav{display:flex;flex-direction:column;gap:6px}
+    .nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border:none;border-radius:12px;background:transparent;color:#334155;cursor:pointer;text-align:left;font-weight:600}
+    .nav-btn:hover{background:var(--panel-2)}
+    .nav-btn.active{background:var(--blue-2);color:var(--blue)}
+    .nav-dot{width:9px;height:9px;border-radius:50%;background:var(--blue)}
+    .side-card{background:var(--panel-2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:10px}
+    .side-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}
+    .side-row:last-child{margin-bottom:0}
+    .side-k{font-size:13px;color:var(--muted)}
+    .side-v{font-size:13px;font-weight:700}
+    .main{flex:1;min-width:0;padding:18px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+    .title h1{margin:0;font-size:28px;letter-spacing:-.03em}
+    .title p{margin:6px 0 0;color:var(--muted)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .search{flex:1;min-width:220px;background:white;border:1px solid var(--border);border-radius:12px;padding:11px 12px}
+    .select{background:white;border:1px solid var(--border);border-radius:12px;padding:11px 12px;min-width:180px}
+    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+    .metric{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+    .metric .k{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;font-weight:800}
+    .metric .v{margin-top:10px;font-size:30px;font-weight:800;letter-spacing:-.03em}
+    .metric .s{margin-top:6px;color:var(--muted);font-size:13px}
+    .layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .today-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .week-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+    .month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .panel-head{padding:18px 18px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+    .panel-head h2{margin:0;font-size:18px}
+    .panel-head p{margin:5px 0 0;color:var(--muted);font-size:14px}
+    .panel-body{padding:0 18px 18px}
+    .alert{padding:12px 14px;border-radius:14px;border:1px solid var(--border);margin-bottom:10px;font-size:14px}
+    .alert.red{background:var(--red-2);border-color:#fecaca}
+    .alert.amber{background:var(--amber-2);border-color:#fde3b4}
+    .alert.green{background:var(--green-2);border-color:#bbf7d0}
+    .lane{border:1px solid var(--border);border-radius:16px;background:var(--panel-2);min-height:320px}
+    .lane-head{padding:14px 14px 8px;border-bottom:1px solid var(--border)}
+    .lane-head h3{margin:0;font-size:15px}
+    .lane-head p{margin:5px 0 0;color:var(--muted);font-size:13px}
+    .lane-body{padding:12px}
+    .task{background:white;border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+    .task:last-child{margin-bottom:0}
+    .task-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .task-title{font-weight:800;font-size:15px;line-height:1.35}
+    .task-sub{margin-top:4px;color:var(--muted);font-size:13px}
+    .badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--chip);color:#334155}
+    .badge.red{background:var(--red-2);color:var(--red)}
+    .badge.amber{background:var(--amber-2);color:var(--amber)}
+    .badge.green{background:var(--green-2);color:var(--green)}
+    .badge.blue{background:var(--blue-2);color:var(--blue)}
+    .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+    .meta .m{background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:10px}
+    .meta .m .mk{font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:800;letter-spacing:.07em}
+    .meta .m .mv{margin-top:5px;font-size:13px;font-weight:700}
+    .qa{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
+    .qbtn{border:none;border-radius:10px;padding:8px 10px;cursor:pointer;font-weight:700;font-size:12px}
+    .qbtn.done{background:var(--green-2);color:var(--green)}
+    .qbtn.block{background:var(--red-2);color:var(--red)}
+    .qbtn.tom{background:var(--amber-2);color:var(--amber)}
+    .qbtn.time{background:var(--blue-2);color:var(--blue)}
+    .score{min-width:74px;text-align:center;border:1px solid #cfe0ff;background:var(--blue-2);color:var(--blue);border-radius:14px;padding:10px 8px}
+    .score b{display:block;font-size:24px;line-height:1}
+    .score span{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    .list{display:flex;flex-direction:column;gap:12px}
+    .rank-row{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--border);background:white;border-radius:14px}
+    .rank-num{width:56px;height:56px;border-radius:14px;background:var(--blue);color:white;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800}
+    .rank-row h4{margin:0 0 4px 0;font-size:15px}
+    .rank-row p{margin:0;color:var(--muted);font-size:13px}
+    .kcol{background:var(--panel-2);border:1px solid var(--border);border-radius:16px;min-height:300px}
+    .khead{padding:14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#475569}
+    .kbody{padding:12px}
+    .initiative{padding:14px;border:1px solid var(--border);background:white;border-radius:14px;margin-bottom:12px}
+    .initiative h4{margin:0 0 6px;font-size:16px}
+    .initiative p{margin:0;color:var(--muted);font-size:13px}
+    .initiative-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .progress{height:10px;background:#edf2fa;border-radius:999px;overflow:hidden;margin-top:10px}
+    .progress>div{height:100%;background:var(--blue);border-radius:999px}
+    .empty{border:1px dashed var(--border);border-radius:14px;background:var(--panel-2);padding:22px;text-align:center;color:var(--muted)}
+    .day-card,.month-cell{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;min-height:150px}
+    .day-card h4,.month-cell h4{margin:0 0 10px 0;font-size:14px}
+    .mini-task{padding:8px 10px;border-radius:10px;background:var(--panel-2);border:1px solid var(--border);font-size:12px;margin-bottom:8px}
+    .mobile-toggle{display:none}
+    .overlay{position:fixed;inset:0;background:rgba(15,23,42,.36);z-index:30;display:none}
+    .overlay.show{display:block}
     img{display:none !important}
-    @media (max-width:1100px){.layout,.grid-2{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.today-grid,.kanban{grid-template-columns:1fr}}
+    @media (max-width:1100px){.layout,.grid-2{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.today-grid,.kanban,.week-grid,.month-grid{grid-template-columns:1fr}}
     @media (max-width:820px){.app{display:block}.sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);z-index:40;transition:.22s ease;width:min(300px,86vw)}.sidebar.open{transform:translateX(0)}.mobile-toggle{display:inline-flex}.main{padding:14px}.metrics{grid-template-columns:1fr}.meta{grid-template-columns:1fr}.rank-row{grid-template-columns:48px 1fr}.rank-row>:last-child{grid-column:2}}
   </style>
 </head>
@@ -55,13 +122,15 @@
       <div class="brand">
         <div class="brand-top">
           <div><div class="logo">BD<b>Flow</b></div><div class="sub">by Miguel Castillo</div></div>
-          <div class="version">Ver. 2.0</div>
+          <div class="version">Ver. 2.1</div>
         </div>
       </div>
       <div class="section-label">Navegación</div>
       <div class="nav">
         <button class="nav-btn active" data-view="dashboard"><span class="nav-dot"></span>Dashboard</button>
         <button class="nav-btn" data-view="today"><span class="nav-dot"></span>Hoy</button>
+        <button class="nav-btn" data-view="week"><span class="nav-dot"></span>Semana</button>
+        <button class="nav-btn" data-view="month"><span class="nav-dot"></span>Mes</button>
         <button class="nav-btn" data-view="ranking"><span class="nav-dot"></span>Ranking</button>
         <button class="nav-btn" data-view="kanban"><span class="nav-dot"></span>Kanban</button>
         <button class="nav-btn" data-view="initiatives"><span class="nav-dot"></span>Iniciativas</button>
@@ -79,7 +148,7 @@
       <div class="topbar">
         <div class="title">
           <h1 id="pageTitle">Dashboard</h1>
-          <p id="pageSubtitle">Visión general de prioridades, carga y ejecución.</p>
+          <p id="pageSubtitle">Decisión inmediata y riesgos del día.</p>
         </div>
         <div class="actions">
           <button class="mobile-toggle search" style="max-width:110px;cursor:pointer" onclick="toggleSidebar(true)">☰ Menú</button>
@@ -119,121 +188,26 @@ const state = {
     {name:'Expansión Partner DACH',owner:'Partners',objective:'Conseguir 3 partners activos en Q2',progress:37,status:'Pendiente'}
   ]
 };
-
 function escapeHtml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');}
 function parseDate(s){return new Date(s+'T12:00:00');}
 function daysToDue(task){const today=new Date();today.setHours(0,0,0,0);const due=parseDate(task.due);due.setHours(0,0,0,0);return Math.round((due-today)/86400000);}
-function scoreTask(task){
-  const d=daysToDue(task);
-  const dueBias=d<0?100:d===0?96:d===1?90:d<=3?78:55;
-  const statusPenalty=task.status==='Finalizada'?-30:0;
-  const waitingPenalty=task.status==='En espera de terceros'?-10:0;
-  const blockedBoost=task.status==='Bloqueada'?8:0;
-  const raw=(task.impact*.30+task.urgency*.22+task.criticality*.22+task.blockRisk*.12+dueBias*.14)+statusPenalty+waitingPenalty+blockedBoost;
-  return Math.max(1,Math.min(100,Math.round(raw)));
-}
-function filteredTasks(){
-  return state.tasks.filter(t=>{
-    const haystack=[t.title,t.desc,t.area,t.initiative,t.next,t.status].join(' ').toLowerCase();
-    const searchOk=!state.search||haystack.includes(state.search.toLowerCase());
-    const statusOk=state.filterStatus==='all'||t.status===state.filterStatus;
-    return searchOk&&statusOk;
-  }).map(t=>({...t,score:scoreTask(t),daysLeft:daysToDue(t)})).sort((a,b)=>b.score-a.score);
-}
+function scoreTask(task){const d=daysToDue(task);const dueBias=d<0?100:d===0?96:d===1?90:d<=3?78:55;const raw=(task.impact*.30+task.urgency*.22+task.criticality*.22+task.blockRisk*.12+dueBias*.14)+(task.status==='Finalizada'?-30:0)+(task.status==='En espera de terceros'?-10:0)+(task.status==='Bloqueada'?8:0);return Math.max(1,Math.min(100,Math.round(raw)));}
+function filteredTasks(){return state.tasks.filter(t=>{const h=[t.title,t.desc,t.area,t.initiative,t.next,t.status].join(' ').toLowerCase();return (!state.search||h.includes(state.search.toLowerCase()))&&(state.filterStatus==='all'||t.status===state.filterStatus);}).map(t=>({...t,score:scoreTask(t),daysLeft:daysToDue(t)})).sort((a,b)=>b.score-a.score);}
 function kpiData(tasks){return {total:tasks.filter(t=>t.status!=='Finalizada').length,critical:tasks.filter(t=>t.score>=85&&t.status!=='Finalizada').length,blocked:tasks.filter(t=>t.status==='Bloqueada').length,due48:tasks.filter(t=>t.status!=='Finalizada'&&t.daysLeft<=2).length};}
-function badgeDue(task){
-  if(task.daysLeft<0)return '<span class="badge red">Vencida</span>';
-  if(task.daysLeft===0)return '<span class="badge red">Vence hoy</span>';
-  if(task.daysLeft===1)return '<span class="badge amber">Vence mañana</span>';
-  if(task.daysLeft<=3)return '<span class="badge amber">En '+task.daysLeft+' días</span>';
-  return '<span class="badge green">'+task.daysLeft+' días</span>';
-}
-function statusBadge(status){
-  const map={'Pendiente':['blue','Pendiente'],'En curso':['green','En curso'],'Bloqueada':['red','Bloqueada'],'En espera de terceros':['amber','En espera'],'Finalizada':['green','Finalizada']};
-  const f=map[status]||['blue',status];
-  return '<span class="badge '+f[0]+'">'+escapeHtml(f[1])+'</span>';
-}
-function taskCard(task){
-  return `<article class="task">
-    <div class="task-top">
-      <div style="min-width:0"><div class="task-title">${escapeHtml(task.title)}</div><div class="task-sub">${escapeHtml(task.desc)}</div></div>
-      <div class="score"><b>${task.score}</b><span>Score</span></div>
-    </div>
-    <div class="badges">${statusBadge(task.status)}${badgeDue(task)}<span class="badge">${escapeHtml(task.area)}</span><span class="badge">${escapeHtml(task.initiative)}</span></div>
-    <div class="meta">
-      <div class="m"><div class="mk">Siguiente paso</div><div class="mv">${escapeHtml(task.next)}</div></div>
-      <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h</div></div>
-      <div class="m"><div class="mk">Prioridad</div><div class="mv">${escapeHtml(task.priority)}</div></div>
-    </div>
-    <div class="qa">
-      <button class="qbtn done" onclick="quickDone('${task.id}')">✓ Finalizar</button>
-      <button class="qbtn block" onclick="quickBlock('${task.id}')">⛔ Bloquear</button>
-      <button class="qbtn tom" onclick="quickTomorrow('${task.id}')">Mañana</button>
-      <button class="qbtn time" onclick="quickAddTime('${task.id}',0.5)">+30m</button>
-      <button class="qbtn time" onclick="quickAddTime('${task.id}',1)">+1h</button>
-    </div>
-  </article>`;
-}
-function renderMetrics(tasks){
-  const k=kpiData(tasks);
-  document.getElementById('metricsSection').innerHTML=`
-    <div class="metric"><div class="k">Tareas activas</div><div class="v">${k.total}</div><div class="s">Carga operativa abierta</div></div>
-    <div class="metric"><div class="k">Críticas</div><div class="v">${k.critical}</div><div class="s">Piden foco hoy</div></div>
-    <div class="metric"><div class="k">Bloqueadas</div><div class="v">${k.blocked}</div><div class="s">Necesitan desbloqueo</div></div>
-    <div class="metric"><div class="k">Vencen &lt; 48h</div><div class="v">${k.due48}</div><div class="s">Riesgo a corto plazo</div></div>`;
-  document.getElementById('quickSummary').innerHTML=`
-    <div class="side-row"><div class="side-k">Foco del día</div><div class="side-v">${Math.min(k.critical,3)} tareas</div></div>
-    <div class="side-row"><div class="side-k">En riesgo</div><div class="side-v">${k.blocked+k.due48}</div></div>
-    <div class="side-row"><div class="side-k">Capacidad</div><div class="side-v">${state.dailyCapacity} h</div></div>
-    <div class="side-row"><div class="side-k">Mejor vista</div><div class="side-v">Hoy</div></div>`;
-}
-function renderDashboard(tasks){
-  const critical=tasks.filter(t=>t.status!=='Finalizada'&&t.score>=85).slice(0,3);
-  const alerts=[];
-  if(tasks.some(t=>t.status==='Bloqueada'))alerts.push({cls:'red',txt:'Hay bloqueos activos. Conviene resolverlos antes de añadir más carga.'});
-  if(tasks.some(t=>t.daysLeft<=1&&t.status!=='Finalizada'))alerts.push({cls:'amber',txt:'Tienes compromisos con vencimiento inmediato. El riesgo no es falta de trabajo, sino dispersión.'});
-  if(!alerts.length)alerts.push({cls:'green',txt:'La carga parece controlable. Puedes avanzar en trabajo estructural sin perder el foco.'});
-  return `<div class="layout">
-    <div class="panel"><div class="panel-head"><div><h2>Foco ejecutivo</h2><p>Lo que no deberías perder de vista hoy.</p></div></div><div class="panel-body">${alerts.map(a=>`<div class="alert ${a.cls}">${a.txt}</div>`).join('')}<div class="list">${critical.map(taskCard).join('')}</div></div></div>
-    <div class="panel"><div class="panel-head"><div><h2>Ranking de prioridades</h2><p>Ordenado por impacto, urgencia y riesgo.</p></div></div><div class="panel-body"><div class="list">${tasks.slice(0,5).map((t,i)=>`<div class="rank-row"><div class="rank-num">${i+1}</div><div><h4>${escapeHtml(t.title)}</h4><p>${escapeHtml(t.initiative)} · ${escapeHtml(t.area)}</p></div><div class="badge blue">Score ${t.score}</div></div>`).join('')}</div></div></div>
-  </div>`;
-}
-function renderToday(tasks){
-  const active=tasks.filter(t=>t.status!=='Finalizada');
-  const critical=active.filter(t=>t.score>=85).slice(0,4);
-  const important=active.filter(t=>t.score>=70&&t.score<85).slice(0,4);
-  const optional=active.filter(t=>t.score<70).slice(0,4);
-  const dayLoad=critical.reduce((a,b)=>a+Math.min(2,Math.max(0,b.effort-b.spent)),0)+important.slice(0,2).reduce((a,b)=>a+Math.min(1.5,Math.max(0,b.effort-b.spent)),0);
-  const gap=Math.round((state.dailyCapacity-dayLoad)*10)/10;
-  return `<div class="panel" style="margin-bottom:18px"><div class="panel-head"><div><h2>Plan recomendado del día</h2><p>Una propuesta realista para ejecutar sin dispersarte.</p></div></div><div class="panel-body"><div class="grid-2"><div class="side-card"><div class="side-row"><div class="side-k">Capacidad diaria</div><div class="side-v">${state.dailyCapacity} h</div></div><div class="side-row"><div class="side-k">Carga sugerida</div><div class="side-v">${dayLoad.toFixed(1)} h</div></div><div class="side-row"><div class="side-k">Margen</div><div class="side-v">${gap>=0? '+'+gap.toFixed(1)+' h':gap.toFixed(1)+' h'}</div></div></div><div class="side-card"><div class="side-row"><div class="side-k">Regla del día</div><div class="side-v">Primero desbloquear</div></div><div class="side-row"><div class="side-k">Riesgo principal</div><div class="side-v">${active.some(t=>t.status==='Bloqueada')?'Bloqueos activos':'Dispersión'}</div></div><div class="side-row"><div class="side-k">Consejo</div><div class="side-v">${critical.length?'Cierra 1 crítica antes de abrir otra':'Consolida avance estructural'}</div></div></div></div></div></div>
-  <div class="today-grid">
-    <div class="lane"><div class="lane-head"><h3>Crítico</h3><p>Sí o sí hoy.</p></div><div class="lane-body">${critical.length?critical.map(taskCard).join(''):'<div class="empty">Nada crítico ahora mismo.</div>'}</div></div>
-    <div class="lane"><div class="lane-head"><h3>Importante</h3><p>Debe avanzar hoy, sin comerse toda la agenda.</p></div><div class="lane-body">${important.length?important.map(taskCard).join(''):'<div class="empty">No hay tareas importantes en este filtro.</div>'}</div></div>
-    <div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Hazlo si mantienes margen real.</p></div><div class="lane-body">${optional.length?optional.map(taskCard).join(''):'<div class="empty">Sin opcionales ahora mismo.</div>'}</div></div>
-  </div>`;
-}
-function renderRanking(tasks){
-  return `<div class="panel"><div class="panel-head"><div><h2>Ranking completo</h2><p>Con títulos visibles, score y siguiente paso.</p></div></div><div class="panel-body"><div class="list">${tasks.map((t,i)=>`<div class="rank-row"><div class="rank-num">${i+1}</div><div><h4>${escapeHtml(t.title)}</h4><p>${escapeHtml(t.desc)}</p><div class="badges" style="margin-top:8px">${statusBadge(t.status)}${badgeDue(t)}<span class="badge">${escapeHtml(t.area)}</span></div></div><div><div class="badge blue" style="margin-bottom:8px">Score ${t.score}</div><div style="font-size:13px;color:var(--muted);max-width:240px">${escapeHtml(t.next)}</div></div></div>`).join('')}</div></div></div>`;
-}
-function renderKanban(tasks){
-  const cols=['Pendiente','En curso','Bloqueada','Finalizada'];
-  return `<div class="panel"><div class="panel-head"><div><h2>Kanban</h2><p>Vista operativa por estado.</p></div></div><div class="panel-body"><div class="kanban">${cols.map(col=>`<div class="kcol"><div class="khead">${col}</div><div class="kbody">${tasks.filter(t=>t.status===col).length?tasks.filter(t=>t.status===col).map(taskCard).join(''):'<div class="empty">Sin tareas</div>'}</div></div>`).join('')}</div></div></div>`;
-}
-function renderInitiatives(){
-  return `<div class="panel"><div class="panel-head"><div><h2>Iniciativas</h2><p>Seguimiento de líneas de trabajo con más impacto.</p></div></div><div class="panel-body">${state.initiatives.map(i=>`<div class="initiative"><h4>${escapeHtml(i.name)}</h4><p>${escapeHtml(i.objective)}</p><div class="initiative-foot"><span class="badge">${escapeHtml(i.owner)}</span>${statusBadge(i.status)}<span class="badge blue">Progreso ${i.progress}%</span></div><div class="progress"><div style="width:${i.progress}%"></div></div></div>`).join('')}</div></div>`;
-}
-function render(){
-  const tasks=filteredTasks();
-  renderMetrics(tasks);
-  const titles={dashboard:['Dashboard','Visión general de prioridades, carga y ejecución.'],today:['Hoy','Plan de trabajo realista para centrarte en lo importante.'],ranking:['Ranking','Priorización visible y ordenada.'],kanban:['Kanban','Seguimiento operativo por estado y acciones rápidas.'],initiatives:['Iniciativas','Panorámica de las líneas de trabajo con más impacto.']};
-  document.getElementById('pageTitle').textContent=titles[state.currentView][0];
-  document.getElementById('pageSubtitle').textContent=titles[state.currentView][1];
-  document.getElementById('viewContainer').innerHTML=state.currentView==='dashboard'?renderDashboard(tasks):state.currentView==='today'?renderToday(tasks):state.currentView==='ranking'?renderRanking(tasks):state.currentView==='kanban'?renderKanban(tasks):renderInitiatives();
-  document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===state.currentView));
-  saveState();
-}
-function saveState(){localStorage.setItem('bdflow_v2_state',JSON.stringify({tasks:state.tasks,initiatives:state.initiatives,dailyCapacity:state.dailyCapacity}));}
-function loadState(){try{const raw=localStorage.getItem('bdflow_v2_state');if(!raw)return;const p=JSON.parse(raw);if(Array.isArray(p.tasks))state.tasks=p.tasks;if(Array.isArray(p.initiatives))state.initiatives=p.initiatives;if(typeof p.dailyCapacity==='number')state.dailyCapacity=p.dailyCapacity;}catch(e){}}
+function badgeDue(task){if(task.daysLeft<0)return '<span class="badge red">Vencida</span>';if(task.daysLeft===0)return '<span class="badge red">Vence hoy</span>';if(task.daysLeft===1)return '<span class="badge amber">Vence mañana</span>';if(task.daysLeft<=3)return '<span class="badge amber">En '+task.daysLeft+' días</span>';return '<span class="badge green">'+task.daysLeft+' días</span>';}
+function statusBadge(status){const map={'Pendiente':['blue','Pendiente'],'En curso':['green','En curso'],'Bloqueada':['red','Bloqueada'],'En espera de terceros':['amber','En espera'],'Finalizada':['green','Finalizada']};const f=map[status]||['blue',status];return '<span class="badge '+f[0]+'">'+escapeHtml(f[1])+'</span>';}
+function taskCard(task){return `<article class="task"><div class="task-top"><div style="min-width:0"><div class="task-title">${escapeHtml(task.title)}</div><div class="task-sub">${escapeHtml(task.desc)}</div></div><div class="score"><b>${task.score}</b><span>Score</span></div></div><div class="badges">${statusBadge(task.status)}${badgeDue(task)}<span class="badge">${escapeHtml(task.area)}</span><span class="badge">${escapeHtml(task.initiative)}</span></div><div class="meta"><div class="m"><div class="mk">Siguiente paso</div><div class="mv">${escapeHtml(task.next)}</div></div><div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h</div></div><div class="m"><div class="mk">Prioridad</div><div class="mv">${escapeHtml(task.priority)}</div></div></div><div class="qa"><button class="qbtn done" onclick="quickDone('${task.id}')">✓ Finalizar</button><button class="qbtn block" onclick="quickBlock('${task.id}')">⛔ Bloquear</button><button class="qbtn tom" onclick="quickTomorrow('${task.id}')">Mañana</button><button class="qbtn time" onclick="quickAddTime('${task.id}',0.5)">+30m</button><button class="qbtn time" onclick="quickAddTime('${task.id}',1)">+1h</button></div></article>`;}
+function renderMetrics(tasks){const k=kpiData(tasks);document.getElementById('metricsSection').innerHTML=`<div class="metric"><div class="k">Tareas activas</div><div class="v">${k.total}</div><div class="s">Carga operativa abierta</div></div><div class="metric"><div class="k">Críticas</div><div class="v">${k.critical}</div><div class="s">Piden foco hoy</div></div><div class="metric"><div class="k">Bloqueadas</div><div class="v">${k.blocked}</div><div class="s">Necesitan desbloqueo</div></div><div class="metric"><div class="k">Vencen &lt; 48h</div><div class="v">${k.due48}</div><div class="s">Riesgo a corto plazo</div></div>`;document.getElementById('quickSummary').innerHTML=`<div class="side-row"><div class="side-k">Foco del día</div><div class="side-v">${Math.min(k.critical,3)} tareas</div></div><div class="side-row"><div class="side-k">En riesgo</div><div class="side-v">${k.blocked+k.due48}</div></div><div class="side-row"><div class="side-k">Capacidad</div><div class="side-v">${state.dailyCapacity} h</div></div><div class="side-row"><div class="side-k">Mejor vista</div><div class="side-v">${state.currentView==='dashboard'?'Hoy':'Semana'}</div></div>`;}
+function renderDashboard(tasks){const mainTask=tasks.find(t=>t.status!=='Finalizada');const risks=tasks.filter(t=>t.status==='Bloqueada'||t.daysLeft<=1).slice(0,3);return `<div class="layout"><div class="panel"><div class="panel-head"><div><h2>🔥 Qué hacer ahora</h2><p>La decisión ya está tomada. Solo ejecuta.</p></div></div><div class="panel-body">${mainTask?`<div class="task" style="border:2px solid #1a56db"><div class="task-top"><div style="min-width:0"><div class="task-title" style="font-size:19px">${escapeHtml(mainTask.title)}</div><div class="task-sub">${escapeHtml(mainTask.desc)}</div></div><div class="score"><b>${mainTask.score}</b><span>Score</span></div></div><div class="badges">${statusBadge(mainTask.status)}${badgeDue(mainTask)}<span class="badge">${escapeHtml(mainTask.area)}</span><span class="badge">${escapeHtml(mainTask.initiative)}</span></div><div class="meta"><div class="m"><div class="mk">Siguiente paso</div><div class="mv">${escapeHtml(mainTask.next)}</div></div><div class="m"><div class="mk">Horas</div><div class="mv">${mainTask.spent}h / ${mainTask.effort}h</div></div><div class="m"><div class="mk">Prioridad</div><div class="mv">${escapeHtml(mainTask.priority)}</div></div></div><div class="qa"><button class="qbtn done" onclick="quickDone('${mainTask.id}')">✓ Hecho</button><button class="qbtn block" onclick="quickBlock('${mainTask.id}')">⛔ Bloquear</button><button class="qbtn time" onclick="quickAddTime('${mainTask.id}',1)">+1h</button></div></div>`:'<div class="empty">No hay tareas activas.</div>'}</div></div><div class="panel"><div class="panel-head"><div><h2>⚠️ Riesgos</h2><p>Lo que te puede romper el día</p></div></div><div class="panel-body">${risks.length?risks.map(t=>`<div class="task"><div class="task-title">${escapeHtml(t.title)}</div><div class="task-sub">${escapeHtml(t.desc)}</div><div class="badges">${statusBadge(t.status)}${badgeDue(t)}</div></div>`).join(''):'<div class="empty">Sin riesgos críticos.</div>'}</div></div></div>`;}
+function renderToday(tasks){const active=tasks.filter(t=>t.status!=='Finalizada');const critical=active.filter(t=>t.score>=85).slice(0,4);const important=active.filter(t=>t.score>=70&&t.score<85).slice(0,4);const optional=active.filter(t=>t.score<70).slice(0,4);const dayLoad=critical.reduce((a,b)=>a+Math.min(2,Math.max(0,b.effort-b.spent)),0)+important.slice(0,2).reduce((a,b)=>a+Math.min(1.5,Math.max(0,b.effort-b.spent)),0);const gap=Math.round((state.dailyCapacity-dayLoad)*10)/10;return `<div class="panel" style="margin-bottom:18px"><div class="panel-head"><div><h2>Plan recomendado del día</h2><p>Una propuesta realista para ejecutar sin dispersarte.</p></div></div><div class="panel-body"><div class="grid-2"><div class="side-card"><div class="side-row"><div class="side-k">Capacidad diaria</div><div class="side-v">${state.dailyCapacity} h</div></div><div class="side-row"><div class="side-k">Carga sugerida</div><div class="side-v">${dayLoad.toFixed(1)} h</div></div><div class="side-row"><div class="side-k">Margen</div><div class="side-v">${gap>=0?'+'+gap.toFixed(1)+' h':gap.toFixed(1)+' h'}</div></div></div><div class="side-card"><div class="side-row"><div class="side-k">Regla del día</div><div class="side-v">Primero desbloquear</div></div><div class="side-row"><div class="side-k">Riesgo principal</div><div class="side-v">${active.some(t=>t.status==='Bloqueada')?'Bloqueos activos':'Dispersión'}</div></div><div class="side-row"><div class="side-k">Consejo</div><div class="side-v">${critical.length?'Cierra 1 crítica antes de abrir otra':'Consolida avance estructural'}</div></div></div></div></div></div><div class="today-grid"><div class="lane"><div class="lane-head"><h3>Crítico</h3><p>Sí o sí hoy.</p></div><div class="lane-body">${critical.length?critical.map(taskCard).join(''):'<div class="empty">Nada crítico ahora mismo.</div>'}</div></div><div class="lane"><div class="lane-head"><h3>Importante</h3><p>Debe avanzar hoy, sin comerse toda la agenda.</p></div><div class="lane-body">${important.length?important.map(taskCard).join(''):'<div class="empty">No hay tareas importantes.</div>'}</div></div><div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Hazlo si mantienes margen real.</p></div><div class="lane-body">${optional.length?optional.map(taskCard).join(''):'<div class="empty">Sin opcionales.</div>'}</div></div></div>`;}
+function renderWeek(tasks){const labels=['Lunes','Martes','Miércoles','Jueves','Viernes'];const groups=[[],[],[],[],[]];tasks.filter(t=>t.status!=='Finalizada').forEach((t,i)=>groups[i%5].push(t));return `<div class="panel"><div class="panel-head"><div><h2>Semana</h2><p>Distribución operativa de carga y compromisos.</p></div></div><div class="panel-body"><div class="week-grid">${labels.map((d,i)=>`<div class="day-card"><h4>${d}</h4><div class="badges" style="margin-bottom:10px"><span class="badge blue">${groups[i].length} tareas</span></div>${groups[i].length?groups[i].map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.area)}</span></div>`).join(''):'<div class="empty" style="padding:14px">Sin carga</div>'}</div>`).join('')}</div></div></div>`;}
+function renderMonth(tasks){const days=Array.from({length:28},(_,i)=>i+1);return `<div class="panel"><div class="panel-head"><div><h2>Mes</h2><p>Visión táctica de hitos, vencimientos y picos.</p></div></div><div class="panel-body"><div class="month-grid">${days.map(d=>{const picks=tasks.filter((t,i)=>(i+d)%11===0).slice(0,1);return `<div class="month-cell"><h4>${d}</h4>${picks.length?picks.map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong></div>`).join(''):'<div style="color:var(--muted);font-size:12px">—</div>'}</div>`;}).join('')}</div></div></div>`;}
+function renderRanking(tasks){return `<div class="panel"><div class="panel-head"><div><h2>Ranking completo</h2><p>Con títulos visibles, score y siguiente paso.</p></div></div><div class="panel-body"><div class="list">${tasks.map((t,i)=>`<div class="rank-row"><div class="rank-num">${i+1}</div><div><h4>${escapeHtml(t.title)}</h4><p>${escapeHtml(t.desc)}</p><div class="badges" style="margin-top:8px">${statusBadge(t.status)}${badgeDue(t)}<span class="badge">${escapeHtml(t.area)}</span></div></div><div><div class="badge blue" style="margin-bottom:8px">Score ${t.score}</div><div style="font-size:13px;color:var(--muted);max-width:240px">${escapeHtml(t.next)}</div></div></div>`).join('')}</div></div></div>`;}
+function renderKanban(tasks){const cols=['Pendiente','En curso','Bloqueada','Finalizada'];return `<div class="panel"><div class="panel-head"><div><h2>Kanban</h2><p>Vista operativa por estado.</p></div></div><div class="panel-body"><div class="kanban">${cols.map(col=>`<div class="kcol"><div class="khead">${col}</div><div class="kbody">${tasks.filter(t=>t.status===col).length?tasks.filter(t=>t.status===col).map(taskCard).join(''):'<div class="empty">Sin tareas</div>'}</div></div>`).join('')}</div></div></div>`;}
+function renderInitiatives(){return `<div class="panel"><div class="panel-head"><div><h2>Iniciativas</h2><p>Seguimiento de líneas de trabajo con más impacto.</p></div></div><div class="panel-body">${state.initiatives.map(i=>`<div class="initiative"><h4>${escapeHtml(i.name)}</h4><p>${escapeHtml(i.objective)}</p><div class="initiative-foot"><span class="badge">${escapeHtml(i.owner)}</span>${statusBadge(i.status)}<span class="badge blue">Progreso ${i.progress}%</span></div><div class="progress"><div style="width:${i.progress}%"></div></div></div>`).join('')}</div></div>`;}
+function render(){const tasks=filteredTasks();renderMetrics(tasks);const titles={dashboard:['Dashboard','Decisión inmediata y riesgos del día.'],today:['Hoy','Plan de trabajo realista para centrarte en lo importante.'],week:['Semana','Carga operativa distribuida por día.'],month:['Mes','Visión táctica de hitos y vencimientos.'],ranking:['Ranking','Priorización visible y ordenada.'],kanban:['Kanban','Seguimiento operativo por estado y acciones rápidas.'],initiatives:['Iniciativas','Panorámica de las líneas de trabajo con más impacto.']};document.getElementById('pageTitle').textContent=titles[state.currentView][0];document.getElementById('pageSubtitle').textContent=titles[state.currentView][1];document.getElementById('viewContainer').innerHTML=state.currentView==='dashboard'?renderDashboard(tasks):state.currentView==='today'?renderToday(tasks):state.currentView==='week'?renderWeek(tasks):state.currentView==='month'?renderMonth(tasks):state.currentView==='ranking'?renderRanking(tasks):state.currentView==='kanban'?renderKanban(tasks):renderInitiatives();document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===state.currentView));saveState();}
+function saveState(){localStorage.setItem('bdflow_v21_state',JSON.stringify({tasks:state.tasks,initiatives:state.initiatives,dailyCapacity:state.dailyCapacity}));}
+function loadState(){try{const raw=localStorage.getItem('bdflow_v21_state');if(!raw)return;const p=JSON.parse(raw);if(Array.isArray(p.tasks))state.tasks=p.tasks;if(Array.isArray(p.initiatives))state.initiatives=p.initiatives;if(typeof p.dailyCapacity==='number')state.dailyCapacity=p.dailyCapacity;}catch(e){}}
 function quickDone(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;t.status='Finalizada';t.spent=Math.max(t.spent,t.effort);render();}
 function quickBlock(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;t.status=t.status==='Bloqueada'?'En curso':'Bloqueada';render();}
 function quickTomorrow(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;const d=parseDate(t.due);d.setDate(d.getDate()+1);t.due=d.toISOString().slice(0,10);render();}
@@ -244,11 +218,7 @@ document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click',
 document.getElementById('searchInput').addEventListener('input',e=>{state.search=e.target.value.trim();render();});
 document.getElementById('statusFilter').addEventListener('change',e=>{state.filterStatus=e.target.value;render();});
 document.getElementById('dailyCap').addEventListener('input',e=>{state.dailyCapacity=Number(e.target.value);document.getElementById('dailyCapValue').textContent=state.dailyCapacity;document.getElementById('dailyCapHint').textContent=state.dailyCapacity<=4?'Muy exigente':state.dailyCapacity<=6?'Foco realista':'Riesgo de sobrecarga';render();});
-loadState();
-document.getElementById('dailyCap').value=state.dailyCapacity;
-document.getElementById('dailyCapValue').textContent=state.dailyCapacity;
-document.getElementById('dailyCapHint').textContent=state.dailyCapacity<=4?'Muy exigente':state.dailyCapacity<=6?'Foco realista':'Riesgo de sobrecarga';
-render();
+loadState();document.getElementById('dailyCap').value=state.dailyCapacity;document.getElementById('dailyCapValue').textContent=state.dailyCapacity;document.getElementById('dailyCapHint').textContent=state.dailyCapacity<=4?'Muy exigente':state.dailyCapacity<=6?'Foco realista':'Riesgo de sobrecarga';render();
 </script>
 </body>
 </html>
