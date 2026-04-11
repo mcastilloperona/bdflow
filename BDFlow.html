@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 2.9.1</title>
+  <title>BDFlow Ver. 3.0</title>
   <style>
     :root{--bg:#f3f6fb;--panel:#fff;--panel-2:#f8faff;--border:#dbe4f0;--text:#0f172a;--muted:#64748b;--blue:#1a56db;--blue-2:#eaf1ff;--green:#16a34a;--green-2:#ecfdf3;--amber:#d97706;--amber-2:#fff7e8;--red:#dc2626;--red-2:#fff0f0;--chip:#eef3fb;--shadow:0 8px 24px rgba(15,23,42,.06);--radius:16px}
     *{box-sizing:border-box} html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif} button,input,select,textarea{font:inherit} body{min-height:100vh}
-    .app{display:flex;min-height:100vh}.sidebar{width:270px;background:#162033;color:#e5eefc;border-right:1px solid #24324b;padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+    .app{display:flex;min-height:100vh}.sidebar{width:270px;background:#26352f;color:#eef6f0;border-right:1px solid #36483f;padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto}
     .brand{padding:6px 8px 18px;border-bottom:1px solid #24324b;margin-bottom:18px}.brand-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.logo{font-size:28px;font-weight:800;letter-spacing:-.03em}.logo b{color:var(--blue)} .sub{font-size:12px;color:#9fb2cf;margin-top:2px}
     .version{display:inline-flex;align-items:center;background:var(--blue-2);color:var(--blue);border:1px solid #cfe0ff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700}
     .section-label{font-size:11px;font-weight:800;letter-spacing:.08em;color:#8fa5c6;text-transform:uppercase;margin:18px 8px 10px}.nav{display:flex;flex-direction:column;gap:6px}
@@ -59,6 +59,22 @@
     .nav .nav-btn:nth-child(8) .nav-dot{background:#38bdf8}
     .nav .nav-btn:nth-child(9) .nav-dot{background:#facc15}
     .nav-btn.active .nav-dot{background:#ffffff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)}
+    
+    .nav .nav-btn:nth-child(1) .nav-dot{background:#93c5fd}
+    .nav .nav-btn:nth-child(2) .nav-dot{background:#86efac}
+    .nav .nav-btn:nth-child(3) .nav-dot{background:#fcd34d}
+    .nav .nav-btn:nth-child(4) .nav-dot{background:#c4b5fd}
+    .nav .nav-btn:nth-child(5) .nav-dot{background:#f9a8d4}
+    .nav .nav-btn:nth-child(6) .nav-dot{background:#67e8f9}
+    .nav .nav-btn:nth-child(7) .nav-dot{background:#fdba74}
+    .nav .nav-btn:nth-child(8) .nav-dot{background:#a7f3d0}
+    .nav .nav-btn:nth-child(9) .nav-dot{background:#fca5a5}
+    .nav-btn.active .nav-dot{background:#ffffff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)}
+    .worklog-list{margin-top:12px}
+    .worklog-entry{padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--panel-2);margin-bottom:8px}
+    .worklog-entry:last-child{margin-bottom:0}
+    .detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+
     .activity-day{border:1px solid var(--border);border-radius:16px;background:white;padding:14px;margin-bottom:14px}
     .activity-day h3{margin:0 0 12px 0;font-size:16px}
     .activity-entry{padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--panel-2);margin-bottom:10px}
@@ -74,7 +90,7 @@
   <div class="overlay" id="overlay" onclick="toggleSidebar(false)"></div>
   <div class="app">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><div class="brand-top"><div><div class="logo">BD<b>Flow</b></div><div class="sub">by Miguel Castillo</div></div><div class="version">Ver. 2.9.1</div></div></div>
+      <div class="brand"><div class="brand-top"><div><div class="logo">BD<b>Flow</b></div><div class="sub">by Miguel Castillo</div></div><div class="version">Ver. 3.0</div></div></div>
       <div class="section-label">Navegación</div>
       <div class="nav">
         <button class="nav-btn active" data-view="dashboard"><span class="nav-dot"></span>Dashboard</button>
@@ -155,8 +171,19 @@
   </div>
 
 
+
+  <div class="modal-wrap" id="taskDetailModalWrap">
+    <div class="modal">
+      <div class="modal-head"><h3>Detalle de tarea</h3><button class="btn secondary" onclick="closeTaskDetailModal()">Cerrar</button></div>
+      <div class="modal-body">
+        <div id="taskDetailContent"></div>
+      </div>
+      <div class="modal-actions"><div></div><div style="display:flex;gap:10px"><button class="btn secondary" onclick="closeTaskDetailModal()">Cerrar</button></div></div>
+    </div>
+  </div>
+
 <script>
-const state={currentView:'dashboard',search:'',filterStatus:'all',dailyCapacity:6,editingTaskId:null,editingInitiativeId:null,editingWorklogTaskId:null,
+const state={currentView:'dashboard',search:'',filterStatus:'all',dailyCapacity:6,editingTaskId:null,editingInitiativeId:null,editingWorklogTaskId:null,detailTaskId:null,
 areas:['General','Business Development'],
 initiatives:[],
 tasks:[]};
@@ -165,6 +192,7 @@ function getInitiativeName(id){const i=state.initiatives.find(x=>x.id===id);retu
 
 function getWorkSessionsCount(task){return Array.isArray(task.worklog)?task.worklog.length:0;}
 function getLastWorkDate(task){return Array.isArray(task.worklog)&&task.worklog.length?task.worklog[task.worklog.length-1].date:'—';}
+function getCreatedAt(task){return task.createdAt||'—';}
 function parseDate(s){return new Date(s+'T12:00:00');}
 function daysToDue(task){
   if(!task.due) return null;
@@ -188,13 +216,13 @@ function badgeDue(task){
 function statusBadge(status){const map={'Pendiente':['blue','Pendiente'],'En curso':['green','En curso'],'Pausada':['amber','Pausada'],'En espera de terceros':['amber','En espera'],'Finalizada':['green','Finalizada']};const f=map[status]||['blue',status];return'<span class="badge '+f[0]+'">'+escapeHtml(f[1])+'</span>';}
 function taskCard(task){
   const pauseLabel = task.status==='Pausada' ? '▶ Reanudar' : '⏸ Pausar';
-  return `<article class="task"><div class="task-top"><div style="min-width:0"><div class="task-title">${escapeHtml(task.title)}</div><div class="task-sub">${escapeHtml(task.desc)}</div></div><div class="score"><b>${task.score}</b><span>Score</span></div></div><div class="badges">${statusBadge(task.status)}${badgeDue(task)}<span class="badge">${escapeHtml(task.area)}</span><span class="badge">${escapeHtml(task.initiative)}</span></div><div class="meta"><div class="m"><div class="mk">Siguiente paso</div><div class="mv">${escapeHtml(task.next)}</div></div><div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h</div></div><div class="m"><div class="mk">Sesiones</div><div class="mv">${getWorkSessionsCount(task)}</div></div><div class="m"><div class="mk">Última actividad</div><div class="mv">${escapeHtml(getLastWorkDate(task))}</div></div></div><div class="qa"><button class="qbtn done" onclick="quickDone('${task.id}')">✓ Finalizar</button><button class="qbtn block" onclick="quickBlock('${task.id}')">${pauseLabel}</button><button class="qbtn time" onclick="quickAddTime('${task.id}',0.5)">+30m</button><button class="qbtn time" onclick="quickAddTime('${task.id}',1)">+1h</button><button class="qbtn time" onclick="openWorklogModal('${task.id}')">Registrar trabajo</button><button class="qbtn edit" onclick="openTaskModal('${task.id}')">Editar</button></div>${task.worklog&&task.worklog.length?`<div style="margin-top:12px"><div class="mk" style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:800">Últimos registros</div>${task.worklog.slice(-3).reverse().map(w=>`<div class="mini-task"><strong>${w.date}</strong> · ${w.hours}h${w.note?` · ${escapeHtml(w.note)}`:''}</div>`).join('')}</div>`:''}</article>`;
+  return `<article class="task"><div class="task-top"><div style="min-width:0"><div class="task-title">${escapeHtml(task.title)}</div><div class="task-sub">${escapeHtml(task.desc)}</div></div><div class="score"><b>${task.score}</b><span>Score</span></div></div><div class="badges">${statusBadge(task.status)}${badgeDue(task)}<span class="badge">${escapeHtml(task.area)}</span><span class="badge">${escapeHtml(task.initiative)}</span></div><div class="meta"><div class="m"><div class="mk">Creada</div><div class="mv">${escapeHtml(getCreatedAt(task))}</div></div><div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h</div></div><div class="m"><div class="mk">Sesiones</div><div class="mv">${getWorkSessionsCount(task)}</div></div><div class="m"><div class="mk">Última actividad</div><div class="mv">${escapeHtml(getLastWorkDate(task))}</div></div></div><div class="qa"><button class="qbtn done" onclick="quickDone('${task.id}')">✓ Finalizar</button><button class="qbtn block" onclick="quickBlock('${task.id}')">${pauseLabel}</button><button class="qbtn time" onclick="quickAddTime('${task.id}',0.5)">+30m</button><button class="qbtn time" onclick="quickAddTime('${task.id}',1)">+1h</button><button class="qbtn time" onclick="openWorklogModal('${task.id}')">Registrar trabajo</button><button class="qbtn edit" onclick="openTaskDetailModal('${task.id}')">Ver detalle</button></div>${task.worklog&&task.worklog.length?`<div style="margin-top:12px"><div class="mk" style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:800">Últimos registros</div>${task.worklog.slice(-3).reverse().map((w,idx)=>`<div class="mini-task"><strong>${w.date}</strong> · ${w.hours}h${w.note?` · ${escapeHtml(w.note)}`:''}</div>`).join('')}</div>`:''}</article>`;
 }
 function renderMetrics(tasks){const k=kpiData(tasks);document.getElementById('metricsSection').innerHTML=`<div class="metric"><div class="k">Tareas activas</div><div class="v">${k.total}</div><div class="s">Carga operativa abierta</div></div><div class="metric"><div class="k">Críticas</div><div class="v">${k.critical}</div><div class="s">Piden foco hoy</div></div><div class="metric"><div class="k">Pausadas</div><div class="v">${k.blocked}</div><div class="s">Necesitan reactivación</div></div><div class="metric"><div class="k">Estructura</div><div class="v">${state.initiatives.length}/${state.areas.length}</div><div class="s">Iniciativas / áreas</div></div>`;document.getElementById('quickSummary').innerHTML=`<div class="side-row"><div class="side-k">Foco del día</div><div class="side-v">${tasks.length?Math.min(k.critical,3)+' tareas':'Sin tareas'}</div></div><div class="side-row"><div class="side-k">En riesgo</div><div class="side-v">${k.blocked+k.due48}</div></div><div class="side-row"><div class="side-k">Capacidad</div><div class="side-v">${state.dailyCapacity} h</div></div><div class="side-row"><div class="side-k">Áreas activas</div><div class="side-v">${state.areas.length}</div></div>`;}
 function renderDashboard(tasks){
   const mainTask=tasks.find(t=>t.status!=='Finalizada');
   const risks=tasks.filter(t=>t.status==='Pausada'||(t.daysLeft!==null&&t.daysLeft<=1)).slice(0,3);
-  return `<div class="layout"><div class="panel"><div class="panel-head"><div><h2>🔥 Qué hacer ahora</h2><p>La decisión ya está tomada. Solo ejecuta.</p></div></div><div class="panel-body">${mainTask?`<div class="task" style="border:2px solid #1a56db"><div class="task-top"><div style="min-width:0"><div class="task-title" style="font-size:19px">${escapeHtml(mainTask.title)}</div><div class="task-sub">${escapeHtml(mainTask.desc)}</div></div><div class="score"><b>${mainTask.score}</b><span>Score</span></div></div><div class="badges">${statusBadge(mainTask.status)}${badgeDue(mainTask)}<span class="badge">${escapeHtml(mainTask.area)}</span><span class="badge">${escapeHtml(mainTask.initiative)}</span></div><div class="meta"><div class="m"><div class="mk">Siguiente paso</div><div class="mv">${escapeHtml(mainTask.next)}</div></div><div class="m"><div class="mk">Horas</div><div class="mv">${mainTask.spent}h / ${mainTask.effort}h</div></div><div class="m"><div class="mk">Sesiones</div><div class="mv">${getWorkSessionsCount(mainTask)}</div></div><div class="m"><div class="mk">Última actividad</div><div class="mv">${escapeHtml(getLastWorkDate(mainTask))}</div></div></div><div class="qa"><button class="qbtn done" onclick="quickDone('${mainTask.id}')">✓ Hecho</button><button class="qbtn block" onclick="quickBlock('${mainTask.id}')">${mainTask.status==='Pausada'?'▶ Reanudar':'⏸ Pausar'}</button><button class="qbtn time" onclick="quickAddTime('${mainTask.id}',1)">+1h</button><button class="qbtn time" onclick="openWorklogModal('${mainTask.id}')">Registrar trabajo</button><button class="qbtn edit" onclick="openTaskModal('${mainTask.id}')">Editar</button></div>${mainTask.worklog&&mainTask.worklog.length?`<div style="margin-top:12px"><div class="mk" style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:800">Últimos registros</div>${mainTask.worklog.slice(-3).reverse().map(w=>`<div class="mini-task"><strong>${w.date}</strong> · ${w.hours}h${w.note?` · ${escapeHtml(w.note)}`:''}</div>`).join('')}</div>`:''}</div>`:'<div class="empty">No hay tareas activas.</div>'}</div></div><div class="panel"><div class="panel-head"><div><h2>⚠️ Riesgos</h2><p>Lo que te puede romper el día</p></div></div><div class="panel-body">${risks.length?risks.map(t=>`<div class="task"><div class="task-title">${escapeHtml(t.title)}</div><div class="task-sub">${escapeHtml(t.desc)}</div><div class="badges">${statusBadge(t.status)}${badgeDue(t)}</div></div>`).join(''):'<div class="empty">Sin riesgos críticos.</div>'}</div></div></div>`;
+  return `<div class="layout"><div class="panel"><div class="panel-head"><div><h2>🔥 Qué hacer ahora</h2><p>La decisión ya está tomada. Solo ejecuta.</p></div></div><div class="panel-body">${mainTask?`<div class="task" style="border:2px solid #1a56db"><div class="task-top"><div style="min-width:0"><div class="task-title" style="font-size:19px">${escapeHtml(mainTask.title)}</div><div class="task-sub">${escapeHtml(mainTask.desc)}</div></div><div class="score"><b>${mainTask.score}</b><span>Score</span></div></div><div class="badges">${statusBadge(mainTask.status)}${badgeDue(mainTask)}<span class="badge">${escapeHtml(mainTask.area)}</span><span class="badge">${escapeHtml(mainTask.initiative)}</span></div><div class="meta"><div class="m"><div class="mk">Creada</div><div class="mv">${escapeHtml(getCreatedAt(mainTask))}</div></div><div class="m"><div class="mk">Horas</div><div class="mv">${mainTask.spent}h / ${mainTask.effort}h</div></div><div class="m"><div class="mk">Sesiones</div><div class="mv">${getWorkSessionsCount(mainTask)}</div></div><div class="m"><div class="mk">Última actividad</div><div class="mv">${escapeHtml(getLastWorkDate(mainTask))}</div></div></div><div class="qa"><button class="qbtn done" onclick="quickDone('${mainTask.id}')">✓ Hecho</button><button class="qbtn block" onclick="quickBlock('${mainTask.id}')">${mainTask.status==='Pausada'?'▶ Reanudar':'⏸ Pausar'}</button><button class="qbtn time" onclick="quickAddTime('${mainTask.id}',1)">+1h</button><button class="qbtn time" onclick="openWorklogModal('${mainTask.id}')">Registrar trabajo</button><button class="qbtn edit" onclick="openTaskModal('${mainTask.id}')">Editar</button></div>${mainTask.worklog&&mainTask.worklog.length?`<div style="margin-top:12px"><div class="mk" style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:800">Últimos registros</div>${mainTask.worklog.slice(-3).reverse().map(w=>`<div class="mini-task"><strong>${w.date}</strong> · ${w.hours}h${w.note?` · ${escapeHtml(w.note)}`:''}</div>`).join('')}</div>`:''}</div>`:'<div class="empty">No hay tareas activas.</div>'}</div></div><div class="panel"><div class="panel-head"><div><h2>⚠️ Riesgos</h2><p>Lo que te puede romper el día</p></div></div><div class="panel-body">${risks.length?risks.map(t=>`<div class="task"><div class="task-title">${escapeHtml(t.title)}</div><div class="task-sub">${escapeHtml(t.desc)}</div><div class="badges">${statusBadge(t.status)}${badgeDue(t)}</div></div>`).join(''):'<div class="empty">Sin riesgos críticos.</div>'}</div></div></div>`;
 }
 function renderToday(tasks){const active=tasks.filter(t=>t.status!=='Finalizada');const critical=active.filter(t=>t.score>=85).slice(0,4);const important=active.filter(t=>t.score>=70&&t.score<85).slice(0,4);const optional=active.filter(t=>t.score<70).slice(0,4);return`<div class="today-grid"><div class="lane"><div class="lane-head"><h3>Crítico</h3><p>Sí o sí hoy.</p></div><div class="lane-body">${critical.length?critical.map(taskCard).join(''):'<div class="empty">Nada crítico ahora mismo.</div>'}</div></div><div class="lane"><div class="lane-head"><h3>Importante</h3><p>Debe avanzar hoy.</p></div><div class="lane-body">${important.length?important.map(taskCard).join(''):'<div class="empty">No hay tareas importantes.</div>'}</div></div><div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Hazlo si mantienes margen.</p></div><div class="lane-body">${optional.length?optional.map(taskCard).join(''):'<div class="empty">Sin opcionales.</div>'}</div></div></div>`;}
 function renderWeek(tasks){const labels=['Lunes','Martes','Miércoles','Jueves','Viernes'];const groups=[[],[],[],[],[]];tasks.filter(t=>t.status!=='Finalizada').forEach((t,i)=>groups[i%5].push(t));return`<div class="panel"><div class="panel-head"><div><h2>Semana</h2><p>Distribución operativa de carga y compromisos.</p></div></div><div class="panel-body"><div class="week-grid">${labels.map((d,i)=>`<div class="day-card"><h4>${d}</h4><div class="badges" style="margin-bottom:10px"><span class="badge blue">${groups[i].length} tareas</span></div>${groups[i].length?groups[i].map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}</span></div>`).join(''):'<div class="empty" style="padding:14px">Sin carga</div>'}</div>`).join('')}</div></div></div>`;}
@@ -292,11 +320,14 @@ function buildCommitteeView(){
 function getAllWorklogEntries(){
   const entries=[];
   state.tasks.forEach(task=>{
-    (task.worklog||[]).forEach(w=>{
+    (task.worklog||[]).forEach((w,index)=>{
       entries.push({
+        taskId:task.id,
+        index,
         taskTitle:task.title,
         initiative:getInitiativeName(task.initiativeId),
         area:task.area,
+        createdAt:getCreatedAt(task),
         date:w.date,
         hours:w.hours,
         note:w.note||''
@@ -313,7 +344,7 @@ function renderActivity(){
   }
   const grouped={};
   entries.forEach(e=>{if(!grouped[e.date]) grouped[e.date]=[]; grouped[e.date].push(e);});
-  return `<div class="panel"><div class="panel-head"><div><h2>Actividad</h2><p>Vista clara del trabajo realizado por fechas.</p></div></div><div class="panel-body">${Object.entries(grouped).map(([date,items])=>`<div class="activity-day"><h3>${date}</h3>${items.map(i=>`<div class="activity-entry"><div class="activity-top"><div><div class="row-title">${escapeHtml(i.taskTitle)}</div><div class="row-sub">${escapeHtml(i.initiative)} · ${escapeHtml(i.area)}</div></div><div class="badge blue">${i.hours}h</div></div>${i.note?`<div style="margin-top:8px;color:var(--muted);font-size:13px">${escapeHtml(i.note)}</div>`:''}</div>`).join('')}</div>`).join('')}</div></div>`;
+  return `<div class="panel"><div class="panel-head"><div><h2>Actividad</h2><p>Vista clara del trabajo realizado por fechas.</p></div></div><div class="panel-body">${Object.entries(grouped).map(([date,items])=>`<div class="activity-day"><h3>${date}</h3>${items.map(i=>`<div class="activity-entry"><div class="activity-top"><div><div class="row-title">${escapeHtml(i.taskTitle)}</div><div class="row-sub">${escapeHtml(i.initiative)} · ${escapeHtml(i.area)} · Creada ${escapeHtml(i.createdAt)}</div></div><div class="badge blue">${i.hours}h</div></div>${i.note?`<div style="margin-top:8px;color:var(--muted);font-size:13px">${escapeHtml(i.note)}</div>`:''}<div class="worklog-row"><button class="btn secondary" onclick="editWorklogEntry('${i.taskId}',${i.index})">Editar</button><button class="btn secondary" onclick="deleteWorklogEntry('${i.taskId}',${i.index})">Eliminar</button><button class="btn secondary" onclick="openTaskDetailModal('${i.taskId}')">Ver tarea</button></div></div>`).join('')}</div>`).join('')}</div></div>`;
 }
 
 function renderReport(){
@@ -341,12 +372,13 @@ function renderReport(){
 }
 function render(){state.tasks.forEach(deriveMetrics);const tasks=filteredTasks();renderMetrics(tasks);const titles={dashboard:['Dashboard','Decisión inmediata y riesgos del día.'],today:['Hoy','Plan de trabajo realista.'],week:['Semana','Carga operativa distribuida por día.'],month:['Mes','Visión táctica de hitos y vencimientos.'],ranking:['Ranking','Priorización visible y ordenada.'],kanban:['Kanban','Seguimiento operativo por estado.'],activity:['Actividad','Vista cronológica del trabajo realizado.'],initiatives:['Iniciativas','Contenedores de trabajo que agrupan tareas.'],config:['Configuración','Áreas e iniciativas gestionadas de forma rápida.'],report:['Informe','Versión comité y resumen ejecutivo listo para compartir.']};document.getElementById('pageTitle').textContent=titles[state.currentView][0];document.getElementById('pageSubtitle').textContent=titles[state.currentView][1];document.getElementById('viewContainer').innerHTML=state.currentView==='dashboard'?renderDashboard(tasks):state.currentView==='today'?renderToday(tasks):state.currentView==='week'?renderWeek(tasks):state.currentView==='month'?renderMonth(tasks):state.currentView==='ranking'?renderRanking(tasks):state.currentView==='kanban'?renderKanban(tasks):state.currentView==='activity'?renderActivity():state.currentView==='initiatives'?renderInitiatives():state.currentView==='config'?renderConfig():renderReport();document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===state.currentView));saveState();}
 function saveState(){localStorage.setItem('bdflow_v262_state',JSON.stringify({tasks:state.tasks,initiatives:state.initiatives,areas:state.areas,dailyCapacity:state.dailyCapacity}));}
-function loadState(){try{const raw=localStorage.getItem('bdflow_v262_state');if(!raw)return;const p=JSON.parse(raw);if(Array.isArray(p.tasks))state.tasks=p.tasks.map(t=>({...t,status:t.status==='Bloqueada'?'Pausada':(t.status||'Pendiente'),worklog:Array.isArray(t.worklog)?t.worklog:[]}));if(Array.isArray(p.initiatives))state.initiatives=p.initiatives.map(i=>({...i,status:i.status==='Bloqueada'?'Pausada':(i.status||'Pendiente')}));if(Array.isArray(p.areas))state.areas=p.areas;if(typeof p.dailyCapacity==='number')state.dailyCapacity=p.dailyCapacity;}catch(e){}}
+function loadState(){try{const raw=localStorage.getItem('bdflow_v262_state');if(!raw)return;const p=JSON.parse(raw);if(Array.isArray(p.tasks))state.tasks=p.tasks.map(t=>({...t,status:t.status==='Bloqueada'?'Pausada':(t.status||'Pendiente'),worklog:Array.isArray(t.worklog)?t.worklog:[],createdAt:t.createdAt||t.created||new Date().toISOString().slice(0,10)}));if(Array.isArray(p.initiatives))state.initiatives=p.initiatives.map(i=>({...i,status:i.status==='Bloqueada'?'Pausada':(i.status||'Pendiente')}));if(Array.isArray(p.areas))state.areas=p.areas;if(typeof p.dailyCapacity==='number')state.dailyCapacity=p.dailyCapacity;}catch(e){}}
 function quickDone(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;t.status='Finalizada';t.spent=Math.max(t.spent,t.effort);render();}
 function quickBlock(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;t.status=t.status==='Pausada'?'En curso':'Pausada';render();}
 function quickTomorrow(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;const d=parseDate(t.due);d.setDate(d.getDate()+1);t.due=d.toISOString().slice(0,10);render();}
 function quickAddTime(id,h){
   const t=state.tasks.find(x=>x.id===id);if(!t)return;
+  if(!t.createdAt) t.createdAt=new Date().toISOString().slice(0,10);
   t.spent=Math.round((t.spent+h)*10)/10;
   if(!Array.isArray(t.worklog)) t.worklog=[];
   t.worklog.push({date:new Date().toISOString().slice(0,10), hours:h, note:'Registro rápido'});
@@ -367,6 +399,7 @@ function closeWorklogModal(){
 function saveWorklogEntry(){
   const t=state.tasks.find(x=>x.id===state.editingWorklogTaskId);
   if(!t) return;
+  if(!t.createdAt) t.createdAt=new Date().toISOString().slice(0,10);
   const date=document.getElementById('wDate').value || new Date().toISOString().slice(0,10);
   const hours=Number(document.getElementById('wHours').value||0);
   const note=document.getElementById('wNote').value.trim();
@@ -378,12 +411,47 @@ function saveWorklogEntry(){
   closeWorklogModal();
   render();
 }
+function openTaskDetailModal(id){
+  state.detailTaskId=id;
+  const t=state.tasks.find(x=>x.id===id);
+  if(!t) return;
+  const content=document.getElementById('taskDetailContent');
+  content.innerHTML=`<div class="detail-grid"><div class="m"><div class="mk">Creada</div><div class="mv">${escapeHtml(getCreatedAt(t))}</div></div><div class="m"><div class="mk">Fecha objetivo</div><div class="mv">${t.due?escapeHtml(t.due):'Sin fecha'}</div></div><div class="m"><div class="mk">Horas totales</div><div class="mv">${t.spent}h</div></div><div class="m"><div class="mk">Sesiones</div><div class="mv">${getWorkSessionsCount(t)}</div></div></div><div class="initiative"><h4>${escapeHtml(t.title)}</h4><p>${escapeHtml(t.desc||'')}</p><div class="initiative-foot"><span class="badge">${escapeHtml(t.area||'General')}</span><span class="badge blue">${escapeHtml(getInitiativeName(t.initiativeId)||'Sin iniciativa')}</span>${statusBadge(t.status)}</div></div><div class="panel" style="box-shadow:none;margin-top:14px"><div class="panel-head"><div><h2>Trabajo realizado</h2><p>Histórico editable de sesiones registradas.</p></div></div><div class="panel-body"><div class="worklog-list">${(t.worklog&&t.worklog.length)?t.worklog.map((w,idx)=>`<div class="worklog-entry"><div class="activity-top"><div><div class="row-title">${escapeHtml(w.date)}</div><div class="row-sub">${w.note?escapeHtml(w.note):'Sin comentario'}</div></div><div class="badge blue">${w.hours}h</div></div><div class="worklog-row"><button class="btn secondary" onclick="editWorklogEntry('${t.id}',${idx})">Editar</button><button class="btn secondary" onclick="deleteWorklogEntry('${t.id}',${idx})">Eliminar</button></div></div>`).join(''):`<div class="empty">Todavía no hay trabajo registrado.</div>`}</div></div></div>`;
+  document.getElementById('taskDetailModalWrap').classList.add('show');
+}
+function closeTaskDetailModal(){document.getElementById('taskDetailModalWrap').classList.remove('show');state.detailTaskId=null;}
+function editWorklogEntry(taskId,index){
+  const t=state.tasks.find(x=>x.id===taskId); if(!t||!t.worklog||!t.worklog[index]) return;
+  const w=t.worklog[index];
+  const newDate=prompt('Fecha (YYYY-MM-DD):', w.date||'');
+  if(newDate===null) return;
+  const newHours=prompt('Horas:', String(w.hours||0));
+  if(newHours===null) return;
+  const parsed=Number(newHours);
+  if(!parsed || parsed<=0){ alert('Horas no válidas.'); return; }
+  const newNote=prompt('Comentario:', w.note||'');
+  const oldHours=Number(w.hours||0);
+  w.date=newDate||w.date;
+  w.hours=parsed;
+  w.note=newNote===null?(w.note||''):newNote;
+  t.spent=Math.round(((Number(t.spent)||0)-oldHours+parsed)*10)/10;
+  render();
+  if(state.detailTaskId===taskId) openTaskDetailModal(taskId);
+}
+function deleteWorklogEntry(taskId,index){
+  const t=state.tasks.find(x=>x.id===taskId); if(!t||!t.worklog||!t.worklog[index]) return;
+  const w=t.worklog[index];
+  t.spent=Math.max(0, Math.round(((Number(t.spent)||0)-Number(w.hours||0))*10)/10);
+  t.worklog.splice(index,1);
+  render();
+  if(state.detailTaskId===taskId) openTaskDetailModal(taskId);
+}
 function toggleSidebar(open){document.getElementById('sidebar').classList.toggle('open',open);document.getElementById('overlay').classList.toggle('show',open);}
 function refreshAreaOptions(selected=''){const s=document.getElementById('fArea');if(s)s.innerHTML=state.areas.map(a=>`<option value="${escapeHtml(a)}" ${a===selected?'selected':''}>${escapeHtml(a)}</option>`).join('');const io=document.getElementById('iOwner');if(io)io.innerHTML=state.areas.map(a=>`<option value="${escapeHtml(a)}" ${a===selected?'selected':''}>${escapeHtml(a)}</option>`).join('');}
 function refreshInitiativeOptions(selectedId=''){const s=document.getElementById('fInitiative');if(s)s.innerHTML=state.initiatives.map(i=>`<option value="${i.id}" ${i.id===selectedId?'selected':''}>${escapeHtml(i.name)}</option>`).join('');}
 function openTaskModal(taskId=null,initiativeId=''){state.editingTaskId=taskId;document.getElementById('taskModalWrap').classList.add('show');const t=taskId?state.tasks.find(x=>x.id===taskId):null;document.getElementById('taskModalTitle').textContent=t?'Editar tarea':'Nueva tarea';document.getElementById('deleteTaskBtn').style.display=t?'inline-flex':'none';document.getElementById('fTitle').value=t?t.title:'';document.getElementById('fDesc').value=t?t.desc:'';refreshAreaOptions(t?t.area:state.areas[0]||'');refreshInitiativeOptions(t?t.initiativeId:initiativeId||state.initiatives[0]?.id||'');document.getElementById('fStatus').value=t?t.status:'Pendiente';document.getElementById('fPriority').value=t?t.priority:'Alta';document.getElementById('fDue').value=t?(t.due||''):'';document.getElementById('fEffort').value=t?t.effort:1;document.getElementById('fNext').value=t?t.next:'Definir siguiente paso.';}
 function closeTaskModal(){document.getElementById('taskModalWrap').classList.remove('show');state.editingTaskId=null;}
-function saveTask(){if(!state.initiatives.length){alert('Crea antes una iniciativa.');return;}if(!state.areas.length){alert('Crea antes un área.');return;}const title=document.getElementById('fTitle').value.trim();if(!title){alert('El título es obligatorio.');return;}const task={id:state.editingTaskId||('t'+Date.now()),title,desc:document.getElementById('fDesc').value.trim(),area:document.getElementById('fArea').value,initiativeId:document.getElementById('fInitiative').value,status:document.getElementById('fStatus').value,priority:document.getElementById('fPriority').value,due:document.getElementById('fDue').value||'',effort:Number(document.getElementById('fEffort').value||0),spent:(state.editingTaskId?(state.tasks.find(x=>x.id===state.editingTaskId)?.spent||0):0),next:document.getElementById('fNext').value.trim()||'Definir siguiente paso.',worklog:(state.editingTaskId?(state.tasks.find(x=>x.id===state.editingTaskId)?.worklog||[]):[]),impact:70,urgency:70,criticality:70,blockRisk:40};deriveMetrics(task);const idx=state.tasks.findIndex(x=>x.id===task.id);if(idx>=0)state.tasks[idx]=task;else state.tasks.unshift(task);closeTaskModal();render();}
+function saveTask(){if(!state.initiatives.length){alert('Crea antes una iniciativa.');return;}if(!state.areas.length){alert('Crea antes un área.');return;}const title=document.getElementById('fTitle').value.trim();if(!title){alert('El título es obligatorio.');return;}const task={id:state.editingTaskId||('t'+Date.now()),title,desc:document.getElementById('fDesc').value.trim(),area:document.getElementById('fArea').value,initiativeId:document.getElementById('fInitiative').value,status:document.getElementById('fStatus').value,priority:document.getElementById('fPriority').value,due:document.getElementById('fDue').value||'',effort:Number(document.getElementById('fEffort').value||0),spent:(state.editingTaskId?(state.tasks.find(x=>x.id===state.editingTaskId)?.spent||0):0),next:document.getElementById('fNext').value.trim()||'Definir siguiente paso.',worklog:(state.editingTaskId?(state.tasks.find(x=>x.id===state.editingTaskId)?.worklog||[]):[]),createdAt:(state.editingTaskId?(state.tasks.find(x=>x.id===state.editingTaskId)?.createdAt||new Date().toISOString().slice(0,10)):new Date().toISOString().slice(0,10)),impact:70,urgency:70,criticality:70,blockRisk:40};deriveMetrics(task);const idx=state.tasks.findIndex(x=>x.id===task.id);if(idx>=0)state.tasks[idx]=task;else state.tasks.unshift(task);closeTaskModal();render();}
 function deleteCurrentTask(){if(!state.editingTaskId)return;state.tasks=state.tasks.filter(x=>x.id!==state.editingTaskId);closeTaskModal();render();}
 function openInitiativeModal(id=null){state.editingInitiativeId=id;document.getElementById('initiativeModalWrap').classList.add('show');const i=id?state.initiatives.find(x=>x.id===id):null;document.getElementById('initiativeModalTitle').textContent=i?'Editar iniciativa':'Nueva iniciativa';document.getElementById('deleteInitiativeBtn').style.display=i?'inline-flex':'none';document.getElementById('iName').value=i?i.name:'';document.getElementById('iObjective').value=i?i.objective:'';refreshAreaOptions(i?i.owner:state.areas[0]||'');document.getElementById('iStatus').value=i?i.status:'Pendiente';}
 function closeInitiativeModal(){document.getElementById('initiativeModalWrap').classList.remove('show');state.editingInitiativeId=null;}
