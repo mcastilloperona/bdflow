@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BDFlow Ver. 2.7</title>
+<title>BDFlow Ver. 2.7 REAL</title>
 <style>
-body{font-family:Arial;margin:0;background:#f4f6f8}
-.sidebar{width:240px;background:#1f2937;color:#fff;position:fixed;height:100%;padding:20px}
+body{font-family:Arial;margin:0;background:#f4f6f8;display:flex}
+.sidebar{width:240px;background:#1f2937;color:#fff;height:100vh;padding:20px;position:fixed}
 .sidebar h2{margin-top:0}
 .sidebar .bottom{position:absolute;bottom:20px;width:200px}
-.main{margin-left:260px;padding:20px}
-.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:10px}
+.main{margin-left:260px;padding:20px;width:100%}
+.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px}
 .btn{padding:8px 12px;border:none;border-radius:6px;cursor:pointer}
 .primary{background:#2563eb;color:#fff}
 .secondary{background:#e5e7eb}
@@ -33,14 +33,14 @@ body{font-family:Arial;margin:0;background:#f4f6f8}
 <h1>Dashboard</h1>
 
 <div class="card">
-<h3>Crear Área</h3>
+<h3>Áreas</h3>
 <input id="newArea">
 <button class="btn primary" onclick="addArea()">Añadir</button>
 <ul id="areaList"></ul>
 </div>
 
 <div class="card">
-<h3>Crear Tarea</h3>
+<h3>Tareas</h3>
 <input id="taskTitle" placeholder="Título">
 <select id="taskArea"></select>
 <button class="btn primary" onclick="addTask()">Crear</button>
