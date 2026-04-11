@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 2.6.2</title>
+  <title>BDFlow Ver. 2.6.4</title>
   <style>
     :root{--bg:#f3f6fb;--panel:#fff;--panel-2:#f8faff;--border:#dbe4f0;--text:#0f172a;--muted:#64748b;--blue:#1a56db;--blue-2:#eaf1ff;--green:#16a34a;--green-2:#ecfdf3;--amber:#d97706;--amber-2:#fff7e8;--red:#dc2626;--red-2:#fff0f0;--chip:#eef3fb;--shadow:0 8px 24px rgba(15,23,42,.06);--radius:16px}
     *{box-sizing:border-box} html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif} button,input,select,textarea{font:inherit} body{min-height:100vh}
@@ -55,7 +55,7 @@
   <div class="overlay" id="overlay" onclick="toggleSidebar(false)"></div>
   <div class="app">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><div class="brand-top"><div><div class="logo">BD<b>Flow</b></div><div class="sub">by Miguel Castillo</div></div><div class="version">Ver. 2.6.2</div></div></div>
+      <div class="brand"><div class="brand-top"><div><div class="logo">BD<b>Flow</b></div><div class="sub">by Miguel Castillo</div></div><div class="version">Ver. 2.6.4</div></div></div>
       <div class="section-label">Navegación</div>
       <div class="nav">
         <button class="nav-btn active" data-view="dashboard"><span class="nav-dot"></span>Dashboard</button>
@@ -78,6 +78,9 @@
           <button class="mobile-toggle btn secondary" onclick="toggleSidebar(true)">☰ Menú</button>
           <button class="btn secondary" onclick="openInitiativeModal()">+ Nueva iniciativa</button>
           <button class="btn primary" onclick="openTaskModal()">+ Nueva tarea</button>
+          <button class="btn secondary" onclick="exportData()">Exportar</button>
+          <input type="file" id="importFile" style="display:none" accept=".json,application/json" onchange="importData(event)">
+          <button class="btn secondary" onclick="document.getElementById('importFile').click()">Importar</button>
           <input id="searchInput" class="search" placeholder="Buscar tareas, iniciativas, áreas..." />
           <select id="statusFilter" class="select"><option value="all">Todos los estados</option><option value="Pendiente">Pendiente</option><option value="En curso">En curso</option><option value="Bloqueada">Bloqueada</option><option value="En espera de terceros">En espera de terceros</option><option value="Finalizada">Finalizada</option></select>
         </div>
@@ -264,7 +267,47 @@ function deleteArea(index){const name=state.areas[index];const usedTasks=state.t
 function quickAddInitiative(){const nameEl=document.getElementById('quickInitiativeName');const ownerEl=document.getElementById('quickInitiativeOwner');if(!nameEl||!ownerEl)return;const name=nameEl.value.trim();if(!name)return;state.initiatives.unshift({id:'i'+Date.now(),name,owner:ownerEl.value,objective:'Sin objetivo definido.',progress:0,status:'Pendiente'});nameEl.value='';render();}
 function copyExecutiveReport(){navigator.clipboard.writeText(buildExecutiveReport()).then(()=>alert('Informe copiado al portapapeles.'));}
 function downloadExecutiveReport(){const text=buildExecutiveReport();const blob=new Blob([text],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='BDFlow_informe_ejecutivo.txt';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
-window.quickDone=quickDone;window.quickBlock=quickBlock;window.quickTomorrow=quickTomorrow;window.quickAddTime=quickAddTime;window.toggleSidebar=toggleSidebar;window.openTaskModal=openTaskModal;window.closeTaskModal=closeTaskModal;window.saveTask=saveTask;window.deleteCurrentTask=deleteCurrentTask;window.openInitiativeModal=openInitiativeModal;window.closeInitiativeModal=closeInitiativeModal;window.saveInitiative=saveInitiative;window.deleteCurrentInitiative=deleteCurrentInitiative;window.addArea=addArea;window.renameArea=renameArea;window.deleteArea=deleteArea;window.quickAddInitiative=quickAddInitiative;window.copyExecutiveReport=copyExecutiveReport;window.downloadExecutiveReport=downloadExecutiveReport;
+
+function exportData(){
+  const raw = localStorage.getItem('bdflow_v262_state');
+  if(!raw){
+    alert('No hay datos para exportar.');
+    return;
+  }
+  const blob = new Blob([raw], {type:'application/json;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'bdflow_backup.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+function importData(event){
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(typeof parsed !== 'object' || parsed === null || !('tasks' in parsed) || !('initiatives' in parsed) || !('areas' in parsed)){
+        alert('El archivo no tiene el formato esperado.');
+        return;
+      }
+      localStorage.setItem('bdflow_v262_state', JSON.stringify(parsed));
+      alert('Datos importados correctamente. Recarga la página.');
+    }catch(err){
+      alert('Error al importar el archivo.');
+    }finally{
+      const input = document.getElementById('importFile');
+      if(input) input.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+window.quickDone=quickDone;window.quickBlock=quickBlock;window.quickTomorrow=quickTomorrow;window.quickAddTime=quickAddTime;window.toggleSidebar=toggleSidebar;window.openTaskModal=openTaskModal;window.closeTaskModal=closeTaskModal;window.saveTask=saveTask;window.deleteCurrentTask=deleteCurrentTask;window.openInitiativeModal=openInitiativeModal;window.closeInitiativeModal=closeInitiativeModal;window.saveInitiative=saveInitiative;window.deleteCurrentInitiative=deleteCurrentInitiative;window.addArea=addArea;window.renameArea=renameArea;window.deleteArea=deleteArea;window.quickAddInitiative=quickAddInitiative;window.exportData=exportData;window.importData=importData;window.copyExecutiveReport=copyExecutiveReport;window.downloadExecutiveReport=downloadExecutiveReport;
 document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click',()=>{state.currentView=btn.dataset.view;render();if(window.innerWidth<=820)toggleSidebar(false);}));
 document.getElementById('searchInput').addEventListener('input',e=>{state.search=e.target.value.trim();render();});
 document.getElementById('statusFilter').addEventListener('change',e=>{state.filterStatus=e.target.value;render();});
