@@ -190,6 +190,26 @@ function buildExecutiveReport(){
   }
   return txt.trim();
 }
+
+function buildCommitteeView(){
+  const tasks=allTasks();
+  const blocked=tasks.filter(t=>t.status==='Bloqueada');
+  const dueSoon=tasks.filter(t=>t.status!=='Finalizada'&&t.daysLeft<=3);
+  const top=tasks.filter(t=>t.status!=='Finalizada').slice(0,3);
+  const situation = blocked.length
+    ? 'La situación actual muestra avance en varias líneas, pero con riesgo operativo por bloqueos abiertos y fechas próximas.'
+    : dueSoon.length
+      ? 'La situación actual es razonablemente estable, aunque existen compromisos cercanos que exigen foco y cierre.'
+      : 'La situación actual es estable y permite combinar ejecución operativa con avance estructural.';
+  const risk = blocked.length
+    ? 'El principal riesgo está en tareas bloqueadas que pueden tensionar plazos y generar arrastre sobre iniciativas relevantes.'
+    : dueSoon.length
+      ? 'El principal riesgo está en la concentración de vencimientos a corto plazo, con posible dispersión si no se prioriza bien.'
+      : 'No se aprecia un riesgo crítico inmediato, aunque conviene mantener disciplina en prioridades.';
+  const decisions = top.length ? top.map(t=>`Priorizar ${t.title} dentro de ${t.initiative} y asegurar el siguiente paso: ${t.next}.`) : ['Consolidar cierres y revisar nuevas prioridades.'];
+  return {situation,risk,decisions};
+}
+
 function renderReport(){
   const report=buildExecutiveReport();
   const committee=buildCommitteeView();
