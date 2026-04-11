@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 2.5</title>
+  <title>BDFlow Ver. 2.6</title>
   <style>
     :root{--bg:#f3f6fb;--panel:#fff;--panel-2:#f8faff;--border:#dbe4f0;--text:#0f172a;--muted:#64748b;--blue:#1a56db;--blue-2:#eaf1ff;--green:#16a34a;--green-2:#ecfdf3;--amber:#d97706;--amber-2:#fff7e8;--red:#dc2626;--red-2:#fff0f0;--chip:#eef3fb;--shadow:0 8px 24px rgba(15,23,42,.06);--radius:16px}
     *{box-sizing:border-box} html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif} button,input,select,textarea{font:inherit} body{min-height:100vh}
@@ -35,6 +35,13 @@
     .inline-form{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px;border:1px solid var(--border);border-radius:14px;background:var(--panel-2);margin-bottom:16px}.inline-form input,.inline-form select{border:1px solid var(--border);border-radius:10px;padding:10px 11px;background:#fff}
     .report-box{border:1px solid var(--border);background:#fff;border-radius:16px;padding:18px;white-space:pre-wrap;line-height:1.55;font-size:14px}
     .report-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+
+    .exec-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .exec-card{border:1px solid var(--border);border-radius:16px;background:#fff;padding:16px}
+    .exec-card h3{margin:0 0 10px 0;font-size:16px}
+    .exec-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+    .exec-list{margin:0;padding-left:18px}
+    .exec-list li{margin-bottom:8px}
     .overlay{position:fixed;inset:0;background:rgba(15,23,42,.36);z-index:30;display:none}.overlay.show{display:block}.mobile-toggle{display:none}
     .modal-wrap{position:fixed;inset:0;background:rgba(15,23,42,.48);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}.modal-wrap.show{display:flex}
     .modal{width:min(760px,100%);background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:0 18px 50px rgba(15,23,42,.22)} .modal-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}.modal-head h3{margin:0;font-size:20px}.modal-body{padding:20px}
@@ -48,7 +55,7 @@
   <div class="overlay" id="overlay" onclick="toggleSidebar(false)"></div>
   <div class="app">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><div class="brand-top"><div><div class="logo">BD<b>Flow</b></div><div class="sub">by Miguel Castillo</div></div><div class="version">Ver. 2.5</div></div></div>
+      <div class="brand"><div class="brand-top"><div><div class="logo">BD<b>Flow</b></div><div class="sub">by Miguel Castillo</div></div><div class="version">Ver. 2.6</div></div></div>
       <div class="section-label">Navegación</div>
       <div class="nav">
         <button class="nav-btn active" data-view="dashboard"><span class="nav-dot"></span>Dashboard</button>
@@ -185,11 +192,30 @@ function buildExecutiveReport(){
 }
 function renderReport(){
   const report=buildExecutiveReport();
-  return `<div class="panel"><div class="panel-head"><div><h2>Informe ejecutivo</h2><p>Resumen listo para copiar a Word, PowerPoint o correo.</p></div></div><div class="panel-body"><div class="report-toolbar"><button class="btn primary" onclick="copyExecutiveReport()">Copiar informe</button><button class="btn secondary" onclick="downloadExecutiveReport()">Descargar TXT</button></div><div class="report-box" id="reportBox">${escapeHtml(report)}</div></div></div>`;
+  const committee=buildCommitteeView();
+  return `<div class="grid-2">
+    <div class="panel">
+      <div class="panel-head"><div><h2>Resumen para comité</h2><p>Versión más ejecutiva y orientada a decisión.</p></div></div>
+      <div class="panel-body">
+        <div class="exec-grid">
+          <div class="exec-card"><h3>Situación</h3><p>${escapeHtml(committee.situation)}</p></div>
+          <div class="exec-card"><h3>Riesgo principal</h3><p>${escapeHtml(committee.risk)}</p></div>
+          <div class="exec-card" style="grid-column:1 / -1"><h3>Decisiones recomendadas</h3><ul class="exec-list">${committee.decisions.map(d=>`<li>${escapeHtml(d)}</li>`).join('')}</ul></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Informe ejecutivo</h2><p>Texto listo para copiar a Word, PowerPoint o correo.</p></div></div>
+      <div class="panel-body">
+        <div class="report-toolbar"><button class="btn primary" onclick="copyExecutiveReport()">Copiar informe</button><button class="btn secondary" onclick="downloadExecutiveReport()">Descargar TXT</button></div>
+        <div class="report-box" id="reportBox">${escapeHtml(report)}</div>
+      </div>
+    </div>
+  </div>`;
 }
-function render(){state.tasks.forEach(deriveMetrics);const tasks=filteredTasks();renderMetrics(tasks);const titles={dashboard:['Dashboard','Decisión inmediata y riesgos del día.'],today:['Hoy','Plan de trabajo realista.'],week:['Semana','Carga operativa distribuida por día.'],month:['Mes','Visión táctica de hitos y vencimientos.'],ranking:['Ranking','Priorización visible y ordenada.'],kanban:['Kanban','Seguimiento operativo por estado.'],initiatives:['Iniciativas','Contenedores de trabajo que agrupan tareas.'],config:['Configuración','Áreas e iniciativas gestionadas de forma rápida.'],report:['Informe','Resumen ejecutivo listo para compartir.']};document.getElementById('pageTitle').textContent=titles[state.currentView][0];document.getElementById('pageSubtitle').textContent=titles[state.currentView][1];document.getElementById('viewContainer').innerHTML=state.currentView==='dashboard'?renderDashboard(tasks):state.currentView==='today'?renderToday(tasks):state.currentView==='week'?renderWeek(tasks):state.currentView==='month'?renderMonth(tasks):state.currentView==='ranking'?renderRanking(tasks):state.currentView==='kanban'?renderKanban(tasks):state.currentView==='initiatives'?renderInitiatives():state.currentView==='config'?renderConfig():renderReport();document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===state.currentView));saveState();}
-function saveState(){localStorage.setItem('bdflow_v25_state',JSON.stringify({tasks:state.tasks,initiatives:state.initiatives,areas:state.areas,dailyCapacity:state.dailyCapacity}));}
-function loadState(){try{const raw=localStorage.getItem('bdflow_v25_state');if(!raw)return;const p=JSON.parse(raw);if(Array.isArray(p.tasks))state.tasks=p.tasks;if(Array.isArray(p.initiatives))state.initiatives=p.initiatives;if(Array.isArray(p.areas))state.areas=p.areas;if(typeof p.dailyCapacity==='number')state.dailyCapacity=p.dailyCapacity;}catch(e){}}
+function render(){state.tasks.forEach(deriveMetrics);const tasks=filteredTasks();renderMetrics(tasks);const titles={dashboard:['Dashboard','Decisión inmediata y riesgos del día.'],today:['Hoy','Plan de trabajo realista.'],week:['Semana','Carga operativa distribuida por día.'],month:['Mes','Visión táctica de hitos y vencimientos.'],ranking:['Ranking','Priorización visible y ordenada.'],kanban:['Kanban','Seguimiento operativo por estado.'],initiatives:['Iniciativas','Contenedores de trabajo que agrupan tareas.'],config:['Configuración','Áreas e iniciativas gestionadas de forma rápida.'],report:['Informe','Versión comité y resumen ejecutivo listo para compartir.']};document.getElementById('pageTitle').textContent=titles[state.currentView][0];document.getElementById('pageSubtitle').textContent=titles[state.currentView][1];document.getElementById('viewContainer').innerHTML=state.currentView==='dashboard'?renderDashboard(tasks):state.currentView==='today'?renderToday(tasks):state.currentView==='week'?renderWeek(tasks):state.currentView==='month'?renderMonth(tasks):state.currentView==='ranking'?renderRanking(tasks):state.currentView==='kanban'?renderKanban(tasks):state.currentView==='initiatives'?renderInitiatives():state.currentView==='config'?renderConfig():renderReport();document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===state.currentView));saveState();}
+function saveState(){localStorage.setItem('bdflow_v26_state',JSON.stringify({tasks:state.tasks,initiatives:state.initiatives,areas:state.areas,dailyCapacity:state.dailyCapacity}));}
+function loadState(){try{const raw=localStorage.getItem('bdflow_v26_state');if(!raw)return;const p=JSON.parse(raw);if(Array.isArray(p.tasks))state.tasks=p.tasks;if(Array.isArray(p.initiatives))state.initiatives=p.initiatives;if(Array.isArray(p.areas))state.areas=p.areas;if(typeof p.dailyCapacity==='number')state.dailyCapacity=p.dailyCapacity;}catch(e){}}
 function quickDone(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;t.status='Finalizada';t.spent=Math.max(t.spent,t.effort);render();}
 function quickBlock(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;t.status=t.status==='Bloqueada'?'En curso':'Bloqueada';render();}
 function quickTomorrow(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;const d=parseDate(t.due);d.setDate(d.getDate()+1);t.due=d.toISOString().slice(0,10);render();}
