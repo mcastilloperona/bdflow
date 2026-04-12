@@ -1431,8 +1431,140 @@
       </div>`;
     }
 
-    function buildExecutiveReport(){
+
+    function round1(v){
+      return Math.round(Number(v || 0) * 10) / 10;
+    }
+
+    function getTaskAgeDays(task){
+      if(!task?.createdAt) return null;
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const created = parseDate(task.createdAt);
+      created.setHours(0,0,0,0);
+      return Math.max(0, Math.round((today - created) / 86400000));
+    }
+
+    function getRemainingEffort(task){
+      return Math.max(0, Number(task.effort || 0) - Number(task.spent || 0));
+    }
+
+    function getWeeklyTasks(tasks){
+      return tasks.filter(t => getTaskWeekIndex(t) !== null);
+    }
+
+    function getReportMetrics(){
       const tasks = filteredTasks();
+      const allTasks = [...tasks];
+      const activeTasks = allTasks.filter(t=>t.status!=='Finalizada');
+      const completedTasks = allTasks.filter(t=>t.status==='Finalizada');
+      const criticalTasks = activeTasks.filter(t=>isCriticalTask(t));
+      const overdueTasks = activeTasks.filter(t=>t.daysLeft !== null && t.daysLeft < 0);
+      const pausedTasks = activeTasks.filter(t=>t.status==='Pausada');
+      const overrunTasks = allTasks.filter(t=>Number(t.spent||0) > Number(t.effort||0));
+      const plannedHours = round1(allTasks.reduce((a,b)=>a + Number(b.effort || 0), 0));
+      const spentHours = round1(allTasks.reduce((a,b)=>a + Number(b.spent || 0), 0));
+      const productivity = plannedHours > 0 ? Math.round((spentHours / plannedHours) * 100) : 0;
+      const reliableTasks = allTasks.filter(t=>Number(t.spent||0) <= Number(t.effort||0)).length;
+      const planningReliability = allTasks.length ? Math.round((reliableTasks / allTasks.length) * 100) : 0;
+      const currentWeekTasks = getWeeklyTasks(allTasks);
+      const weeklyCompleted = currentWeekTasks.filter(t=>t.status==='Finalizada').length;
+      const wip = activeTasks.filter(t=>t.status==='En curso').length;
+      const recentCompleted = getRecentCompletedTasks(7);
+      const weeklyCapacity = state.dailyCapacity * 5;
+      const weeklyLoad = round1(currentWeekTasks.filter(t=>t.status!=='Finalizada').reduce((a,b)=>a + getRemainingEffort(b), 0));
+      const loadVsCapacity = weeklyCapacity > 0 ? Math.round((weeklyLoad / weeklyCapacity) * 100) : 0;
+
+      return {
+        tasks: allTasks,
+        activeTasks,
+        completedTasks,
+        criticalTasks,
+        overdueTasks,
+        pausedTasks,
+        overrunTasks,
+        plannedHours,
+        spentHours,
+        productivity,
+        planningReliability,
+        weeklyCompleted,
+        wip,
+        recentCompleted,
+        weeklyCapacity,
+        weeklyLoad,
+        loadVsCapacity
+      };
+    }
+
+    function getDeviationItems(metrics){
+      const items = [];
+      metrics.overdueTasks.forEach(t=>{
+        items.push({
+          level: 'red',
+          title: t.title,
+          sub: `${t.initiative} · vencida desde ${Math.abs(t.daysLeft)} día(s).`
+        });
+      });
+      metrics.pausedTasks.forEach(t=>{
+        const age = getTaskAgeDays(t);
+        items.push({
+          level: 'amber',
+          title: t.title,
+          sub: `${t.initiative} · pausada${age!==null ? ` · ${age} día(s) desde creación` : ''}.`
+        });
+      });
+      metrics.overrunTasks.forEach(t=>{
+        const deviation = Number(t.effort || 0) > 0
+          ? Math.round(((Number(t.spent || 0) - Number(t.effort || 0)) / Number(t.effort || 0)) * 100)
+          : 100;
+        items.push({
+          level: 'purple',
+          title: t.title,
+          sub: `${t.initiative} · ${t.spent}h vs ${t.effort}h previstas · desviación ${deviation}%`
+        });
+      });
+      return items.slice(0, 12);
+    }
+
+    function getAutoRecommendations(metrics){
+      const out = [];
+      if(metrics.wip > 7) out.push('Reducir tareas en curso: el WIP actual indica dispersión operativa.');
+      if(metrics.productivity > 110) out.push('Revisar estimaciones: las horas reales están muy por encima de las previstas.');
+      if(metrics.productivity > 0 && metrics.productivity < 80) out.push('Revisar capacidad y secuencia de trabajo: la ejecución está por debajo del plan previsto.');
+      if(metrics.planningReliability < 70 && metrics.tasks.length) out.push('Mejorar fiabilidad de planificación: demasiadas tareas superan el esfuerzo previsto.');
+      if(metrics.overdueTasks.length) out.push('Priorizar cierres inmediatos: hay tareas vencidas que ya están tensionando la semana.');
+      if(metrics.pausedTasks.length >= 3) out.push('Desbloquear tareas pausadas: el volumen actual puede arrastrar compromisos relevantes.');
+      if(metrics.loadVsCapacity > 100) out.push(`Redistribuir carga semanal: ${metrics.weeklyLoad}h previstas frente a ${metrics.weeklyCapacity}h de capacidad.`);
+      if(!out.length) out.push('La situación es estable: mantener foco en cierres y evitar abrir trabajo adicional sin necesidad.');
+      return out.slice(0,3);
+    }
+
+    function renderReportSummary(metrics){
+      const completionRate = metrics.tasks.length ? Math.round((metrics.completedTasks.length / metrics.tasks.length) * 100) : 0;
+      return `<div class="metrics" style="margin-bottom:18px">
+        <div class="metric"><div class="k">Productividad</div><div class="v">${metrics.productivity}%</div><div class="s">${metrics.spentHours}h reales / ${metrics.plannedHours}h previstas</div></div>
+        <div class="metric"><div class="k">Fiabilidad planificación</div><div class="v">${metrics.planningReliability}%</div><div class="s">Tareas dentro de esfuerzo estimado</div></div>
+        <div class="metric"><div class="k">Throughput semanal</div><div class="v">${metrics.weeklyCompleted}</div><div class="s">Tareas finalizadas en semana visible</div></div>
+        <div class="metric"><div class="k">Cierre total</div><div class="v">${completionRate}%</div><div class="s">${metrics.completedTasks.length} de ${metrics.tasks.length} tareas cerradas</div></div>
+      </div>`;
+    }
+
+    function renderDeviationPanel(metrics){
+      const items = getDeviationItems(metrics);
+      return `<div class="panel">
+        <div class="panel-head"><div><h2>Desviaciones y riesgos</h2><p>Incidencias relevantes para seguimiento y comité.</p></div></div>
+        <div class="panel-body">
+          <div class="grid-2" style="margin-bottom:16px">
+            <div class="exec-card"><h3>Riesgo operativo</h3><p>${metrics.overdueTasks.length} vencidas · ${metrics.pausedTasks.length} pausadas · ${metrics.criticalTasks.length} críticas.</p></div>
+            <div class="exec-card"><h3>Carga semanal</h3><p>${metrics.weeklyLoad}h pendientes frente a ${metrics.weeklyCapacity}h de capacidad (${metrics.loadVsCapacity}%).</p></div>
+          </div>
+          ${items.length ? items.map(i=>`<div class="alert-item"><div class="a-title">${escapeHtml(i.title)}</div><div class="a-sub">${escapeHtml(i.sub)}</div></div>`).join('') : '<div class="empty">Sin desviaciones relevantes en la vista actual.</div>'}
+        </div>
+      </div>`;
+    }
+
+    function buildExecutiveReport(){
+      const metrics = getReportMetrics();
       if(!state.initiatives.length && !state.tasks.length){
         return [
           'INFORME EJECUTIVO BDFlow',
@@ -1445,27 +1577,40 @@
           '- Crear áreas, iniciativas y primeras tareas reales.'
         ].join('\n');
       }
-      const activeInitiatives = state.initiatives.filter(i=>i.status!=='Finalizada');
-      const pausedTasks = tasks.filter(t=>t.status==='Pausada');
-      const dueSoon = tasks.filter(t=>t.status!=='Finalizada' && t.daysLeft!==null && t.daysLeft<=3);
+      const recommendations = getAutoRecommendations(metrics);
+      const top = metrics.activeTasks.slice(0,3);
       let txt = '';
       txt += 'INFORME EJECUTIVO BDFlow\n';
       txt += 'Fecha: ' + new Date().toLocaleDateString('es-ES') + '\n\n';
-      txt += 'SITUACIÓN\n';
-      txt += '- Iniciativas activas: ' + activeInitiatives.length + '\n';
-      txt += '- Tareas activas: ' + tasks.filter(t=>t.status!=='Finalizada').length + '\n';
-      txt += '- Tareas pausadas: ' + pausedTasks.length + '\n';
-      txt += '- Vencimientos <= 3 días: ' + dueSoon.length + '\n\n';
+      txt += 'RESUMEN EJECUTIVO\n';
+      txt += '- Productividad: ' + metrics.productivity + '% (' + metrics.spentHours + 'h reales / ' + metrics.plannedHours + 'h previstas)\n';
+      txt += '- Fiabilidad de planificación: ' + metrics.planningReliability + '%\n';
+      txt += '- Tareas activas: ' + metrics.activeTasks.length + '\n';
+      txt += '- Tareas críticas: ' + metrics.criticalTasks.length + '\n';
+      txt += '- Tareas pausadas: ' + metrics.pausedTasks.length + '\n';
+      txt += '- Tareas vencidas: ' + metrics.overdueTasks.length + '\n';
+      txt += '- Throughput semanal: ' + metrics.weeklyCompleted + ' cierres\n';
+      txt += '- WIP actual: ' + metrics.wip + ' tareas en curso\n';
+      txt += '- Carga semanal: ' + metrics.weeklyLoad + 'h / ' + metrics.weeklyCapacity + 'h (' + metrics.loadVsCapacity + '%)\n\n';
       txt += 'DECISIONES RECOMENDADAS\n';
-      const top = tasks.filter(t=>t.status!=='Finalizada').slice(0,3);
-      if(top.length){
-        top.forEach(t=>{ txt += '- Priorizar "'+t.title+'" dentro de '+t.initiative+'. Siguiente paso: '+t.next+'\n'; });
+      recommendations.forEach(r=>{ txt += '- ' + r + '\n'; });
+      txt += '\nRIESGOS Y DESVIACIONES\n';
+      if(metrics.overdueTasks.length || metrics.pausedTasks.length || metrics.overrunTasks.length){
+        metrics.overdueTasks.slice(0,4).forEach(t=>{ txt += '- Vencida: ' + t.title + ' · ' + t.initiative + ' · ' + Math.abs(t.daysLeft) + ' día(s) de retraso\n'; });
+        metrics.pausedTasks.slice(0,4).forEach(t=>{ txt += '- Pausada: ' + t.title + ' · ' + t.initiative + '\n'; });
+        metrics.overrunTasks.slice(0,4).forEach(t=>{ txt += '- Desviada: ' + t.title + ' · ' + t.spent + 'h vs ' + t.effort + 'h previstas\n'; });
       } else {
-        txt += '- Consolidar cierres y revisar nuevas prioridades.\n';
+        txt += '- No se aprecian desviaciones relevantes en la vista actual.\n';
+      }
+      txt += '\nFOCO OPERATIVO\n';
+      if(top.length){
+        top.forEach(t=>{ txt += '- ' + t.title + ' · ' + t.initiative + ' · siguiente paso: ' + t.next + '\n'; });
+      } else {
+        txt += '- Sin foco operativo pendiente.\n';
       }
       txt += '\nDETALLE POR INICIATIVA\n';
       state.initiatives.forEach(i=>{
-        const linked = tasks.filter(t=>t.initiativeId===i.id);
+        const linked = metrics.tasks.filter(t=>t.initiativeId===i.id);
         txt += '• ' + i.name + '\n';
         txt += '  Objetivo: ' + i.objective + '\n';
         txt += '  Responsable / Área: ' + i.owner + '\n';
@@ -1479,45 +1624,50 @@
     }
 
     function buildCommitteeView(){
-      const tasks = filteredTasks();
-      const paused = tasks.filter(t=>t.status==='Pausada');
-      const dueSoon = tasks.filter(t=>t.status!=='Finalizada' && t.daysLeft!==null && t.daysLeft<=3);
-      const top = tasks.filter(t=>t.status!=='Finalizada').slice(0,3);
-      const situation = paused.length
-        ? 'La situación actual muestra avance, pero con riesgo operativo por tareas pausadas y compromisos pendientes.'
-        : dueSoon.length
-          ? 'La situación actual es razonablemente estable, aunque existen compromisos cercanos que exigen foco y cierre.'
-          : 'La situación actual es estable y permite combinar ejecución operativa con avance estructural.';
-      const risk = paused.length
-        ? 'El principal riesgo está en tareas pausadas que pueden tensionar plazos y generar arrastre.'
-        : dueSoon.length
-          ? 'El principal riesgo está en la concentración de vencimientos a corto plazo.'
-          : 'No se aprecia un riesgo crítico inmediato.';
-      const decisions = top.length ? top.map(t=>`Priorizar ${t.title} dentro de ${t.initiative} y asegurar el siguiente paso: ${t.next}.`) : ['Consolidar cierres y revisar nuevas prioridades.'];
-      return {situation, risk, decisions};
+      const metrics = getReportMetrics();
+      const recommendations = getAutoRecommendations(metrics);
+      const situation = metrics.activeTasks.length
+        ? `Hay ${metrics.activeTasks.length} tareas activas con ${metrics.criticalTasks.length} críticas y ${metrics.completedTasks.length} cierres acumulados.`
+        : 'No hay carga operativa activa en la vista actual.';
+      const risk = metrics.overdueTasks.length
+        ? `El principal riesgo está en ${metrics.overdueTasks.length} tarea(s) vencida(s) y ${metrics.pausedTasks.length} pausada(s).`
+        : metrics.loadVsCapacity > 100
+          ? `La principal tensión está en una carga semanal del ${metrics.loadVsCapacity}% sobre la capacidad disponible.`
+          : metrics.pausedTasks.length
+            ? `El principal riesgo está en ${metrics.pausedTasks.length} tarea(s) pausada(s) que pueden arrastrar compromisos.`
+            : 'No se aprecia un riesgo crítico inmediato.';
+      return { situation, risk, decisions: recommendations, metrics };
     }
 
     function renderReport(){
       const report = buildExecutiveReport();
       const committee = buildCommitteeView();
-      return `<div class="grid-2">
-        <div class="panel">
-          <div class="panel-head"><div><h2>Resumen para comité</h2><p>Versión más ejecutiva y orientada a decisión.</p></div></div>
-          <div class="panel-body">
-            <div class="exec-grid">
-              <div class="exec-card"><h3>Situación</h3><p>${escapeHtml(committee.situation)}</p></div>
-              <div class="exec-card"><h3>Riesgo principal</h3><p>${escapeHtml(committee.risk)}</p></div>
-              <div class="exec-card" style="grid-column:1 / -1"><h3>Decisiones recomendadas</h3><ul class="exec-list">${committee.decisions.map(d=>`<li>${escapeHtml(d)}</li>`).join('')}</ul></div>
+      const metrics = committee.metrics;
+      const recommendations = getAutoRecommendations(metrics);
+      return `<div style="display:flex;flex-direction:column;gap:18px">
+        ${renderReportSummary(metrics)}
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><div><h2>Resumen para comité</h2><p>Visión ejecutiva, lectura rápida y decisión.</p></div></div>
+            <div class="panel-body">
+              <div class="exec-grid">
+                <div class="exec-card"><h3>Situación</h3><p>${escapeHtml(committee.situation)}</p></div>
+                <div class="exec-card"><h3>Riesgo principal</h3><p>${escapeHtml(committee.risk)}</p></div>
+                <div class="exec-card"><h3>Productividad</h3><p>${metrics.productivity}% · ${metrics.spentHours}h reales / ${metrics.plannedHours}h previstas.</p></div>
+                <div class="exec-card"><h3>Fiabilidad</h3><p>${metrics.planningReliability}% · ${metrics.wip} tareas en curso · ${metrics.weeklyCompleted} cierres en semana.</p></div>
+                <div class="exec-card" style="grid-column:1 / -1"><h3>Decisiones recomendadas</h3><ul class="exec-list">${recommendations.map(d=>`<li>${escapeHtml(d)}</li>`).join('')}</ul></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Informe ejecutivo</h2><p>Texto listo para copiar a Word, PowerPoint o correo.</p></div></div>
+            <div class="panel-body">
+              <div class="report-toolbar"><button class="btn primary" onclick="copyExecutiveReport()">Copiar informe</button></div>
+              <div class="report-box">${escapeHtml(report)}</div>
             </div>
           </div>
         </div>
-        <div class="panel">
-          <div class="panel-head"><div><h2>Informe ejecutivo</h2><p>Texto listo para copiar a Word, PowerPoint o correo.</p></div></div>
-          <div class="panel-body">
-            <div class="report-toolbar"><button class="btn primary" onclick="copyExecutiveReport()">Copiar informe</button></div>
-            <div class="report-box">${escapeHtml(report)}</div>
-          </div>
-        </div>
+        ${renderDeviationPanel(metrics)}
       </div>`;
     }
 
