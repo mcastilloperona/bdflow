@@ -589,12 +589,6 @@
       const group = document.getElementById('rankingGroup');
       if(group) group.value = state.rankingGroup;
     }
-      if(initiativeSelect){
-        initiativeSelect.innerHTML = '<option value="all">Todas las iniciativas</option>' + state.initiatives.map(i=>`<option value="${i.id}" ${state.initiativeFilter===i.id?'selected':''}>${escapeHtml(i.name)}</option>`).join('');
-      }
-      const status = document.getElementById('statusFilter');
-      if(status) status.value = state.filterStatus;
-    }
 
     function parseDate(s){
       return new Date(s + 'T12:00:00');
@@ -695,8 +689,6 @@
         return searchOk && statusOk && areaOk && initiativeOk;
       });
       return sortTasks(tasks);
-    });
-      return sortTasks(tasks);
     }
 
     function kpiData(tasks){
@@ -706,7 +698,6 @@
         paused: tasks.filter(t=>t.status==='Pausada').length,
         upcoming: tasks.filter(t=>t.status!=='Finalizada' && t.daysLeft!==null && t.daysLeft<=2).length
       };
-    };
     }
 
     function taskCard(task){
@@ -766,22 +757,6 @@
       const searchEl = document.getElementById('searchInput');
       if(searchEl) searchEl.value = '';
       render();
-    }else if(type === 'critical'){
-        state.currentView = 'today';
-        state.filterStatus = 'all';
-        state.search = '';
-      }else if(type === 'paused'){
-        state.currentView = 'kanban';
-        state.filterStatus = 'all';
-        state.search = '';
-      }else if(type === 'structure'){
-        state.currentView = 'initiatives';
-        state.filterStatus = 'all';
-        state.search = '';
-      }
-      const searchEl = document.getElementById('searchInput');
-      if(searchEl) searchEl.value = state.search;
-      render();
     }
 
     function getFilterBannerText(){
@@ -794,13 +769,6 @@
       else if(state.filterStatus === 'all') parts.push(['Mostrando: Todas','Vista completa sin exclusiones.']);
       if(state.areaFilter !== 'all') parts.push([`Área: ${state.areaFilter}`,'']);
       if(state.initiativeFilter !== 'all') parts.push([`Iniciativa: ${getInitiativeName(state.initiativeFilter)}`,'']);
-      if(!parts.length) return null;
-      return {
-        title: parts.map(p=>p[0]).join(' · '),
-        sub: parts.map(p=>p[1]).filter(Boolean).join(' ')
-      };
-    }
-      if(state.filterStatus !== 'all') parts.push([`Estado: ${state.filterStatus}`,'']);
       if(!parts.length) return null;
       return {
         title: parts.map(p=>p[0]).join(' · '),
