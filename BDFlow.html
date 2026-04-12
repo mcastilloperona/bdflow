@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.1.3</title>
+  <title>BDFlow Ver. 3.2</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -165,6 +165,14 @@
     .exec-card p{margin:0;color:var(--muted);line-height:1.55}
     .exec-list{margin:0;padding-left:18px}
     .exec-list li{margin-bottom:8px}
+
+    .metric.clickable{cursor:pointer;transition:transform .12s ease, box-shadow .12s ease}
+    .metric.clickable:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(15,23,42,.10)}
+    .filter-banner{display:none;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin:0 0 16px 0;box-shadow:var(--shadow)}
+    .filter-banner.show{display:flex}
+    .filter-banner .fb-title{font-weight:800}
+    .filter-banner .fb-sub{color:var(--muted);font-size:13px;margin-top:4px}
+
     @media (max-width:1180px){
       .layout,.grid-2,.exec-grid{grid-template-columns:1fr}
       .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -193,7 +201,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.1.3</div>
+          <div class="version">Ver. 3.2</div>
         </div>
       </div>
 
@@ -266,6 +274,7 @@
         </div>
       </div>
 
+      <div id="filterBanner" class="filter-banner"></div>
       <section id="metricsSection" class="metrics"></section>
       <div style="height:18px"></div>
       <section id="viewContainer"></section>
@@ -518,6 +527,8 @@
     window.importData = importData;
     window.toggleSidebar = toggleSidebar;
     window.copyExecutiveReport = copyExecutiveReport;
+    window.applyDrillDown = applyDrillDown;
+    window.clearDrillDown = clearDrillDown;
     window.loadMoreRanking = loadMoreRanking;
 
     loadState();
@@ -738,13 +749,87 @@
       </article>`;
     }
 
+
+    function applyDrillDown(type){
+      if(type === 'active'){
+        state.currentView = 'ranking';
+        state.visibilityFilter = 'active_only';
+        state.filterStatus = 'all';
+        state.search = '';
+      }else if(type === 'critical'){
+        state.currentView = 'today';
+        state.visibilityFilter = 'active_only';
+        state.filterStatus = 'all';
+        state.search = '';
+      }else if(type === 'paused'){
+        state.currentView = 'kanban';
+        state.visibilityFilter = 'paused_only';
+        state.filterStatus = 'all';
+        state.search = '';
+      }else if(type === 'structure'){
+        state.currentView = 'initiatives';
+        state.visibilityFilter = 'all';
+        state.filterStatus = 'all';
+        state.search = '';
+      }
+      const searchEl = document.getElementById('searchInput');
+      if(searchEl) searchEl.value = state.search;
+      render();
+    }
+
+    function getFilterBannerText(){
+      const parts = [];
+      if(state.visibilityFilter === 'active_only') parts.push(['Mostrando solo activas','Las tareas finalizadas quedan fuera del foco diario.']);
+      else if(state.visibilityFilter === 'done_only') parts.push(['Mostrando solo finalizadas','Vista histórica para revisar cierres.']);
+      else if(state.visibilityFilter === 'paused_only') parts.push(['Mostrando solo pausadas','Tareas detenidas pendientes de reactivación.']);
+      else if(state.visibilityFilter === 'overdue_only') parts.push(['Mostrando solo vencidas','Compromisos fuera de fecha objetivo.']);
+      else if(state.visibilityFilter === 'include_done') parts.push(['Mostrando activas + finalizadas','Vista mixta con trabajo actual e histórico.']);
+      if(state.areaFilter !== 'all') parts.push([`Área: ${state.areaFilter}`,'']);
+      if(state.initiativeFilter !== 'all') {
+        const name = getInitiativeName(state.initiativeFilter);
+        parts.push([`Iniciativa: ${name}`,'']);
+      }
+      if(state.filterStatus !== 'all') parts.push([`Estado: ${state.filterStatus}`,'']);
+      if(!parts.length) return null;
+      return {
+        title: parts.map(p=>p[0]).join(' · '),
+        sub: parts.map(p=>p[1]).filter(Boolean).join(' ')
+      };
+    }
+
+    function renderFilterBanner(){
+      const el = document.getElementById('filterBanner');
+      if(!el) return;
+      const info = getFilterBannerText();
+      if(!info){
+        el.classList.remove('show');
+        el.innerHTML = '';
+        return;
+      }
+      el.classList.add('show');
+      el.innerHTML = `<div><div class="fb-title">${escapeHtml(info.title)}</div>${info.sub?`<div class="fb-sub">${escapeHtml(info.sub)}</div>`:''}</div><button class="btn secondary small" onclick="clearDrillDown()">Limpiar filtros</button>`;
+    }
+
+    function clearDrillDown(){
+      state.visibilityFilter = 'active_only';
+      state.areaFilter = 'all';
+      state.initiativeFilter = 'all';
+      state.filterStatus = 'all';
+      state.search = '';
+      state.currentView = 'dashboard';
+      const searchEl = document.getElementById('searchInput');
+      if(searchEl) searchEl.value = '';
+      render();
+    }
+
+
     function renderMetrics(tasks){
       const k = kpiData(tasks);
       document.getElementById('metricsSection').innerHTML = `
-        <div class="metric"><div class="k">Tareas activas</div><div class="v">${k.total}</div><div class="s">Carga operativa abierta</div></div>
-        <div class="metric"><div class="k">Críticas</div><div class="v">${k.critical}</div><div class="s">Piden foco hoy</div></div>
-        <div class="metric"><div class="k">Pausadas</div><div class="v">${k.paused}</div><div class="s">Necesitan reactivación</div></div>
-        <div class="metric"><div class="k">Estructura</div><div class="v">${state.initiatives.length}/${state.areas.length}</div><div class="s">Iniciativas / áreas</div></div>
+        <div class="metric clickable" onclick="applyDrillDown('active')"><div class="k">Tareas activas</div><div class="v">${k.total}</div><div class="s">Carga operativa abierta</div></div>
+        <div class="metric clickable" onclick="applyDrillDown('critical')"><div class="k">Críticas</div><div class="v">${k.critical}</div><div class="s">Piden foco hoy</div></div>
+        <div class="metric clickable" onclick="applyDrillDown('paused')"><div class="k">Pausadas</div><div class="v">${k.paused}</div><div class="s">Necesitan reactivación</div></div>
+        <div class="metric clickable" onclick="applyDrillDown('structure')"><div class="k">Estructura</div><div class="v">${state.initiatives.length}/${state.areas.length}</div><div class="s">Iniciativas / áreas</div></div>
       `;
       document.getElementById('quickSummary').innerHTML = `
         <div class="side-row"><div class="side-k">Foco del día</div><div class="side-v">${k.critical} tareas</div></div>
@@ -1387,6 +1472,7 @@
     function render(){
       const tasks = filteredTasks();
       renderMetrics(tasks);
+      renderFilterBanner();
       populateGlobalFilters();
 
       const titles = {
