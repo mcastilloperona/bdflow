@@ -102,6 +102,8 @@
     .lane-body,.kbody{padding:12px}
     .task{background:#fff;border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
     .task:last-child{margin-bottom:0}
+    .task.completed-card{opacity:.82;background:linear-gradient(180deg,#ffffff 0%, #f8fafc 100%);border-style:dashed}
+    .task.completed-card .task-title{text-decoration:line-through;text-decoration-thickness:1.5px}
     .task-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
     .task-title{font-weight:900;font-size:17px;line-height:1.35}
     .task-sub{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.45}
@@ -129,6 +131,7 @@
     .empty{border:1px dashed var(--border);border-radius:16px;background:var(--panel-2);padding:24px;text-align:center;color:var(--muted)}
     .mini-task{padding:9px 11px;border-radius:12px;background:var(--panel-2);border:1px solid var(--border);font-size:13px;margin-bottom:8px}
     .row-card{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px;border:1px solid var(--border);border-radius:14px;background:#fff;margin-bottom:10px}
+    .row-card.completed-row{opacity:.78;background:linear-gradient(180deg,#fff 0%, #f8fafc 100%);border-style:dashed}
     .row-title{font-weight:800}
     .row-sub{font-size:13px;color:var(--muted);margin-top:3px}
     .inline-form{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px;border:1px solid var(--border);border-radius:14px;background:var(--panel-2);margin-bottom:16px}
@@ -453,6 +456,10 @@
         state.initiatives = Array.isArray(parsed.initiatives) ? parsed.initiatives : [];
         state.tasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
         state.alertsConfig = {...state.alertsConfig, ...(parsed.alertsConfig || {})};
+        state.dailyCapacity = Number(parsed.dailyCapacity || state.dailyCapacity || 6);
+        state.rankingLimit = Number(parsed.rankingLimit || state.rankingLimit || 20);
+        state.rankingSort = parsed.rankingSort || state.rankingSort || 'score';
+        state.rankingGroup = parsed.rankingGroup || state.rankingGroup || 'flat';
       }catch(e){
         state.areas = [...seed.areas];
         state.initiatives = [...seed.initiatives];
@@ -480,20 +487,21 @@
           worklog.reduce((a,b)=>a+Number(b.hours||0),0) ??
           0
         );
+        const normalizedStatus = ['Pendiente','En curso','Pausada','Finalizada'].includes(t.status) ? t.status : 'Pendiente';
         return {
           id: t.id || ('t' + Date.now() + Math.random()),
           title: t.title || 'Sin título',
           desc: t.desc || '',
           area: t.area || state.areas[0] || 'General',
           initiativeId: t.initiativeId || state.initiatives[0]?.id || '',
-          status: ['Pendiente','En curso','Pausada','Finalizada'].includes(t.status) ? t.status : 'Pendiente',
+          status: normalizedStatus,
           priority: ['Alta','Media','Baja'].includes(t.priority) ? t.priority : 'Media',
           due: t.due || '',
           effort: Number(t.effort || 0),
-          spent,
+          spent: Math.round(spent * 10) / 10,
           next: t.next || 'Definir siguiente paso.',
           createdAt: t.createdAt || new Date().toISOString().slice(0,10),
-          completedAt: t.completedAt || '',
+          completedAt: normalizedStatus === 'Finalizada' ? (t.completedAt || new Date().toISOString().slice(0,10)) : '',
           worklog
         };
       });
@@ -504,7 +512,11 @@
         areas: state.areas,
         initiatives: state.initiatives,
         tasks: state.tasks,
-        alertsConfig: state.alertsConfig
+        alertsConfig: state.alertsConfig,
+        dailyCapacity: state.dailyCapacity,
+        rankingLimit: state.rankingLimit,
+        rankingSort: state.rankingSort,
+        rankingGroup: state.rankingGroup
       }));
     }
 
@@ -537,37 +549,7 @@
             return;
           }
           localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-      
-    window.openTaskModal = openTaskModal;
-    window.closeTaskModal = closeTaskModal;
-    window.saveTask = saveTask;
-    window.deleteCurrentTask = deleteCurrentTask;
-    window.openInitiativeModal = openInitiativeModal;
-    window.closeInitiativeModal = closeInitiativeModal;
-    window.saveInitiative = saveInitiative;
-    window.deleteCurrentInitiative = deleteCurrentInitiative;
-    window.openWorklogModal = openWorklogModal;
-    window.closeWorklogModal = closeWorklogModal;
-    window.saveWorklogEntry = saveWorklogEntry;
-    window.deleteWorklogEntry = deleteWorklogEntry;
-    window.openDetailModal = openDetailModal;
-    window.closeDetailModal = closeDetailModal;
-    window.toggleDone = toggleDone;
-    window.quickPause = quickPause;
-    window.quickAddTime = quickAddTime;
-    window.addArea = addArea;
-    window.renameArea = renameArea;
-    window.deleteArea = deleteArea;
-    window.quickAddInitiative = quickAddInitiative;
-    window.exportData = exportData;
-    window.importData = importData;
-    window.toggleSidebar = toggleSidebar;
-    window.copyExecutiveReport = copyExecutiveReport;
-    window.applyDrillDown = applyDrillDown;
-    window.clearDrillDown = clearDrillDown;
-    window.loadMoreRanking = loadMoreRanking;
-
-    loadState();
+          loadState();
           render();
           alert('Datos importados correctamente.');
         }catch(err){
@@ -592,6 +574,19 @@
     function getLastWorkDate(task){
       if(!Array.isArray(task.worklog) || !task.worklog.length) return '—';
       return [...task.worklog].sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0].date;
+    }
+
+    function isExecutionView(view){
+      return ['dashboard','today'].includes(view);
+    }
+
+    function isTrackingView(view){
+      return ['week','month','ranking','kanban','activity'].includes(view);
+    }
+
+    function getViewScopedTasks(tasks, view=state.currentView){
+      if(isExecutionView(view)) return tasks.filter(t=>t.status!=='Finalizada');
+      return tasks;
     }
 
 
@@ -1048,9 +1043,10 @@
     }
 
     function taskCard(task){
+      const isCompleted = task.status === 'Finalizada';
       const pauseLabel = task.status === 'Pausada' ? '▶ Reanudar' : '⏸ Pausar';
-      const doneLabel = task.status === 'Finalizada' ? '↺ Reabrir' : '✓ Finalizar';
-      return `<article class="task">
+      const doneLabel = isCompleted ? '↺ Reabrir' : '✓ Finalizar';
+      return `<article class="task ${isCompleted ? 'completed-card' : ''}">
         <div class="task-top">
           <div style="min-width:0">
             <div class="task-title">${escapeHtml(task.title)}</div>
@@ -1063,20 +1059,21 @@
           ${badgeDue(task)}
           <span class="badge">${escapeHtml(task.area)}</span>
           <span class="badge">${escapeHtml(task.initiative)}</span>
+          ${isCompleted && task.completedAt ? `<span class="badge green">Cerrada ${escapeHtml(task.completedAt)}</span>` : ''}
         </div>
         <div class="meta">
           <div class="m"><div class="mk">Creada</div><div class="mv">${escapeHtml(task.createdAt || '—')}</div></div>
+          <div class="m"><div class="mk">Objetivo</div><div class="mv">${task.due ? escapeHtml(task.due) : 'Sin fecha'}</div></div>
           <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h${Number(task.spent||0)>Number(task.effort||0)?'<div style="margin-top:4px;color:#d97706;font-size:12px;font-weight:800">Desviada</div>':''}</div></div>
           <div class="m"><div class="mk">Sesiones</div><div class="mv">${getWorkSessionsCount(task)}</div></div>
           <div class="m"><div class="mk">Última actividad</div><div class="mv">${escapeHtml(getLastWorkDate(task))}</div></div>
+          <div class="m"><div class="mk">Siguiente paso</div><div class="mv">${escapeHtml(task.next || '—')}</div></div>
         </div>
         <div class="qa">
           <button class="qbtn done" onclick="toggleDone('${task.id}')">${doneLabel}</button>
-          <button class="qbtn pause" onclick="quickPause('${task.id}')">${pauseLabel}</button>
+          ${!isCompleted ? `<button class="qbtn pause" onclick="quickPause('${task.id}')">${pauseLabel}</button>` : ''}
           <button class="qbtn edit" onclick="openTaskModal('${task.id}')">Editar tarea</button>
           <button class="qbtn time" onclick="openWorklogModal('${task.id}')">Registrar trabajo</button>
-          <button class="qbtn time" onclick="quickAddTime('${task.id}',0.5)">+30m</button>
-          <button class="qbtn time" onclick="quickAddTime('${task.id}',1)">+1h</button>
           <button class="qbtn edit" onclick="openDetailModal('${task.id}')">Ver detalle</button>
         </div>
         ${renderGroupedWorklog(task)}
@@ -1203,21 +1200,27 @@
     }
 
     function renderWeek(tasks){
+      const scoped = getViewScopedTasks(tasks, 'week');
       const labels = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
       const groups = [[],[],[],[],[]];
-      tasks.forEach(t=>{
+      scoped.forEach(t=>{
         const idx = getTaskWeekIndex(t);
         if(idx !== null && idx >= 0 && idx < 5) groups[idx].push(t);
       });
       return `<div class="panel"><div class="panel-head"><div><h2>Semana</h2><p>Distribución operativa de carga y compromisos.</p></div></div><div class="panel-body"><div class="week-grid">${
-        labels.map((d,i)=>`<div class="lane"><div class="lane-head"><h3>${d}</h3><p>${groups[i].length} tareas</p></div><div class="lane-body">${groups[i].length?groups[i].map(t=>`<div class="mini-task ${t.status==='Finalizada'?'completed':''}"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}${t.status==='Finalizada'?' · Finalizada':''}</span></div>`).join(''):'<div class="empty">Sin carga</div>'}</div></div>`).join('')
+        labels.map((d,i)=>{
+          const items = sortTasks(groups[i]).slice(0,10);
+          const overflow = Math.max(0, groups[i].length - items.length);
+          return `<div class="lane"><div class="lane-head"><h3>${d}</h3><p>${groups[i].length} tareas</p></div><div class="lane-body">${items.length?items.map(t=>`<div class="mini-task ${t.status==='Finalizada'?'completed':''}" onclick="openDetailModal('${t.id}')" style="cursor:pointer"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)} · ${escapeHtml(t.status)}</span></div>`).join(''): '<div class="empty">Sin carga</div>'}${overflow?`<div class="mini-task">+ ${overflow} más</div>`:''}</div></div>`;
+        }).join('')
       }</div></div></div>`;
     }
 
     function renderMonth(tasks){
+      const scoped = getViewScopedTasks(tasks, 'month');
       const days = Array.from({length:28},(_,i)=>i+1);
       const dayMap = {};
-      tasks.forEach(t=>{
+      scoped.forEach(t=>{
         const ref = getTaskReferenceDate(t);
         if(!ref) return;
         const d = new Date(ref + 'T12:00:00');
@@ -1228,12 +1231,16 @@
         }
       });
       return `<div class="panel"><div class="panel-head"><div><h2>Mes</h2><p>Visión táctica de hitos y vencimientos.</p></div></div><div class="panel-body"><div class="month-grid">${
-        days.map(d=>`<div class="mini-task"><strong>${d}</strong>${(dayMap[d]||[]).slice(0,2).map(t=>`<div style="margin-top:6px;color:var(--muted);font-size:12px;opacity:${t.status==='Finalizada'?'0.7':'1'}">${escapeHtml(t.title)}</div>`).join('') || '<div style="margin-top:6px;color:var(--muted);font-size:12px">—</div>'}</div>`).join('')
+        days.map(d=>{
+          const items = sortTasks(dayMap[d] || []).slice(0,3);
+          const overflow = Math.max(0, (dayMap[d] || []).length - items.length);
+          return `<div class="mini-task"><strong>${d}</strong>${items.map(t=>`<div style="margin-top:6px;color:var(--muted);font-size:12px;opacity:${t.status==='Finalizada'?'0.7':'1'}">${escapeHtml(t.title)}</div>`).join('') || '<div style="margin-top:6px;color:var(--muted);font-size:12px">—</div>'}${overflow?`<div style="margin-top:6px;color:var(--muted);font-size:12px">+ ${overflow} más</div>`:''}</div>`;
+        }).join('')
       }</div></div></div>`;
     }
 
     function renderRanking(tasks){
-      const source = [...tasks];
+      const source = [...getViewScopedTasks(tasks, 'ranking')];
       const visible = source.slice(0, state.rankingLimit);
       const controls = `<div class="inline-form" style="margin-bottom:14px">
         <select id="rankingSort">
@@ -1250,12 +1257,12 @@
       const body = state.rankingGroup === 'initiative'
         ? renderRankingGrouped(visible)
         : visible.map((t,i)=>`
-          <div class="row-card">
+          <div class="row-card ${t.status==='Finalizada'?'completed-row':''}">
             <div style="display:flex;gap:14px;align-items:center;min-width:0">
               <div class="score" style="min-width:58px;padding:10px 6px"><b style="font-size:22px">${i+1}</b><span>#</span></div>
               <div><div class="row-title">${escapeHtml(t.title)}</div><div class="row-sub">${escapeHtml(t.desc)}</div></div>
             </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">${statusBadge(t.status)}${badgeDue(t)}<span class="badge blue">Score ${t.score}</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center">${statusBadge(t.status)}${badgeDue(t)}<span class="badge blue">Score ${t.score}</span><button class="btn ghost small" onclick="openDetailModal('${t.id}')">Detalle</button></div>
           </div>
         `).join('');
 
@@ -1287,9 +1294,15 @@
     }
 
     function renderKanban(tasks){
+      const scoped = getViewScopedTasks(tasks, 'kanban');
       const cols = ['Pendiente','En curso','Pausada','Finalizada'];
       return `<div class="panel"><div class="panel-head"><div><h2>Kanban</h2><p>Seguimiento operativo por estado.</p></div></div><div class="panel-body"><div class="kanban">${
-        cols.map(col=>`<div class="kcol"><div class="khead">${col}</div><div class="kbody">${tasks.filter(t=>t.status===col).length?tasks.filter(t=>t.status===col).map(taskCard).join(''):'<div class="empty">Sin tareas</div>'}</div></div>`).join('')
+        cols.map(col=>{
+          const items = scoped.filter(t=>t.status===col);
+          const visible = items.slice(0,8);
+          const overflow = Math.max(0, items.length - visible.length);
+          return `<div class="kcol"><div class="khead">${col} · ${items.length}</div><div class="kbody">${visible.length?visible.map(taskCard).join(''):'<div class="empty">Sin tareas</div>'}${overflow?`<div class="empty">+ ${overflow} tareas más en esta columna</div>`:''}</div></div>`;
+        }).join('')
       }</div></div></div>`;
     }
 
@@ -1360,7 +1373,7 @@
     function renderInitiatives(){
       return `<div class="panel"><div class="panel-head"><div><h2>Iniciativas</h2><p>Contenedores de trabajo que agrupan tareas.</p></div></div><div class="panel-body">${
         state.initiatives.map(i=>{
-          const linked = filteredTasks().filter(t=>t.initiativeId===i.id);
+          const linked = baseTasks().filter(t=>t.initiativeId===i.id);
           const paused = linked.filter(t=>t.status==='Pausada').length;
           return `<div class="task">
             <div class="task-title">${escapeHtml(i.name)}</div>
@@ -1384,7 +1397,7 @@
                 <button class="btn primary" onclick="addArea()">Añadir área</button>
               </div>
               ${state.areas.map((a,i)=>`
-                <div class="row-card">
+                <div class="row-card ${t.status==='Finalizada'?'completed-row':''}">
                   <div><div class="row-title">${escapeHtml(a)}</div><div class="row-sub">${state.tasks.filter(t=>t.area===a).length} tareas · ${state.initiatives.filter(x=>x.owner===a).length} iniciativas</div></div>
                   <div style="display:flex;gap:8px"><button class="btn ghost" onclick="renameArea(${i})">Renombrar</button><button class="btn secondary" onclick="deleteArea(${i})">Eliminar</button></div>
                 </div>
@@ -1400,7 +1413,7 @@
                 <button class="btn primary" onclick="quickAddInitiative()">Añadir iniciativa</button>
               </div>
               ${state.initiatives.map(i=>`
-                <div class="row-card">
+                <div class="row-card ${t.status==='Finalizada'?'completed-row':''}">
                   <div><div class="row-title">${escapeHtml(i.name)}</div><div class="row-sub">${escapeHtml(i.owner)} · ${state.tasks.filter(t=>t.initiativeId===i.id).length} tareas</div></div>
                   <div><button class="btn ghost" onclick="openInitiativeModal('${i.id}')">Editar</button></div>
                 </div>
@@ -1549,7 +1562,7 @@
         createdAt: existing ? (existing.createdAt || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10),
         completedAt: (document.getElementById('fStatus').value === 'Finalizada')
           ? (existing && existing.completedAt ? existing.completedAt : new Date().toISOString().slice(0,10))
-          : (existing ? (existing.completedAt || '') : ''),
+          : '',
         worklog: existing ? (existing.worklog || []) : []
       };
       const idx = state.tasks.findIndex(x=>x.id===task.id);
@@ -1662,7 +1675,10 @@
       }
 
       task.spent = Math.round(task.worklog.reduce((a,b)=>a+Number(b.hours||0),0) * 10) / 10;
-      if(task.status === 'Pendiente' || task.status === 'Pausada') task.status = 'En curso';
+      if(task.status === 'Pendiente' || task.status === 'Pausada' || task.status === 'Finalizada'){
+        task.status = 'En curso';
+        task.completedAt = '';
+      }
       saveState();
       closeWorklogModal();
       render();
@@ -1680,7 +1696,7 @@
 
     function openDetailModal(taskId){
       state.detailTaskId = taskId;
-      const task = filteredTasks().find(x=>x.id===taskId);
+      const task = baseTasks().find(x=>x.id===taskId);
       if(!task) return;
       const grouped = getGroupedWorklog(task);
       document.getElementById('detailModalBody').innerHTML = `
@@ -1743,7 +1759,7 @@
       const t = state.tasks.find(x=>x.id===id);
       if(!t) return;
       if(t.status === 'Finalizada'){
-        t.status = 'En curso';
+        t.status = (Array.isArray(t.worklog) && t.worklog.length) || Number(t.spent||0) > 0 ? 'En curso' : 'Pendiente';
         t.completedAt = '';
       }else{
         t.status = 'Finalizada';
@@ -1755,8 +1771,8 @@
 
     function quickPause(id){
       const t = state.tasks.find(x=>x.id===id);
-      if(!t) return;
-      t.status = t.status === 'Pausada' ? 'En curso' : 'Pausada';
+      if(!t || t.status === 'Finalizada') return;
+      t.status = t.status === 'Pausada' ? ((Array.isArray(t.worklog) && t.worklog.length) || Number(t.spent||0) > 0 ? 'En curso' : 'Pendiente') : 'Pausada';
       saveState();
       render();
     }
@@ -1767,7 +1783,10 @@
       if(!Array.isArray(t.worklog)) t.worklog = [];
       t.worklog.push({id:'w'+Date.now(), date:new Date().toISOString().slice(0,10), hours:h, note:'Registro rápido'});
       t.spent = Math.round(t.worklog.reduce((a,b)=>a+Number(b.hours||0),0) * 10) / 10;
-      if(t.status === 'Pendiente' || t.status === 'Pausada') t.status = 'En curso';
+      if(t.status === 'Pendiente' || t.status === 'Pausada' || t.status === 'Finalizada'){
+        t.status = 'En curso';
+        t.completedAt = '';
+      }
       saveState();
       render();
     }
@@ -1882,12 +1901,41 @@
         state.currentView === 'config' ? renderConfig() :
         renderReport();
 
-      document.querySelectorAll('.nav-btn').forEach(btn=>{
-        btn.classList.toggle('active', btn.dataset.view === state.currentView);
-      });
-
-      saveState();
-    }
+  
+    window.openTaskModal = openTaskModal;
+    window.closeTaskModal = closeTaskModal;
+    window.saveTask = saveTask;
+    window.deleteCurrentTask = deleteCurrentTask;
+    window.openInitiativeModal = openInitiativeModal;
+    window.closeInitiativeModal = closeInitiativeModal;
+    window.saveInitiative = saveInitiative;
+    window.deleteCurrentInitiative = deleteCurrentInitiative;
+    window.openWorklogModal = openWorklogModal;
+    window.closeWorklogModal = closeWorklogModal;
+    window.saveWorklogEntry = saveWorklogEntry;
+    window.deleteWorklogEntry = deleteWorklogEntry;
+    window.openDetailModal = openDetailModal;
+    window.closeDetailModal = closeDetailModal;
+    window.toggleDone = toggleDone;
+    window.quickPause = quickPause;
+    window.quickAddTime = quickAddTime;
+    window.addArea = addArea;
+    window.renameArea = renameArea;
+    window.deleteArea = deleteArea;
+    window.quickAddInitiative = quickAddInitiative;
+    window.exportData = exportData;
+    window.importData = importData;
+    window.toggleSidebar = toggleSidebar;
+    window.copyExecutiveReport = copyExecutiveReport;
+    window.applyDrillDown = applyDrillDown;
+    window.clearDrillDown = clearDrillDown;
+    window.loadMoreRanking = loadMoreRanking;
+    window.openAlertsModal = openAlertsModal;
+    window.closeAlertsModal = closeAlertsModal;
+    window.prepareAlertsEmail = prepareAlertsEmail;
+    window.requestBrowserNotifications = requestBrowserNotifications;
+    window.saveAlertsConfig = saveAlertsConfig;
+    window.testAlertsNow = testAlertsNow;
 
     document.querySelectorAll('.nav-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
