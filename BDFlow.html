@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.3</title>
+  <title>BDFlow Ver. 3.5</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -173,6 +173,30 @@
     .filter-banner .fb-title{font-weight:800}
     .filter-banner .fb-sub{color:var(--muted);font-size:13px;margin-top:4px}
 
+
+    .mini-task.completed{opacity:.65;border-style:dashed}
+    .alert-item{padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:var(--panel-2);margin-bottom:10px}
+    .alert-item:last-child{margin-bottom:0}
+    .alert-item .a-title{font-weight:800}
+    .alert-item .a-sub{margin-top:4px;color:var(--muted);font-size:13px}
+    .btn.completed-soft{background:#eef2f7;color:#334155}
+
+
+    .toast-wrap{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:10px;z-index:90;max-width:360px}
+    .toast{background:#fff;border:1px solid var(--border);border-left:5px solid var(--amber);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px}
+    .toast .t-title{font-weight:800}
+    .toast .t-sub{margin-top:4px;color:var(--muted);font-size:13px;line-height:1.4}
+    .toggle-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)}
+    .toggle-row:last-child{border-bottom:none}
+    .switch{position:relative;display:inline-block;width:48px;height:28px}
+    .switch input{display:none}
+    .slider{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;cursor:pointer;transition:.2s}
+    .slider:before{content:'';position:absolute;height:22px;width:22px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    .switch input:checked + .slider{background:var(--blue)}
+    .switch input:checked + .slider:before{transform:translateX(20px)}
+    .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .setting-box{border:1px solid var(--border);border-radius:16px;background:#fff;padding:16px}
+
     @media (max-width:1180px){
       .layout,.grid-2,.exec-grid{grid-template-columns:1fr}
       .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -201,7 +225,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.3</div>
+          <div class="version">Ver. 3.5</div>
         </div>
       </div>
 
@@ -249,6 +273,7 @@
           <button class="mobile-toggle btn secondary" onclick="toggleSidebar(true)">☰ Menú</button>
           <button class="btn secondary" onclick="openInitiativeModal()">+ Nueva iniciativa</button>
           <button class="btn primary" onclick="openTaskModal()">+ Nueva tarea</button>
+          <button class="btn secondary" id="alertsBtn" onclick="openAlertsModal()">🔔 <span id="alertsCount">0</span></button>
           <input id="searchInput" class="search" placeholder="Buscar tareas, iniciativas, áreas..." />
           <select id="statusFilter" class="select">
             <option value="active">Activas</option>
@@ -390,6 +415,22 @@
       editingWorklogTaskId: null,
       editingWorklogEntryId: null,
       detailTaskId: null,
+      alertEmailTo: '',
+      alertsConfig: {
+        browserEnabled: false,
+        inAppEnabled: true,
+        dailyEnabled: true,
+        dailyTime: '09:00',
+        weeklyEnabled: true,
+        weeklyDay: 'MO',
+        weeklyTime: '08:30',
+        includeCritical: true,
+        includeOverdue: true,
+        includePaused: true,
+        includeCompleted: true,
+        emailTo: ''
+      },
+      notified: {},
       areas: [],
       initiatives: [],
       tasks: []
@@ -411,6 +452,7 @@
         state.areas = Array.isArray(parsed.areas) && parsed.areas.length ? parsed.areas : [...seed.areas];
         state.initiatives = Array.isArray(parsed.initiatives) ? parsed.initiatives : [];
         state.tasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
+        state.alertsConfig = {...state.alertsConfig, ...(parsed.alertsConfig || {})};
       }catch(e){
         state.areas = [...seed.areas];
         state.initiatives = [...seed.initiatives];
@@ -451,6 +493,7 @@
           spent,
           next: t.next || 'Definir siguiente paso.',
           createdAt: t.createdAt || new Date().toISOString().slice(0,10),
+          completedAt: t.completedAt || '',
           worklog
         };
       });
@@ -460,7 +503,8 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         areas: state.areas,
         initiatives: state.initiatives,
-        tasks: state.tasks
+        tasks: state.tasks,
+        alertsConfig: state.alertsConfig
       }));
     }
 
@@ -675,6 +719,309 @@
       }</div>`;
     }
 
+
+    function getTaskReferenceDate(task){
+      return task.completedAt || task.due || task.createdAt || '';
+    }
+
+    function getTaskWeekIndex(task){
+      const ref = getTaskReferenceDate(task);
+      if(!ref) return null;
+      const d = new Date(ref + 'T12:00:00');
+      const day = d.getDay(); // 0 Sun ... 6 Sat
+      if(day === 0) return 4;
+      if(day === 6) return 4;
+      return day - 1;
+    }
+
+    function getRecentCompletedTasks(limit=5){
+      return [...state.tasks]
+        .filter(t => t.status === 'Finalizada' && t.completedAt)
+        .sort((a,b)=>String(b.completedAt).localeCompare(String(a.completedAt)))
+        .slice(0, limit)
+        .map(t => ({...t, initiative:getInitiativeName(t.initiativeId), score:scoreTask(t), daysLeft:daysToDue(t)}));
+    }
+
+    function getAlerts(tasks){
+      const alerts = [];
+      tasks.filter(t=>t.status!=='Finalizada' && t.daysLeft !== null && t.daysLeft < 0).forEach(t=>{
+        alerts.push({type:'Vencida', title:t.title, sub:`${t.initiative} · vencida desde ${Math.abs(t.daysLeft)} día(s).`});
+      });
+      tasks.filter(t=>t.status==='Pausada').forEach(t=>{
+        alerts.push({type:'Pausada', title:t.title, sub:`${t.initiative} · pendiente de reactivación.`});
+      });
+      tasks.filter(t=>Number(t.spent||0) > Number(t.effort||0)).forEach(t=>{
+        alerts.push({type:'Desviada', title:t.title, sub:`${t.spent}h / ${t.effort}h previstas.`});
+      });
+      return alerts.slice(0, 12);
+    }
+
+
+    function nowHM(){
+      const n = new Date();
+      return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+    }
+
+    function currentWeekdayCode(){
+      return ['SU','MO','TU','WE','TH','FR','SA'][new Date().getDay()];
+    }
+
+    function showToast(title, sub){
+      const wrap = document.getElementById('toastWrap');
+      if(!wrap) return;
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.innerHTML = `<div class="t-title">${escapeHtml(title)}</div><div class="t-sub">${escapeHtml(sub)}</div>`;
+      wrap.appendChild(el);
+      setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(4px)'; }, 5500);
+      setTimeout(()=>{ el.remove(); }, 6200);
+    }
+
+    function requestBrowserNotifications(){
+      if(!('Notification' in window)){
+        alert('Este navegador no soporta notificaciones.');
+        return;
+      }
+      Notification.requestPermission().then(permission=>{
+        if(permission === 'granted'){
+          state.alertsConfig.browserEnabled = true;
+          saveState();
+          render();
+          showToast('Notificaciones activadas', 'BDFlow podrá avisarte con la pantalla activa.');
+        }else{
+          state.alertsConfig.browserEnabled = false;
+          saveState();
+          render();
+          alert('No se concedieron permisos de notificación.');
+        }
+      });
+    }
+
+    function pushBrowserNotification(title, body){
+      if(!state.alertsConfig.browserEnabled) return;
+      if(!('Notification' in window)) return;
+      if(Notification.permission !== 'granted') return;
+      new Notification(title, { body });
+    }
+
+    function alertKey(prefix, taskId=''){
+      const d = new Date();
+      return `${prefix}_${taskId}_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function shouldNotifySchedule(type){
+      const cfg = state.alertsConfig;
+      const hm = nowHM();
+      if(type === 'daily'){
+        return cfg.dailyEnabled && hm === cfg.dailyTime;
+      }
+      if(type === 'weekly'){
+        return cfg.weeklyEnabled && currentWeekdayCode() === cfg.weeklyDay && hm === cfg.weeklyTime;
+      }
+      return false;
+    }
+
+    function getActiveAlertsPayload(tasks){
+      const alerts = getAlerts(tasks);
+      const cfg = state.alertsConfig;
+      return alerts.filter(a=>{
+        if(a.type === 'Vencida' && !cfg.includeOverdue) return false;
+        if(a.type === 'Pausada' && !cfg.includePaused) return false;
+        if(a.type === 'Desviada' && !cfg.includeCritical) return false;
+        return true;
+      });
+    }
+
+    function runActiveScreenAlerts(){
+      const cfg = state.alertsConfig;
+      if(!cfg.inAppEnabled && !cfg.browserEnabled) return;
+      const tasks = filteredTasks();
+      const alerts = getActiveAlertsPayload(tasks);
+      if(!alerts.length) return;
+
+      const criticalTasks = tasks.filter(t=>isCriticalTask(t));
+      const keyBase = nowHM();
+
+      if(shouldNotifySchedule('daily')){
+        const key = `daily_${keyBase}`;
+        if(!state.notified[key]){
+          state.notified[key] = true;
+          const title = 'BDFlow · Prioridades de hoy';
+          const body = criticalTasks.length
+            ? `${criticalTasks.length} tareas críticas. Foco: ${criticalTasks[0].title}`
+            : `${alerts.length} alertas activas en BDFlow.`;
+          if(cfg.inAppEnabled) showToast(title, body);
+          if(cfg.browserEnabled) pushBrowserNotification(title, body);
+        }
+      }
+
+      if(shouldNotifySchedule('weekly')){
+        const key = `weekly_${currentWeekdayCode()}_${keyBase}`;
+        if(!state.notified[key]){
+          state.notified[key] = true;
+          const weekTasks = tasks.filter(t=>t.status!=='Finalizada').slice(0,5);
+          const title = 'BDFlow · Prioridades de la semana';
+          const body = weekTasks.length
+            ? `Tareas clave: ${weekTasks.map(t=>t.title).slice(0,3).join(', ')}`
+            : 'No hay tareas activas para esta semana.';
+          if(cfg.inAppEnabled) showToast(title, body);
+          if(cfg.browserEnabled) pushBrowserNotification(title, body);
+        }
+      }
+
+      // immediate alerts for overdue items on active screen
+      const overdue = alerts.find(a=>a.type === 'Vencida');
+      if(overdue){
+        const key = `overdue_${overdue.title}_${new Date().toISOString().slice(0,10)}`;
+        if(!state.notified[key]){
+          state.notified[key] = true;
+          if(cfg.inAppEnabled) showToast('BDFlow · Tarea vencida', `${overdue.title} requiere atención inmediata.`);
+          if(cfg.browserEnabled) pushBrowserNotification('BDFlow · Tarea vencida', `${overdue.title} requiere atención inmediata.`);
+        }
+      }
+    }
+
+    function renderAlertsSettings(){
+      const cfg = state.alertsConfig;
+      return `<div class="settings-grid">
+        <div class="setting-box">
+          <h3 style="margin:0 0 12px 0">Pantalla activa</h3>
+          <div class="toggle-row">
+            <div><div class="row-title">Avisos dentro de BDFlow</div><div class="row-sub">Toast y contador de alertas.</div></div>
+            <label class="switch"><input type="checkbox" id="cfgInApp" ${cfg.inAppEnabled?'checked':''}><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="row-title">Notificaciones del navegador</div><div class="row-sub">Requiere permiso del navegador.</div></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <label class="switch"><input type="checkbox" id="cfgBrowser" ${cfg.browserEnabled?'checked':''}><span class="slider"></span></label>
+              <button class="btn ghost small" onclick="requestBrowserNotifications()">Permitir</button>
+            </div>
+          </div>
+          <div class="toggle-row">
+            <div><div class="row-title">Incluir críticas / desviadas</div></div>
+            <label class="switch"><input type="checkbox" id="cfgCritical" ${cfg.includeCritical?'checked':''}><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="row-title">Incluir vencidas</div></div>
+            <label class="switch"><input type="checkbox" id="cfgOverdue" ${cfg.includeOverdue?'checked':''}><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="row-title">Incluir pausadas</div></div>
+            <label class="switch"><input type="checkbox" id="cfgPaused" ${cfg.includePaused?'checked':''}><span class="slider"></span></label>
+          </div>
+        </div>
+
+        <div class="setting-box">
+          <h3 style="margin:0 0 12px 0">Automatización preparada</h3>
+          <div class="toggle-row">
+            <div><div class="row-title">Resumen diario</div><div class="row-sub">Solo con pantalla activa en esta versión.</div></div>
+            <label class="switch"><input type="checkbox" id="cfgDaily" ${cfg.dailyEnabled?'checked':''}><span class="slider"></span></label>
+          </div>
+          <div class="field" style="margin-bottom:12px"><label>Hora diaria</label><input id="cfgDailyTime" type="time" value="${cfg.dailyTime}"></div>
+          <div class="toggle-row">
+            <div><div class="row-title">Resumen semanal</div><div class="row-sub">Por ejemplo, los lunes.</div></div>
+            <label class="switch"><input type="checkbox" id="cfgWeekly" ${cfg.weeklyEnabled?'checked':''}><span class="slider"></span></label>
+          </div>
+          <div class="field"><label>Día semanal</label><select id="cfgWeeklyDay">
+            <option value="MO" ${cfg.weeklyDay==='MO'?'selected':''}>Lunes</option>
+            <option value="TU" ${cfg.weeklyDay==='TU'?'selected':''}>Martes</option>
+            <option value="WE" ${cfg.weeklyDay==='WE'?'selected':''}>Miércoles</option>
+            <option value="TH" ${cfg.weeklyDay==='TH'?'selected':''}>Jueves</option>
+            <option value="FR" ${cfg.weeklyDay==='FR'?'selected':''}>Viernes</option>
+          </select></div>
+          <div class="field" style="margin-top:12px"><label>Hora semanal</label><input id="cfgWeeklyTime" type="time" value="${cfg.weeklyTime}"></div>
+          <div class="field" style="margin-top:12px"><label>Email destinatario (preparación)</label><input id="cfgEmailTo" type="email" value="${escapeHtml(cfg.emailTo || '')}" placeholder="tu@email.com"></div>
+          <div class="field" style="margin-top:12px"><label>Nota</label><div style="color:var(--muted);font-size:13px;line-height:1.45">El envío automático real por correo requiere backend o función programada. En esta versión queda preparada la configuración y las alertas con pantalla activa.</div></div>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn primary" onclick="saveAlertsConfig()">Guardar configuración de alertas</button>
+        <button class="btn secondary" onclick="testAlertsNow()">Probar alertas ahora</button>
+      </div>`;
+    }
+
+    function saveAlertsConfig(){
+      const cfg = state.alertsConfig;
+      cfg.inAppEnabled = !!document.getElementById('cfgInApp')?.checked;
+      cfg.browserEnabled = !!document.getElementById('cfgBrowser')?.checked;
+      cfg.includeCritical = !!document.getElementById('cfgCritical')?.checked;
+      cfg.includeOverdue = !!document.getElementById('cfgOverdue')?.checked;
+      cfg.includePaused = !!document.getElementById('cfgPaused')?.checked;
+      cfg.dailyEnabled = !!document.getElementById('cfgDaily')?.checked;
+      cfg.dailyTime = document.getElementById('cfgDailyTime')?.value || '09:00';
+      cfg.weeklyEnabled = !!document.getElementById('cfgWeekly')?.checked;
+      cfg.weeklyDay = document.getElementById('cfgWeeklyDay')?.value || 'MO';
+      cfg.weeklyTime = document.getElementById('cfgWeeklyTime')?.value || '08:30';
+      cfg.emailTo = document.getElementById('cfgEmailTo')?.value.trim() || '';
+      saveState();
+      showToast('BDFlow', 'Configuración de alertas guardada.');
+      render();
+    }
+
+    function testAlertsNow(){
+      const tasks = filteredTasks();
+      const alerts = getActiveAlertsPayload(tasks);
+      if(!alerts.length){
+        showToast('BDFlow', 'No hay alertas activas para probar ahora.');
+        return;
+      }
+      const first = alerts[0];
+      if(state.alertsConfig.inAppEnabled) showToast(`BDFlow · ${first.type}`, `${first.title} · ${first.sub}`);
+      if(state.alertsConfig.browserEnabled) pushBrowserNotification(`BDFlow · ${first.type}`, `${first.title} · ${first.sub}`);
+    }
+
+
+    function openAlertsModal(){
+      const tasks = filteredTasks();
+      const alerts = getAlerts(tasks);
+      const completed = getRecentCompletedTasks(5);
+      const body = [];
+      body.push('<div style="margin-bottom:12px;font-weight:800">Alertas operativas</div>');
+      if(alerts.length){
+        body.push(alerts.map(a=>`<div class="alert-item"><div class="a-title">${escapeHtml(a.type)} · ${escapeHtml(a.title)}</div><div class="a-sub">${escapeHtml(a.sub)}</div></div>`).join(''));
+      }else{
+        body.push('<div class="empty" style="margin-bottom:12px">Sin alertas activas.</div>');
+      }
+      body.push('<div style="margin:18px 0 12px;font-weight:800">Cierres recientes</div>');
+      if(completed.length){
+        body.push(completed.map(t=>`<div class="alert-item"><div class="a-title">${escapeHtml(t.title)}</div><div class="a-sub">${escapeHtml(t.initiative)} · finalizada el ${escapeHtml(t.completedAt || "—")}</div></div>`).join(''));
+      }else{
+        body.push('<div class="empty">Sin cierres recientes.</div>');
+      }
+      document.getElementById('alertsModalBody').innerHTML = body.join('');
+      document.getElementById('alertsModalWrap').classList.add('show');
+    }
+
+    function closeAlertsModal(){
+      document.getElementById('alertsModalWrap').classList.remove('show');
+    }
+
+    function prepareAlertsEmail(){
+      const tasks = filteredTasks();
+      const alerts = getAlerts(tasks);
+      const completed = getRecentCompletedTasks(5);
+      const lines = [];
+      lines.push('Resumen BDFlow');
+      lines.push('');
+      lines.push('Alertas operativas:');
+      if(alerts.length){
+        alerts.forEach(a=>lines.push(`- ${a.type}: ${a.title} (${a.sub})`));
+      }else{
+        lines.push('- Sin alertas activas');
+      }
+      lines.push('');
+      lines.push('Cierres recientes:');
+      if(completed.length){
+        completed.forEach(t=>lines.push(`- ${t.title} · ${t.initiative} · finalizada el ${t.completedAt || '—'}`));
+      }else{
+        lines.push('- Sin cierres recientes');
+      }
+      const subject = encodeURIComponent('Resumen BDFlow');
+      const body = encodeURIComponent(lines.join('\n'));
+      window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
+
     function filteredTasks(){
       const tasks = baseTasks().filter(t => {
         const hay = [t.title,t.desc,t.area,getInitiativeName(t.initiativeId),t.next,t.status].join(' ').toLowerCase();
@@ -812,7 +1159,7 @@
         <div class="side-row"><div class="side-k">Foco del día</div><div class="side-v">${tasks.filter(t=>isCriticalTask(t)).length} tareas</div></div>
         <div class="side-row"><div class="side-k">En riesgo</div><div class="side-v">${tasks.filter(t=>t.status==='Pausada' || (t.daysLeft!==null && t.daysLeft<=2 && t.status!=='Finalizada')).length}</div></div>
         <div class="side-row"><div class="side-k">Capacidad</div><div class="side-v">${state.dailyCapacity} h</div></div>
-        <div class="side-row"><div class="side-k">Áreas activas</div><div class="side-v">${state.areas.length}</div></div>
+        <div class="side-row"><div class="side-k">Cierres recientes</div><div class="side-v">${getRecentCompletedTasks(7).length}</div></div>
       `;
     }
 
@@ -821,7 +1168,7 @@
       const mainTask = active.find(t=>isCriticalTask(t)) || active[0];
       const critical = active.filter(t=>isCriticalTask(t)).slice(0,5);
       const important = active.filter(t=>!isCriticalTask(t) && t.score>=70).slice(0,5);
-      const paused = tasks.filter(t=>t.status==='Pausada').slice(0,3);
+      const completed = getRecentCompletedTasks(5);
 
       return `<div class="grid-2">
         <div class="panel">
@@ -837,8 +1184,8 @@
           <div class="panel-body">${important.length ? important.map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}</span></div>`).join('') : '<div class="empty">Sin importantes.</div>'}</div>
         </div>
         <div class="panel">
-          <div class="panel-head"><div><h2>⏸ Pausadas</h2><p>Máximo 3 para reactivar cuando toque.</p></div></div>
-          <div class="panel-body">${paused.length ? paused.map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}</span></div>`).join('') : '<div class="empty">Sin pausadas.</div>'}</div>
+          <div class="panel-head"><div><h2>✅ Cierres recientes</h2><p>Trabajo resuelto recientemente.</p></div></div>
+          <div class="panel-body">${completed.length ? completed.map(t=>`<div class="mini-task completed"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)} · ${escapeHtml(t.completedAt || '—')}</span></div>`).join('') : '<div class="empty">Sin cierres recientes.</div>'}</div>
         </div>
       </div>`;
     }
@@ -858,16 +1205,30 @@
     function renderWeek(tasks){
       const labels = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
       const groups = [[],[],[],[],[]];
-      tasks.filter(t=>t.status!=='Finalizada').forEach((t,i)=>groups[i%5].push(t));
+      tasks.forEach(t=>{
+        const idx = getTaskWeekIndex(t);
+        if(idx !== null && idx >= 0 && idx < 5) groups[idx].push(t);
+      });
       return `<div class="panel"><div class="panel-head"><div><h2>Semana</h2><p>Distribución operativa de carga y compromisos.</p></div></div><div class="panel-body"><div class="week-grid">${
-        labels.map((d,i)=>`<div class="lane"><div class="lane-head"><h3>${d}</h3><p>${groups[i].length} tareas</p></div><div class="lane-body">${groups[i].length?groups[i].map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}</span></div>`).join(''):'<div class="empty">Sin carga</div>'}</div></div>`).join('')
+        labels.map((d,i)=>`<div class="lane"><div class="lane-head"><h3>${d}</h3><p>${groups[i].length} tareas</p></div><div class="lane-body">${groups[i].length?groups[i].map(t=>`<div class="mini-task ${t.status==='Finalizada'?'completed':''}"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}${t.status==='Finalizada'?' · Finalizada':''}</span></div>`).join(''):'<div class="empty">Sin carga</div>'}</div></div>`).join('')
       }</div></div></div>`;
     }
 
     function renderMonth(tasks){
       const days = Array.from({length:28},(_,i)=>i+1);
+      const dayMap = {};
+      tasks.forEach(t=>{
+        const ref = getTaskReferenceDate(t);
+        if(!ref) return;
+        const d = new Date(ref + 'T12:00:00');
+        const day = d.getDate();
+        if(day >= 1 && day <= 28){
+          if(!dayMap[day]) dayMap[day] = [];
+          dayMap[day].push(t);
+        }
+      });
       return `<div class="panel"><div class="panel-head"><div><h2>Mes</h2><p>Visión táctica de hitos y vencimientos.</p></div></div><div class="panel-body"><div class="month-grid">${
-        days.map(d=>`<div class="mini-task"><strong>${d}</strong><div style="margin-top:6px;color:var(--muted);font-size:12px">${tasks.filter((_,i)=>(i+d)%11===0).length ? tasks.filter((_,i)=>(i+d)%11===0)[0].title : '—'}</div></div>`).join('')
+        days.map(d=>`<div class="mini-task"><strong>${d}</strong>${(dayMap[d]||[]).slice(0,2).map(t=>`<div style="margin-top:6px;color:var(--muted);font-size:12px;opacity:${t.status==='Finalizada'?'0.7':'1'}">${escapeHtml(t.title)}</div>`).join('') || '<div style="margin-top:6px;color:var(--muted);font-size:12px">—</div>'}</div>`).join('')
       }</div></div></div>`;
     }
 
@@ -954,15 +1315,24 @@
 
     function renderActivity(){
       const entries = getAllWorklogEntries();
-      if(!entries.length){
-        return `<div class="panel"><div class="panel-head"><div><h2>Actividad</h2><p>Vista cronológica del trabajo realizado.</p></div></div><div class="panel-body"><div class="empty">Todavía no hay trabajo registrado.</div></div></div>`;
+      const completions = state.tasks.filter(t=>t.status==='Finalizada' && t.completedAt).map(t=>({
+        date: t.completedAt,
+        taskTitle: t.title,
+        initiative: getInitiativeName(t.initiativeId),
+        area: t.area,
+        hours: '✔',
+        note: 'Tarea finalizada'
+      }));
+      const merged = [...entries, ...completions].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+      if(!merged.length){
+        return `<div class="panel"><div class="panel-head"><div><h2>Actividad</h2><p>Vista cronológica del trabajo realizado.</p></div></div><div class="panel-body"><div class="empty">Todavía no hay actividad registrada.</div></div></div>`;
       }
       const grouped = {};
-      entries.forEach(e=>{ if(!grouped[e.date]) grouped[e.date]=[]; grouped[e.date].push(e); });
-      return `<div class="panel"><div class="panel-head"><div><h2>Actividad</h2><p>Trabajo realizado de forma clara y cronológica.</p></div></div><div class="panel-body">${
+      merged.forEach(e=>{ if(!grouped[e.date]) grouped[e.date]=[]; grouped[e.date].push(e); });
+      return `<div class="panel"><div class="panel-head"><div><h2>Actividad</h2><p>Trabajo realizado y cierres de forma clara y cronológica.</p></div></div><div class="panel-body">${
         Object.entries(grouped).map(([date,items])=>`
           <div class="activity-day">
-            <h3>${date} · ${items.reduce((a,b)=>a+Number(b.hours||0),0)}h</h3>
+            <h3>${date} · ${items.filter(i=>i.hours !== '✔').reduce((a,b)=>a+Number(b.hours||0),0)}h</h3>
             ${items.map(i=>`
               <div class="activity-entry">
                 <div class="activity-top">
@@ -970,7 +1340,7 @@
                     <div class="row-title">${escapeHtml(i.taskTitle)}</div>
                     <div class="row-sub">${escapeHtml(i.initiative)} · ${escapeHtml(i.area)}</div>
                   </div>
-                  <div class="badge blue">${i.hours}h</div>
+                  <div class="badge ${i.hours==='✔'?'green':'blue'}">${i.hours==='✔'?'Finalizada':`${i.hours}h`}</div>
                 </div>
                 ${i.note ? `<div style="margin-top:8px;color:var(--muted);font-size:13px">${escapeHtml(i.note)}</div>` : ''}
               </div>
@@ -1004,36 +1374,45 @@
     }
 
     function renderConfig(){
-      return `<div class="grid-2">
-        <div class="panel">
-          <div class="panel-head"><div><h2>Áreas</h2><p>Configuración rápida para áreas.</p></div></div>
-          <div class="panel-body">
-            <div class="inline-form">
-              <input id="newAreaInput" placeholder="Nueva área" />
-              <button class="btn primary" onclick="addArea()">Añadir área</button>
-            </div>
-            ${state.areas.map((a,i)=>`
-              <div class="row-card">
-                <div><div class="row-title">${escapeHtml(a)}</div><div class="row-sub">${state.tasks.filter(t=>t.area===a).length} tareas · ${state.initiatives.filter(x=>x.owner===a).length} iniciativas</div></div>
-                <div style="display:flex;gap:8px"><button class="btn ghost" onclick="renameArea(${i})">Renombrar</button><button class="btn secondary" onclick="deleteArea(${i})">Eliminar</button></div>
+      return `<div style="display:flex;flex-direction:column;gap:18px">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><div><h2>Áreas</h2><p>Configuración rápida para áreas.</p></div></div>
+            <div class="panel-body">
+              <div class="inline-form">
+                <input id="newAreaInput" placeholder="Nueva área" />
+                <button class="btn primary" onclick="addArea()">Añadir área</button>
               </div>
-            `).join('')}
+              ${state.areas.map((a,i)=>`
+                <div class="row-card">
+                  <div><div class="row-title">${escapeHtml(a)}</div><div class="row-sub">${state.tasks.filter(t=>t.area===a).length} tareas · ${state.initiatives.filter(x=>x.owner===a).length} iniciativas</div></div>
+                  <div style="display:flex;gap:8px"><button class="btn ghost" onclick="renameArea(${i})">Renombrar</button><button class="btn secondary" onclick="deleteArea(${i})">Eliminar</button></div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Iniciativas</h2><p>Gestión rápida para estructurar el trabajo.</p></div></div>
+            <div class="panel-body">
+              <div class="inline-form">
+                <input id="quickInitiativeName" placeholder="Nueva iniciativa" />
+                <select id="quickInitiativeOwner">${state.areas.map(a=>`<option>${escapeHtml(a)}</option>`).join('')}</select>
+                <button class="btn primary" onclick="quickAddInitiative()">Añadir iniciativa</button>
+              </div>
+              ${state.initiatives.map(i=>`
+                <div class="row-card">
+                  <div><div class="row-title">${escapeHtml(i.name)}</div><div class="row-sub">${escapeHtml(i.owner)} · ${state.tasks.filter(t=>t.initiativeId===i.id).length} tareas</div></div>
+                  <div><button class="btn ghost" onclick="openInitiativeModal('${i.id}')">Editar</button></div>
+                </div>
+              `).join('')}
+            </div>
           </div>
         </div>
+
         <div class="panel">
-          <div class="panel-head"><div><h2>Iniciativas</h2><p>Gestión rápida para estructurar el trabajo.</p></div></div>
+          <div class="panel-head"><div><h2>Alertas y automatización</h2><p>Notificaciones con pantalla activa y configuración preparada para automatización.</p></div></div>
           <div class="panel-body">
-            <div class="inline-form">
-              <input id="quickInitiativeName" placeholder="Nueva iniciativa" />
-              <select id="quickInitiativeOwner">${state.areas.map(a=>`<option>${escapeHtml(a)}</option>`).join('')}</select>
-              <button class="btn primary" onclick="quickAddInitiative()">Añadir iniciativa</button>
-            </div>
-            ${state.initiatives.map(i=>`
-              <div class="row-card">
-                <div><div class="row-title">${escapeHtml(i.name)}</div><div class="row-sub">${escapeHtml(i.owner)} · ${state.tasks.filter(t=>t.initiativeId===i.id).length} tareas</div></div>
-                <div><button class="btn ghost" onclick="openInitiativeModal('${i.id}')">Editar</button></div>
-              </div>
-            `).join('')}
+            ${renderAlertsSettings()}
           </div>
         </div>
       </div>`;
@@ -1168,6 +1547,9 @@
         spent: existing ? Number(existing.spent || 0) : 0,
         next: document.getElementById('fNext').value.trim() || 'Definir siguiente paso.',
         createdAt: existing ? (existing.createdAt || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10),
+        completedAt: (document.getElementById('fStatus').value === 'Finalizada')
+          ? (existing && existing.completedAt ? existing.completedAt : new Date().toISOString().slice(0,10))
+          : (existing ? (existing.completedAt || '') : ''),
         worklog: existing ? (existing.worklog || []) : []
       };
       const idx = state.tasks.findIndex(x=>x.id===task.id);
@@ -1360,7 +1742,13 @@
     function toggleDone(id){
       const t = state.tasks.find(x=>x.id===id);
       if(!t) return;
-      t.status = t.status === 'Finalizada' ? 'En curso' : 'Finalizada';
+      if(t.status === 'Finalizada'){
+        t.status = 'En curso';
+        t.completedAt = '';
+      }else{
+        t.status = 'Finalizada';
+        t.completedAt = new Date().toISOString().slice(0,10);
+      }
       saveState();
       render();
     }
@@ -1446,11 +1834,25 @@
       document.getElementById('overlay').classList.toggle('show', open);
     }
 
+
+    function updateAlertsBadge(tasks){
+      const count = getAlerts(tasks).length;
+      const el = document.getElementById('alertsCount');
+      if(el) el.textContent = String(count);
+      const btn = document.getElementById('alertsBtn');
+      if(btn){
+        btn.classList.toggle('completed-soft', count === 0);
+      }
+    }
+
+
     function render(){
       const tasks = filteredTasks();
       renderMetrics(tasks);
       renderFilterBanner();
       populateGlobalFilters();
+      updateAlertsBadge(tasks);
+      runActiveScreenAlerts();
 
       const titles = {
         dashboard:['Dashboard','Decisión inmediata y riesgos del día.'],
@@ -1539,5 +1941,25 @@
     document.getElementById('dailyCapHint').textContent = state.dailyCapacity <= 4 ? 'Muy exigente' : state.dailyCapacity <= 6 ? 'Foco realista' : 'Riesgo de sobrecarga';
     render();
   </script>
+
+  <div class="modal-wrap" id="alertsModalWrap">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Alertas y puntos importantes</h3>
+        <button class="btn secondary" onclick="closeAlertsModal()">Cerrar</button>
+      </div>
+      <div class="modal-body" id="alertsModalBody"></div>
+      <div class="modal-actions">
+        <div></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn secondary" onclick="prepareAlertsEmail()">Preparar correo</button>
+          <button class="btn primary" onclick="closeAlertsModal()">Aceptar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="toastWrap" class="toast-wrap"></div>
 </body>
 </html>
