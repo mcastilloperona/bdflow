@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.7</title>
+  <title>BDFlow Ver. 3.8</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -26,8 +26,8 @@
       --teal-2:#ecfeff;
       --shadow:0 8px 24px rgba(15,23,42,.06);
       --radius:18px;
-      --sidebar:#2563eb;
-      --sidebar-2:#1e4ed8;
+      --sidebar:#1f3a34;
+      --sidebar-2:#213c35;
       --sidebar-text:#f1f5f9;
     }
     *{box-sizing:border-box}
@@ -35,17 +35,7 @@
     body{min-height:100vh}
     button,input,select,textarea{font:inherit}
     .app{display:flex;min-height:100vh}
-    .sidebar{
-  width:320px;
-  background:linear-gradient(180deg,#2563eb,#1e4ed8);
-  color:var(--sidebar-text);
-  padding:18px 16px;
-  position:sticky;
-  top:0;
-  height:100vh;
-  overflow:auto;
-  border-right:1px solid rgba(255,255,255,.06)
-}}
+    .sidebar{width:320px;background:linear-gradient(180deg,var(--sidebar),#1c322d);color:var(--sidebar-text);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid rgba(255,255,255,.06)}
     .brand{padding:8px 10px 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:16px}
     .brand-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .logo{font-size:28px;font-weight:800;letter-spacing:-.03em}
@@ -56,7 +46,7 @@
     .nav{display:flex;flex-direction:column;gap:8px}
     .nav-btn{display:flex;align-items:center;gap:14px;width:100%;border:none;background:transparent;color:var(--sidebar-text);border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left;font-weight:700;font-size:17px}
     .nav-btn:hover{background:rgba(255,255,255,.05)}
-    .nav-btn.active{background:rgba(255,255,255,.2);}
+    .nav-btn.active{background:#243f69;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
     .nav-dot{width:12px;height:12px;border-radius:50%;display:inline-block}
     .nav .nav-btn:nth-child(1) .nav-dot{background:#7db1ff}
     .nav .nav-btn:nth-child(2) .nav-dot{background:#3dd598}
@@ -76,7 +66,7 @@
     .side-v{font-size:14px;font-weight:800;color:#fff}
     .backup-box{margin-top:14px}
     .btn{border:none;border-radius:14px;padding:11px 14px;cursor:pointer;font-weight:800}
-    .btn.primary{background:#ff6a00;color:#fff;}
+    .btn.primary{background:var(--blue);color:#fff}
     .btn.secondary{background:#fff;border:1px solid var(--border);color:var(--text)}
     .btn.ghost{background:var(--panel-2);border:1px solid var(--border);color:var(--text)}
     .btn.dark{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.08)}
@@ -238,7 +228,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.7</div>
+          <div class="version">Ver. 3.8</div>
         </div>
       </div>
 
@@ -402,6 +392,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const STORAGE_KEY = 'bdflow_v262_state';
 
@@ -444,10 +435,22 @@
         emailTo: ''
       },
       notified: {},
+      supabase: {
+        enabled: true,
+        autoSync: true,
+        url: 'https://jljaejkmbnfnhcbjcjnm.supabase.co',
+        anonKey: 'sb_publishable_lfoDBgK3_QmtkZ8sKG7nww_zmIZVoxP',
+        workspace: 'miguel_bdflow',
+        lastSyncAt: '',
+        lastSyncStatus: 'Local'
+      },
       areas: [],
       initiatives: [],
       tasks: []
     };
+
+    let supabaseClient = null;
+    let supabaseSyncTimer = null;
 
     function escapeHtml(v){
       return String(v ?? '')
@@ -470,6 +473,7 @@
         state.rankingLimit = Number(parsed.rankingLimit || state.rankingLimit || 20);
         state.rankingSort = parsed.rankingSort || state.rankingSort || 'score';
         state.rankingGroup = parsed.rankingGroup || state.rankingGroup || 'flat';
+        state.supabase = {...state.supabase, ...(parsed.supabase || {})};
       }catch(e){
         state.areas = [...seed.areas];
         state.initiatives = [...seed.initiatives];
@@ -526,8 +530,167 @@
         dailyCapacity: state.dailyCapacity,
         rankingLimit: state.rankingLimit,
         rankingSort: state.rankingSort,
-        rankingGroup: state.rankingGroup
+        rankingGroup: state.rankingGroup,
+        supabase: state.supabase
       }));
+      scheduleSupabaseSync();
+    }
+
+    function getSerializableState(){
+      return {
+        areas: state.areas,
+        initiatives: state.initiatives,
+        tasks: state.tasks,
+        alertsConfig: state.alertsConfig,
+        dailyCapacity: state.dailyCapacity,
+        rankingLimit: state.rankingLimit,
+        rankingSort: state.rankingSort,
+        rankingGroup: state.rankingGroup,
+        supabase: state.supabase
+      };
+    }
+
+    function applyRemoteState(payload){
+      if(!payload || typeof payload !== 'object') return false;
+      state.areas = Array.isArray(payload.areas) && payload.areas.length ? payload.areas : [...seed.areas];
+      state.initiatives = Array.isArray(payload.initiatives) ? payload.initiatives : [];
+      state.tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
+      state.alertsConfig = {...state.alertsConfig, ...(payload.alertsConfig || {})};
+      state.dailyCapacity = Number(payload.dailyCapacity || state.dailyCapacity || 6);
+      state.rankingLimit = Number(payload.rankingLimit || state.rankingLimit || 20);
+      state.rankingSort = payload.rankingSort || state.rankingSort || 'score';
+      state.rankingGroup = payload.rankingGroup || state.rankingGroup || 'flat';
+      state.supabase = {...state.supabase, ...(payload.supabase || {})};
+      migrateState();
+      return true;
+    }
+
+    function sanitizeWorkspace(value){
+      return String(value || 'miguel').trim().toLowerCase().replace(/[^a-z0-9_-]+/g,'-') || 'miguel';
+    }
+
+    function initSupabaseClient(){
+      const cfg = state.supabase || {};
+      if(!cfg.url || !cfg.anonKey || !window.supabase || !window.supabase.createClient) return null;
+      try{
+        if(!supabaseClient || supabaseClient.__url !== cfg.url){
+          supabaseClient = window.supabase.createClient(cfg.url, cfg.anonKey);
+          supabaseClient.__url = cfg.url;
+        }
+        return supabaseClient;
+      }catch(err){
+        console.error('Supabase init error', err);
+        return null;
+      }
+    }
+
+    function scheduleSupabaseSync(){
+      if(!state.supabase?.enabled || !state.supabase?.autoSync) return;
+      clearTimeout(supabaseSyncTimer);
+      supabaseSyncTimer = setTimeout(()=>saveStateToSupabase(false), 900);
+    }
+
+    async function saveStateToSupabase(showFeedback=true){
+      const client = initSupabaseClient();
+      if(!client){
+        if(showFeedback) alert('Configura primero Supabase URL y anon key.');
+        return false;
+      }
+      try{
+        const workspace = sanitizeWorkspace(state.supabase.workspace);
+        state.supabase.workspace = workspace;
+        const snapshot = getSerializableState();
+        const { error } = await client.from('bdflow_state').upsert({
+          workspace,
+          app_state: snapshot,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'workspace' });
+        if(error) throw error;
+        state.supabase.lastSyncAt = new Date().toISOString();
+        state.supabase.lastSyncStatus = 'Sincronizado';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getSerializableState()));
+        if(showFeedback) showToast('BDFlow', 'Sincronizado con Supabase.');
+        render();
+        return true;
+      }catch(err){
+        console.error('Supabase save error', err);
+        state.supabase.lastSyncStatus = 'Error';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getSerializableState()));
+        if(showFeedback) alert('No se pudo sincronizar con Supabase. Revisa URL, anon key y tabla bdflow_state.');
+        render();
+        return false;
+      }
+    }
+
+    async function loadStateFromSupabase(showFeedback=true){
+      const client = initSupabaseClient();
+      if(!client){
+        if(showFeedback) alert('Configura primero Supabase URL y anon key.');
+        return false;
+      }
+      try{
+        const workspace = sanitizeWorkspace(state.supabase.workspace);
+        state.supabase.workspace = workspace;
+        const { data, error } = await client.from('bdflow_state').select('app_state, updated_at').eq('workspace', workspace).maybeSingle();
+        if(error) throw error;
+        if(!data || !data.app_state){
+          if(showFeedback) showToast('BDFlow', 'No hay estado remoto todavía para este workspace.');
+          return false;
+        }
+        applyRemoteState(data.app_state);
+        state.supabase.lastSyncAt = data.updated_at || new Date().toISOString();
+        state.supabase.lastSyncStatus = 'Cargado desde Supabase';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getSerializableState()));
+        render();
+        if(showFeedback) showToast('BDFlow', 'Datos cargados desde Supabase.');
+        return true;
+      }catch(err){
+        console.error('Supabase load error', err);
+        state.supabase.lastSyncStatus = 'Error';
+        if(showFeedback) alert('No se pudo cargar desde Supabase. Revisa URL, anon key y tabla bdflow_state.');
+        render();
+        return false;
+      }
+    }
+
+    async function connectSupabaseFromUI(){
+      state.supabase.url = document.getElementById('sbUrl')?.value.trim() || '';
+      state.supabase.anonKey = document.getElementById('sbAnonKey')?.value.trim() || '';
+      state.supabase.workspace = sanitizeWorkspace(document.getElementById('sbWorkspace')?.value || state.supabase.workspace);
+      state.supabase.enabled = !!document.getElementById('sbEnabled')?.checked;
+      state.supabase.autoSync = !!document.getElementById('sbAutoSync')?.checked;
+      saveState();
+      const ok = await loadStateFromSupabase(false);
+      if(ok){
+        showToast('BDFlow', 'Supabase conectado y datos remotos cargados.');
+      }else if(state.supabase.enabled){
+        showToast('BDFlow', 'Supabase configurado. Puedes sincronizar cuando quieras.');
+      }
+      render();
+    }
+
+    async function testSupabaseConnection(){
+      const client = initSupabaseClient();
+      if(!client){
+        alert('Configura primero Supabase URL y anon key.');
+        return;
+      }
+      try{
+        const { error } = await client.from('bdflow_state').select('workspace').limit(1);
+        if(error) throw error;
+        showToast('BDFlow', 'Conexión con Supabase correcta.');
+      }catch(err){
+        console.error(err);
+        alert('No se pudo validar la conexión con Supabase. Comprueba URL, anon key y RLS.');
+      }
+    }
+
+    async function disconnectSupabase(){
+      state.supabase.enabled = false;
+      state.supabase.lastSyncStatus = 'Local';
+      saveState();
+      render();
+      showToast('BDFlow', 'Supabase desactivado. Sigues trabajando en local.');
     }
 
     function exportData(){
@@ -1267,7 +1430,7 @@
       const body = state.rankingGroup === 'initiative'
         ? renderRankingGrouped(visible)
         : visible.map((t,i)=>`
-          <div class="row-card ${t.status==='Finalizada'?'completed-row':''}">
+          <div class="row-card">
             <div style="display:flex;gap:14px;align-items:center;min-width:0">
               <div class="score" style="min-width:58px;padding:10px 6px"><b style="font-size:22px">${i+1}</b><span>#</span></div>
               <div><div class="row-title">${escapeHtml(t.title)}</div><div class="row-sub">${escapeHtml(t.desc)}</div></div>
@@ -1396,7 +1559,59 @@
       }</div></div>`;
     }
 
-    function renderConfig(){
+    
+    function renderSupabaseSettings(){
+      const cfg = state.supabase || {};
+      const maskedKey = cfg.anonKey ? '•'.repeat(Math.max(8, Math.min(20, cfg.anonKey.length))) : '';
+      return `<div class="panel">
+        <div class="panel-head"><div><h2>Supabase</h2><p>Conexión remota para guardar y recuperar BDFlow desde la nube.</p></div></div>
+        <div class="panel-body">
+          <div class="settings-grid">
+            <div class="setting-box">
+              <div class="field"><label>URL del proyecto</label><input id="sbUrl" value="${escapeHtml(cfg.url || '')}" placeholder="https://xxxx.supabase.co"></div>
+              <div class="field" style="margin-top:12px"><label>Anon key</label><input id="sbAnonKey" value="${escapeHtml(cfg.anonKey || '')}" placeholder="eyJ..."></div>
+              <div class="field" style="margin-top:12px"><label>Workspace</label><input id="sbWorkspace" value="${escapeHtml(cfg.workspace || 'miguel_bdflow')}" placeholder="miguel_bdflow"></div>
+              <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn primary" onclick="connectSupabaseFromUI()">Guardar conexión</button>
+                <button class="btn secondary" onclick="testSupabaseConnection()">Probar conexión</button>
+                <button class="btn ghost" onclick="disconnectSupabase()">Trabajar en local</button>
+              </div>
+            </div>
+            <div class="setting-box">
+              <div class="toggle-row">
+                <div><div class="row-title">Supabase activo</div><div class="row-sub">Si está apagado, BDFlow solo usa localStorage.</div></div>
+                <label class="switch"><input type="checkbox" id="sbEnabled" ${cfg.enabled?'checked':''}><span class="slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div><div class="row-title">Auto-sync al guardar</div><div class="row-sub">Sincroniza automáticamente cambios de tareas, iniciativas y configuración.</div></div>
+                <label class="switch"><input type="checkbox" id="sbAutoSync" ${cfg.autoSync?'checked':''}><span class="slider"></span></label>
+              </div>
+              <div class="row-card" style="margin-top:14px">
+                <div>
+                  <div class="row-title">Estado</div>
+                  <div class="row-sub">${escapeHtml(cfg.lastSyncStatus || 'Local')}${cfg.lastSyncAt ? ' · ' + escapeHtml(cfg.lastSyncAt.replace('T',' ').slice(0,16)) : ''}</div>
+                </div>
+                <div><span class="badge ${cfg.enabled ? 'blue' : ''}">${cfg.enabled ? 'Supabase' : 'Local'}</span></div>
+              </div>
+              <div class="row-card">
+                <div>
+                  <div class="row-title">Clave cargada</div>
+                  <div class="row-sub">${maskedKey || 'Sin anon key guardada'}</div>
+                </div>
+                <div><span class="badge">workspace: ${escapeHtml(cfg.workspace || 'miguel_bdflow')}</span></div>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+                <button class="btn primary" onclick="saveStateToSupabase(true)">Subir estado ahora</button>
+                <button class="btn secondary" onclick="loadStateFromSupabase(true)">Traer estado remoto</button>
+              </div>
+              <div style="margin-top:12px;color:var(--muted);font-size:13px;line-height:1.5">Esta integración usa la tabla <strong>bdflow_state</strong> con una fila por workspace.</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+function renderConfig(){
       return `<div style="display:flex;flex-direction:column;gap:18px">
         <div class="grid-2">
           <div class="panel">
@@ -1407,7 +1622,7 @@
                 <button class="btn primary" onclick="addArea()">Añadir área</button>
               </div>
               ${state.areas.map((a,i)=>`
-                <div class="row-card ${t.status==='Finalizada'?'completed-row':''}">
+                <div class="row-card">
                   <div><div class="row-title">${escapeHtml(a)}</div><div class="row-sub">${state.tasks.filter(t=>t.area===a).length} tareas · ${state.initiatives.filter(x=>x.owner===a).length} iniciativas</div></div>
                   <div style="display:flex;gap:8px"><button class="btn ghost" onclick="renameArea(${i})">Renombrar</button><button class="btn secondary" onclick="deleteArea(${i})">Eliminar</button></div>
                 </div>
@@ -1423,7 +1638,7 @@
                 <button class="btn primary" onclick="quickAddInitiative()">Añadir iniciativa</button>
               </div>
               ${state.initiatives.map(i=>`
-                <div class="row-card ${t.status==='Finalizada'?'completed-row':''}">
+                <div class="row-card">
                   <div><div class="row-title">${escapeHtml(i.name)}</div><div class="row-sub">${escapeHtml(i.owner)} · ${state.tasks.filter(t=>t.initiativeId===i.id).length} tareas</div></div>
                   <div><button class="btn ghost" onclick="openInitiativeModal('${i.id}')">Editar</button></div>
                 </div>
@@ -1438,6 +1653,7 @@
             ${renderAlertsSettings()}
           </div>
         </div>
+        ${renderSupabaseSettings()}
       </div>`;
     }
 
@@ -2091,6 +2307,11 @@
     window.applyDrillDown = applyDrillDown;
     window.clearDrillDown = clearDrillDown;
     window.loadMoreRanking = loadMoreRanking;
+    window.connectSupabaseFromUI = connectSupabaseFromUI;
+    window.testSupabaseConnection = testSupabaseConnection;
+    window.saveStateToSupabase = saveStateToSupabase;
+    window.loadStateFromSupabase = loadStateFromSupabase;
+    window.disconnectSupabase = disconnectSupabase;
     window.openAlertsModal = openAlertsModal;
     window.closeAlertsModal = closeAlertsModal;
     window.prepareAlertsEmail = prepareAlertsEmail;
@@ -2144,11 +2365,18 @@
       render();
     });
 
+    async function bootstrapRemoteState(){
+      if(state.supabase?.enabled && state.supabase?.url && state.supabase?.anonKey){
+        await loadStateFromSupabase(false);
+      }
+    }
+
     loadState();
     document.getElementById('dailyCap').value = state.dailyCapacity;
     document.getElementById('dailyCapValue').textContent = state.dailyCapacity;
     document.getElementById('dailyCapHint').textContent = state.dailyCapacity <= 4 ? 'Muy exigente' : state.dailyCapacity <= 6 ? 'Foco realista' : 'Riesgo de sobrecarga';
     render();
+    bootstrapRemoteState();
   </script>
 
   <div class="modal-wrap" id="alertsModalWrap">
