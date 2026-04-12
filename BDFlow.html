@@ -26,8 +26,8 @@
       --teal-2:#ecfeff;
       --shadow:0 8px 24px rgba(15,23,42,.06);
       --radius:18px;
-      --sidebar:#1f3a34;
-      --sidebar-2:#213c35;
+      --sidebar:#3b82f6;
+      --sidebar-2:#2563eb;
       --sidebar-text:#f1f5f9;
     }
     *{box-sizing:border-box}
@@ -35,7 +35,17 @@
     body{min-height:100vh}
     button,input,select,textarea{font:inherit}
     .app{display:flex;min-height:100vh}
-    .sidebar{width:320px;background:linear-gradient(180deg,var(--sidebar),#1c322d);color:var(--sidebar-text);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid rgba(255,255,255,.06)}
+    .sidebar{
+  width:320px;
+  background:linear-gradient(180deg,#3b82f6,#2563eb);
+  color:var(--sidebar-text);
+  padding:18px 16px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow:auto;
+  border-right:1px solid rgba(255,255,255,.06)
+}
     .brand{padding:8px 10px 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:16px}
     .brand-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .logo{font-size:28px;font-weight:800;letter-spacing:-.03em}
