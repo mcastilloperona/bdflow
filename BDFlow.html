@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.0.3</title>
+  <title>BDFlow Ver. 3.1</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -193,7 +193,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.0.3</div>
+          <div class="version">Ver. 3.1</div>
         </div>
       </div>
 
@@ -242,6 +242,20 @@
           <button class="btn secondary" onclick="openInitiativeModal()">+ Nueva iniciativa</button>
           <button class="btn primary" onclick="openTaskModal()">+ Nueva tarea</button>
           <input id="searchInput" class="search" placeholder="Buscar tareas, iniciativas, áreas..." />
+          <select id="visibilityFilter" class="select">
+            <option value="active_only">Solo activas</option>
+            <option value="all">Todas</option>
+            <option value="include_done">Incluir finalizadas</option>
+            <option value="done_only">Solo finalizadas</option>
+            <option value="paused_only">Solo pausadas</option>
+            <option value="overdue_only">Solo vencidas</option>
+          </select>
+          <select id="areaFilter" class="select">
+            <option value="all">Todas las áreas</option>
+          </select>
+          <select id="initiativeFilter" class="select">
+            <option value="all">Todas las iniciativas</option>
+          </select>
           <select id="statusFilter" class="select">
             <option value="all">Todos los estados</option>
             <option value="Pendiente">Pendiente</option>
@@ -363,6 +377,12 @@
       currentView: 'dashboard',
       search: '',
       filterStatus: 'all',
+      visibilityFilter: 'active_only',
+      areaFilter: 'all',
+      initiativeFilter: 'all',
+      rankingLimit: 20,
+      rankingSort: 'score',
+      rankingGroup: 'flat',
       dailyCapacity: 6,
       editingTaskId: null,
       editingInitiativeId: null,
@@ -498,23 +518,7 @@
     window.importData = importData;
     window.toggleSidebar = toggleSidebar;
     window.copyExecutiveReport = copyExecutiveReport;
-
-
-    window.addEventListener('focus', ()=>{
-      refreshFromStorage();
-    });
-
-    document.addEventListener('visibilitychange', ()=>{
-      if(!document.hidden){
-        refreshFromStorage();
-      }
-    });
-
-    window.addEventListener('storage', (e)=>{
-      if(e.key === STORAGE_KEY){
-        refreshFromStorage();
-      }
-    });
+    window.loadMoreRanking = loadMoreRanking;
 
     loadState();
           render();
@@ -628,13 +632,62 @@
       }</div>`;
     }
 
-    function filteredTasks(){
+
+    function baseTasks(){
       state.tasks.forEach(deriveMetrics);
-      return state.tasks.filter(t => {
+      return state.tasks.map(t => ({
+        ...t,
+        initiative: getInitiativeName(t.initiativeId),
+        score: scoreTask(t),
+        daysLeft: daysToDue(t)
+      }));
+    }
+
+    function matchesVisibility(task){
+      if(state.visibilityFilter === 'all' || state.visibilityFilter === 'include_done') return true;
+      if(state.visibilityFilter === 'active_only') return task.status !== 'Finalizada';
+      if(state.visibilityFilter === 'done_only') return task.status === 'Finalizada';
+      if(state.visibilityFilter === 'paused_only') return task.status === 'Pausada';
+      if(state.visibilityFilter === 'overdue_only') return task.daysLeft !== null && task.daysLeft < 0 && task.status !== 'Finalizada';
+      return true;
+    }
+
+    function taskSortValue(task, key){
+      if(key === 'last_activity'){
+        const d = getLastWorkDate(task);
+        return d === '—' ? '' : d;
+      }
+      if(key === 'due'){
+        return task.due || '9999-12-31';
+      }
+      return task.score;
+    }
+
+    function sortTasks(tasks, key=state.rankingSort){
+      const cloned = [...tasks];
+      if(key === 'score'){
+        cloned.sort((a,b)=>b.score-a.score);
+      }else if(key === 'last_activity'){
+        cloned.sort((a,b)=>String(taskSortValue(b,'last_activity')).localeCompare(String(taskSortValue(a,'last_activity'))));
+      }else if(key === 'due'){
+        cloned.sort((a,b)=>String(taskSortValue(a,'due')).localeCompare(String(taskSortValue(b,'due'))));
+      }
+      return cloned;
+    }
+
+
+    function filteredTasks(){
+      const tasks = baseTasks().filter(t => {
         const hay = [t.title,t.desc,t.area,getInitiativeName(t.initiativeId),t.next,t.status].join(' ').toLowerCase();
-        return (!state.search || hay.includes(state.search.toLowerCase())) &&
-               (state.filterStatus === 'all' || t.status === state.filterStatus);
-      }).map(t => ({
+        const searchOk = !state.search || hay.includes(state.search.toLowerCase());
+        const statusOk = state.filterStatus === 'all' || t.status === state.filterStatus;
+        const visibilityOk = matchesVisibility(t);
+        const areaOk = state.areaFilter === 'all' || t.area === state.areaFilter;
+        const initiativeOk = state.initiativeFilter === 'all' || t.initiativeId === state.initiativeFilter;
+        return searchOk && statusOk && visibilityOk && areaOk && initiativeOk;
+      });
+      return sortTasks(tasks);
+    }).map(t => ({
         ...t,
         initiative: getInitiativeName(t.initiativeId),
         score: scoreTask(t),
@@ -704,20 +757,28 @@
     }
 
     function renderDashboard(tasks){
-      const mainTask = tasks.find(t=>isCriticalTask(t)) || tasks.find(t=>t.status!=='Finalizada');
-      const risks = tasks.filter(t=>t.status==='Pausada' || (t.daysLeft!==null && t.daysLeft<=1)).slice(0,3);
-      return `<div class="layout">
+      const active = tasks.filter(t=>t.status!=='Finalizada');
+      const mainTask = active.find(t=>isCriticalTask(t)) || active[0];
+      const critical = active.filter(t=>isCriticalTask(t)).slice(0,5);
+      const important = active.filter(t=>!isCriticalTask(t) && t.score>=70).slice(0,5);
+      const paused = tasks.filter(t=>t.status==='Pausada').slice(0,3);
+
+      return `<div class="grid-2">
         <div class="panel">
-          <div class="panel-head"><div><h2>🔥 Qué hacer ahora</h2><p>La decisión ya está tomada. Solo ejecuta.</p></div></div>
-          <div class="panel-body">
-            ${mainTask ? `<div class="task" style="border:2px solid #1a56db">${taskCard(mainTask).replace('<article class="task">','').replace('</article>','')}</div>` : '<div class="empty">No hay tareas activas.</div>'}
-          </div>
+          <div class="panel-head"><div><h2>🔥 Qué hacer ahora</h2><p>Una sola tarea foco para empezar.</p></div></div>
+          <div class="panel-body">${mainTask ? taskCard(mainTask) : '<div class="empty">Sin foco principal.</div>'}</div>
         </div>
         <div class="panel">
-          <div class="panel-head"><div><h2>⚠️ Riesgos</h2><p>Lo que te puede romper el día</p></div></div>
-          <div class="panel-body">
-            ${risks.length ? risks.map(t=>`<div class="task"><div class="task-title">${escapeHtml(t.title)}</div><div class="task-sub">${escapeHtml(t.desc)}</div><div class="badges">${statusBadge(t.status)}${badgeDue(t)}</div></div>`).join('') : '<div class="empty">Sin riesgos críticos.</div>'}
-          </div>
+          <div class="panel-head"><div><h2>⚠️ Críticas</h2><p>Máximo 5 tareas que piden foco inmediato.</p></div></div>
+          <div class="panel-body">${critical.length ? critical.map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}</span></div>`).join('') : '<div class="empty">Sin tareas críticas.</div>'}</div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h2>🚀 Importantes</h2><p>Máximo 5 tareas con alto valor.</p></div></div>
+          <div class="panel-body">${important.length ? important.map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}</span></div>`).join('') : '<div class="empty">Sin importantes.</div>'}</div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h2>⏸ Pausadas</h2><p>Máximo 3 para reactivar cuando toque.</p></div></div>
+          <div class="panel-body">${paused.length ? paused.map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}</span></div>`).join('') : '<div class="empty">Sin pausadas.</div>'}</div>
         </div>
       </div>`;
     }
@@ -751,8 +812,23 @@
     }
 
     function renderRanking(tasks){
-      return `<div class="panel"><div class="panel-head"><div><h2>Ranking completo</h2><p>Priorización visible y ordenada.</p></div></div><div class="panel-body">${
-        tasks.map((t,i)=>`
+      const source = [...tasks];
+      const visible = source.slice(0, state.rankingLimit);
+      const controls = `<div class="inline-form" style="margin-bottom:14px">
+        <select id="rankingSort">
+          <option value="score" ${state.rankingSort==='score'?'selected':''}>Ordenar por score</option>
+          <option value="due" ${state.rankingSort==='due'?'selected':''}>Ordenar por fecha</option>
+          <option value="last_activity" ${state.rankingSort==='last_activity'?'selected':''}>Ordenar por última actividad</option>
+        </select>
+        <select id="rankingGroup">
+          <option value="flat" ${state.rankingGroup==='flat'?'selected':''}>Vista lista</option>
+          <option value="initiative" ${state.rankingGroup==='initiative'?'selected':''}>Agrupar por iniciativa</option>
+        </select>
+      </div>`;
+
+      const body = state.rankingGroup === 'initiative'
+        ? renderRankingGrouped(visible)
+        : visible.map((t,i)=>`
           <div class="row-card">
             <div style="display:flex;gap:14px;align-items:center;min-width:0">
               <div class="score" style="min-width:58px;padding:10px 6px"><b style="font-size:22px">${i+1}</b><span>#</span></div>
@@ -760,8 +836,34 @@
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">${statusBadge(t.status)}${badgeDue(t)}<span class="badge blue">Score ${t.score}</span></div>
           </div>
-        `).join('')
-      }</div></div>`;
+        `).join('');
+
+      const more = source.length > state.rankingLimit
+        ? `<div style="margin-top:12px"><button class="btn secondary" onclick="loadMoreRanking()">Cargar más</button></div>`
+        : '';
+
+      return `<div class="panel"><div class="panel-head"><div><h2>Ranking completo</h2><p>Priorización visible y ordenada.</p></div></div><div class="panel-body">${controls}${body}${more}</div></div>`;
+    }
+
+    function renderRankingGrouped(tasks){
+      const grouped = {};
+      tasks.forEach(t=>{
+        const name = t.initiative || 'Sin iniciativa';
+        if(!grouped[name]) grouped[name] = [];
+        grouped[name].push(t);
+      });
+      return Object.entries(grouped).map(([name, items])=>`
+        <div class="task" style="margin-bottom:14px">
+          <div class="task-title">${escapeHtml(name)}</div>
+          <div style="margin-top:10px">${items.map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${statusBadge(t.status)} ${badgeDue(t)}</span></div>`).join('')}</div>
+        </div>
+      `).join('');
+    }
+
+    function loadMoreRanking(){
+      state.rankingLimit += 20;
+      render();
+    }</div></div>`;
     }
 
     function renderKanban(tasks){
@@ -1013,7 +1115,7 @@
       if(idx >= 0) state.tasks[idx] = task; else state.tasks.unshift(task);
       saveState();
       closeTaskModal();
-      refreshFromStorage();
+      render();
     }
 
     function deleteCurrentTask(){
@@ -1021,7 +1123,7 @@
       state.tasks = state.tasks.filter(x=>x.id!==state.editingTaskId);
       saveState();
       closeTaskModal();
-      refreshFromStorage();
+      render();
     }
 
     function refreshAreaOptions(selected=''){
@@ -1067,7 +1169,7 @@
       if(idx >= 0) state.initiatives[idx] = initiative; else state.initiatives.unshift(initiative);
       saveState();
       closeInitiativeModal();
-      refreshFromStorage();
+      render();
     }
 
     function deleteCurrentInitiative(){
@@ -1077,7 +1179,7 @@
       state.initiatives = state.initiatives.filter(x=>x.id!==state.editingInitiativeId);
       saveState();
       closeInitiativeModal();
-      refreshFromStorage();
+      render();
     }
 
     function openWorklogModal(taskId, entryId=null){
@@ -1122,7 +1224,7 @@
       if(task.status === 'Pendiente' || task.status === 'Pausada') task.status = 'En curso';
       saveState();
       closeWorklogModal();
-      refreshFromStorage();
+      render();
     }
 
     function deleteWorklogEntry(taskId, entryId){
@@ -1132,7 +1234,7 @@
       task.spent = Math.round(task.worklog.reduce((a,b)=>a+Number(b.hours||0),0) * 10) / 10;
       saveState();
       openDetailModal(taskId);
-      refreshFromStorage();
+      render();
     }
 
     function openDetailModal(taskId){
@@ -1201,7 +1303,7 @@
       if(!t) return;
       t.status = t.status === 'Finalizada' ? 'En curso' : 'Finalizada';
       saveState();
-      refreshFromStorage();
+      render();
     }
 
     function quickPause(id){
@@ -1209,7 +1311,7 @@
       if(!t) return;
       t.status = t.status === 'Pausada' ? 'En curso' : 'Pausada';
       saveState();
-      refreshFromStorage();
+      render();
     }
 
     function quickAddTime(id,h){
@@ -1220,7 +1322,7 @@
       t.spent = Math.round(t.worklog.reduce((a,b)=>a+Number(b.hours||0),0) * 10) / 10;
       if(t.status === 'Pendiente' || t.status === 'Pausada') t.status = 'En curso';
       saveState();
-      refreshFromStorage();
+      render();
     }
 
     function addArea(){
@@ -1232,7 +1334,7 @@
       state.areas.push(name);
       el.value = '';
       saveState();
-      refreshFromStorage();
+      render();
     }
 
     function renameArea(index){
@@ -1245,7 +1347,7 @@
       state.initiatives.forEach(i=>{ if(i.owner === current) i.owner = clean; });
       state.areas[index] = clean;
       saveState();
-      refreshFromStorage();
+      render();
     }
 
     function deleteArea(index){
@@ -1255,7 +1357,7 @@
       if(usedTasks || usedInitiatives){ alert('No puedes eliminar un área en uso.'); return; }
       state.areas.splice(index,1);
       saveState();
-      refreshFromStorage();
+      render();
     }
 
     function quickAddInitiative(){
@@ -1273,7 +1375,7 @@
       });
       nameEl.value = '';
       saveState();
-      refreshFromStorage();
+      render();
     }
 
     function copyExecutiveReport(){
@@ -1286,9 +1388,23 @@
     }
 
 
-    function refreshFromStorage(){
-      loadState();
-      render();
+    function populateGlobalFilters(){
+      const areaSelect = document.getElementById('areaFilter');
+      const initiativeSelect = document.getElementById('initiativeFilter');
+      if(areaSelect){
+        areaSelect.innerHTML = '<option value="all">Todas las áreas</option>' + state.areas.map(a=>`<option value="${escapeHtml(a)}" ${state.areaFilter===a?'selected':''}>${escapeHtml(a)}</option>`).join('');
+      }
+      if(initiativeSelect){
+        initiativeSelect.innerHTML = '<option value="all">Todas las iniciativas</option>' + state.initiatives.map(i=>`<option value="${i.id}" ${state.initiativeFilter===i.id?'selected':''}>${escapeHtml(i.name)}</option>`).join('');
+      }
+      const visibility = document.getElementById('visibilityFilter');
+      if(visibility) visibility.value = state.visibilityFilter;
+      const status = document.getElementById('statusFilter');
+      if(status) status.value = state.filterStatus;
+      const sort = document.getElementById('rankingSort');
+      if(sort) sort.value = state.rankingSort;
+      const group = document.getElementById('rankingGroup');
+      if(group) group.value = state.rankingGroup;
     }
 
     function render(){
@@ -1310,6 +1426,9 @@
 
       document.getElementById('pageTitle').textContent = titles[state.currentView][0];
       document.getElementById('pageSubtitle').textContent = titles[state.currentView][1];
+
+
+      populateGlobalFilters();
 
       document.getElementById('viewContainer').innerHTML =
         state.currentView === 'dashboard' ? renderDashboard(tasks) :
@@ -1333,7 +1452,7 @@
     document.querySelectorAll('.nav-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         state.currentView = btn.dataset.view;
-        refreshFromStorage();
+        render();
         if(window.innerWidth <= 820) toggleSidebar(false);
       });
     });
@@ -1346,6 +1465,31 @@
     document.getElementById('statusFilter').addEventListener('change', e=>{
       state.filterStatus = e.target.value;
       render();
+    });
+    document.getElementById('visibilityFilter').addEventListener('change', e=>{
+      state.visibilityFilter = e.target.value;
+      render();
+    });
+
+    document.getElementById('areaFilter').addEventListener('change', e=>{
+      state.areaFilter = e.target.value;
+      render();
+    });
+
+    document.getElementById('initiativeFilter').addEventListener('change', e=>{
+      state.initiativeFilter = e.target.value;
+      render();
+    });
+
+    document.addEventListener('change', e=>{
+      if(e.target && e.target.id === 'rankingSort'){
+        state.rankingSort = e.target.value;
+        render();
+      }
+      if(e.target && e.target.id === 'rankingGroup'){
+        state.rankingGroup = e.target.value;
+        render();
+      }
     });
 
     document.getElementById('dailyCap').addEventListener('input', e=>{
