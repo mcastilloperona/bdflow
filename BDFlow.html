@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.1</title>
+  <title>BDFlow Ver. 3.1.1</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -193,7 +193,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.1</div>
+          <div class="version">Ver. 3.1.1</div>
         </div>
       </div>
 
@@ -687,12 +687,6 @@
         return searchOk && statusOk && visibilityOk && areaOk && initiativeOk;
       });
       return sortTasks(tasks);
-    }).map(t => ({
-        ...t,
-        initiative: getInitiativeName(t.initiativeId),
-        score: scoreTask(t),
-        daysLeft: daysToDue(t)
-      })).sort((a,b)=>b.score-a.score);
     }
 
     function kpiData(tasks){
