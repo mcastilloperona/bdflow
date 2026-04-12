@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.2</title>
+  <title>BDFlow Ver. 3.3</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -201,7 +201,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.2</div>
+          <div class="version">Ver. 3.3</div>
         </div>
       </div>
 
@@ -385,8 +385,7 @@
     const state = {
       currentView: 'dashboard',
       search: '',
-      filterStatus: 'all',
-      visibilityFilter: 'active_only',
+      filterStatus: 'active',
       areaFilter: 'all',
       initiativeFilter: 'all',
       rankingLimit: 20,
@@ -569,16 +568,6 @@
       }));
     }
 
-    function matchesVisibility(task){
-      if(state.visibilityFilter === 'all') return true;
-      if(state.visibilityFilter === 'include_done') return true;
-      if(state.visibilityFilter === 'active_only') return task.status !== 'Finalizada';
-      if(state.visibilityFilter === 'done_only') return task.status === 'Finalizada';
-      if(state.visibilityFilter === 'paused_only') return task.status === 'Pausada';
-      if(state.visibilityFilter === 'overdue_only') return task.daysLeft !== null && task.daysLeft < 0 && task.status !== 'Finalizada';
-      return true;
-    }
-
     function sortTasks(tasks, key=state.rankingSort){
       const cloned = [...tasks];
       if(key === 'last_activity'){
@@ -600,9 +589,7 @@
       if(initiativeSelect){
         initiativeSelect.innerHTML = '<option value="all">Todas las iniciativas</option>' + state.initiatives.map(i=>`<option value="${i.id}" ${state.initiativeFilter===i.id?'selected':''}>${escapeHtml(i.name)}</option>`).join('');
       }
-      const visibility = document.getElementById('visibilityFilter');
-      if(visibility) visibility.value = state.visibilityFilter;
-      const status = document.getElementById('statusFilter');
+            const status = document.getElementById('statusFilter');
       if(status) status.value = state.filterStatus;
     }
 
@@ -695,12 +682,17 @@
       const tasks = baseTasks().filter(t => {
         const hay = [t.title,t.desc,t.area,getInitiativeName(t.initiativeId),t.next,t.status].join(' ').toLowerCase();
         const searchOk = !state.search || hay.includes(state.search.toLowerCase());
-        const statusOk = state.filterStatus === 'all' || t.status === state.filterStatus;
-        const visibilityOk = matchesVisibility(t);
+        const statusOk = state.filterStatus === 'all'
+          ? true
+          : state.filterStatus === 'active'
+            ? t.status !== 'Finalizada'
+            : t.status === state.filterStatus;
         const areaOk = state.areaFilter === 'all' || t.area === state.areaFilter;
         const initiativeOk = state.initiativeFilter === 'all' || t.initiativeId === state.initiativeFilter;
-        return searchOk && statusOk && visibilityOk && areaOk && initiativeOk;
+        return searchOk && statusOk && areaOk && initiativeOk;
       });
+      return sortTasks(tasks);
+    });
       return sortTasks(tasks);
     }
 
@@ -711,6 +703,7 @@
         paused: tasks.filter(t=>t.status==='Pausada').length,
         upcoming: tasks.filter(t=>t.status!=='Finalizada' && t.daysLeft!==null && t.daysLeft<=2).length
       };
+    };
     }
 
     function taskCard(task){
@@ -753,13 +746,24 @@
     function applyDrillDown(type){
       if(type === 'active'){
         state.currentView = 'ranking';
-        state.visibilityFilter = 'active_only';
-        state.filterStatus = 'all';
-        state.search = '';
+        state.filterStatus = 'active';
       }else if(type === 'critical'){
         state.currentView = 'today';
-        state.visibilityFilter = 'active_only';
+        state.filterStatus = 'active';
+      }else if(type === 'paused'){
+        state.currentView = 'kanban';
+        state.filterStatus = 'Pausada';
+      }else if(type === 'structure'){
+        state.currentView = 'initiatives';
         state.filterStatus = 'all';
+      }
+      state.search = '';
+      const searchEl = document.getElementById('searchInput');
+      if(searchEl) searchEl.value = state.search;
+      render();
+    }else if(type === 'critical'){
+        state.currentView = 'today';
+                state.filterStatus = 'all';
         state.search = '';
       }else if(type === 'paused'){
         state.currentView = 'kanban';
@@ -768,8 +772,7 @@
         state.search = '';
       }else if(type === 'structure'){
         state.currentView = 'initiatives';
-        state.visibilityFilter = 'all';
-        state.filterStatus = 'all';
+                state.filterStatus = 'all';
         state.search = '';
       }
       const searchEl = document.getElementById('searchInput');
@@ -779,16 +782,22 @@
 
     function getFilterBannerText(){
       const parts = [];
-      if(state.visibilityFilter === 'active_only') parts.push(['Mostrando solo activas','Las tareas finalizadas quedan fuera del foco diario.']);
-      else if(state.visibilityFilter === 'done_only') parts.push(['Mostrando solo finalizadas','Vista histórica para revisar cierres.']);
-      else if(state.visibilityFilter === 'paused_only') parts.push(['Mostrando solo pausadas','Tareas detenidas pendientes de reactivación.']);
-      else if(state.visibilityFilter === 'overdue_only') parts.push(['Mostrando solo vencidas','Compromisos fuera de fecha objetivo.']);
-      else if(state.visibilityFilter === 'include_done') parts.push(['Mostrando activas + finalizadas','Vista mixta con trabajo actual e histórico.']);
+      if(state.filterStatus === 'active') parts.push(['Mostrando: Activas','Trabajo abierto y en foco.']);
+      else if(state.filterStatus === 'Finalizada') parts.push(['Mostrando: Finalizadas','Vista histórica para revisar cierres.']);
+      else if(state.filterStatus === 'Pausada') parts.push(['Mostrando: Pausadas','Tareas detenidas pendientes de reactivación.']);
+      else if(state.filterStatus === 'En curso') parts.push(['Mostrando: En curso','Trabajo actualmente en ejecución.']);
+      else if(state.filterStatus === 'Pendiente') parts.push(['Mostrando: Pendientes','Trabajo todavía no iniciado.']);
       if(state.areaFilter !== 'all') parts.push([`Área: ${state.areaFilter}`,'']);
       if(state.initiativeFilter !== 'all') {
         const name = getInitiativeName(state.initiativeFilter);
         parts.push([`Iniciativa: ${name}`,'']);
       }
+      if(!parts.length) return null;
+      return {
+        title: parts.map(p=>p[0]).join(' · '),
+        sub: parts.map(p=>p[1]).filter(Boolean).join(' ')
+      };
+    }
       if(state.filterStatus !== 'all') parts.push([`Estado: ${state.filterStatus}`,'']);
       if(!parts.length) return null;
       return {
@@ -811,10 +820,9 @@
     }
 
     function clearDrillDown(){
-      state.visibilityFilter = 'active_only';
+      state.filterStatus = 'active';
       state.areaFilter = 'all';
       state.initiativeFilter = 'all';
-      state.filterStatus = 'all';
       state.search = '';
       state.currentView = 'dashboard';
       const searchEl = document.getElementById('searchInput');
@@ -826,14 +834,14 @@
     function renderMetrics(tasks){
       const k = kpiData(tasks);
       document.getElementById('metricsSection').innerHTML = `
-        <div class="metric clickable" onclick="applyDrillDown('active')"><div class="k">Tareas activas</div><div class="v">${k.total}</div><div class="s">Carga operativa abierta</div></div>
-        <div class="metric clickable" onclick="applyDrillDown('critical')"><div class="k">Críticas</div><div class="v">${k.critical}</div><div class="s">Piden foco hoy</div></div>
-        <div class="metric clickable" onclick="applyDrillDown('paused')"><div class="k">Pausadas</div><div class="v">${k.paused}</div><div class="s">Necesitan reactivación</div></div>
+        <div class="metric clickable" onclick="applyDrillDown('active')"><div class="k">Tareas activas</div><div class="v">${tasks.filter(t=>t.status!=='Finalizada').length}</div><div class="s">Carga operativa visible</div></div>
+        <div class="metric clickable" onclick="applyDrillDown('critical')"><div class="k">Críticas</div><div class="v">${tasks.filter(t=>isCriticalTask(t)).length}</div><div class="s">Dentro de la vista actual</div></div>
+        <div class="metric clickable" onclick="applyDrillDown('paused')"><div class="k">Pausadas</div><div class="v">${tasks.filter(t=>t.status==='Pausada').length}</div><div class="s">Dentro de la vista actual</div></div>
         <div class="metric clickable" onclick="applyDrillDown('structure')"><div class="k">Estructura</div><div class="v">${state.initiatives.length}/${state.areas.length}</div><div class="s">Iniciativas / áreas</div></div>
       `;
       document.getElementById('quickSummary').innerHTML = `
-        <div class="side-row"><div class="side-k">Foco del día</div><div class="side-v">${k.critical} tareas</div></div>
-        <div class="side-row"><div class="side-k">En riesgo</div><div class="side-v">${k.upcoming + k.paused}</div></div>
+        <div class="side-row"><div class="side-k">Foco del día</div><div class="side-v">${tasks.filter(t=>isCriticalTask(t)).length} tareas</div></div>
+        <div class="side-row"><div class="side-k">En riesgo</div><div class="side-v">${tasks.filter(t=>t.status==='Pausada' || (t.daysLeft!==null && t.daysLeft<=2 && t.status!=='Finalizada')).length}</div></div>
         <div class="side-row"><div class="side-k">Capacidad</div><div class="side-v">${state.dailyCapacity} h</div></div>
         <div class="side-row"><div class="side-k">Áreas activas</div><div class="side-v">${state.areas.length}</div></div>
       `;
@@ -1525,11 +1533,6 @@
 
     document.getElementById('statusFilter').addEventListener('change', e=>{
       state.filterStatus = e.target.value;
-      render();
-    });
-
-    document.getElementById('visibilityFilter').addEventListener('change', e=>{
-      state.visibilityFilter = e.target.value;
       render();
     });
 
