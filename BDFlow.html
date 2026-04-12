@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.0.1</title>
+  <title>BDFlow Ver. 3.0.2</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -193,7 +193,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.0.1</div>
+          <div class="version">Ver. 3.0.2</div>
         </div>
       </div>
 
@@ -472,7 +472,34 @@
             return;
           }
           localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-          loadState();
+      
+    window.openTaskModal = openTaskModal;
+    window.closeTaskModal = closeTaskModal;
+    window.saveTask = saveTask;
+    window.deleteCurrentTask = deleteCurrentTask;
+    window.openInitiativeModal = openInitiativeModal;
+    window.closeInitiativeModal = closeInitiativeModal;
+    window.saveInitiative = saveInitiative;
+    window.deleteCurrentInitiative = deleteCurrentInitiative;
+    window.openWorklogModal = openWorklogModal;
+    window.closeWorklogModal = closeWorklogModal;
+    window.saveWorklogEntry = saveWorklogEntry;
+    window.deleteWorklogEntry = deleteWorklogEntry;
+    window.openDetailModal = openDetailModal;
+    window.closeDetailModal = closeDetailModal;
+    window.toggleDone = toggleDone;
+    window.quickPause = quickPause;
+    window.quickAddTime = quickAddTime;
+    window.addArea = addArea;
+    window.renameArea = renameArea;
+    window.deleteArea = deleteArea;
+    window.quickAddInitiative = quickAddInitiative;
+    window.exportData = exportData;
+    window.importData = importData;
+    window.toggleSidebar = toggleSidebar;
+    window.copyExecutiveReport = copyExecutiveReport;
+
+    loadState();
           render();
           alert('Datos importados correctamente.');
         }catch(err){
@@ -609,7 +636,7 @@
 
     function taskCard(task){
       const pauseLabel = task.status === 'Pausada' ? '▶ Reanudar' : '⏸ Pausar';
-      const overrun = Number(task.spent||0) > Number(task.effort||0);
+      const doneLabel = task.status === 'Finalizada' ? '↺ Reabrir' : '✓ Finalizar';
       return `<article class="task">
         <div class="task-top">
           <div style="min-width:0">
@@ -621,22 +648,22 @@
         <div class="badges">
           ${statusBadge(task.status)}
           ${badgeDue(task)}
-          ${overrun ? '<span class="badge overrun">Desviada</span>' : ''}
           <span class="badge">${escapeHtml(task.area)}</span>
           <span class="badge">${escapeHtml(task.initiative)}</span>
         </div>
         <div class="meta">
           <div class="m"><div class="mk">Creada</div><div class="mv">${escapeHtml(task.createdAt || '—')}</div></div>
-          <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h</div></div>
+          <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h${Number(task.spent||0)>Number(task.effort||0)?'<div style="margin-top:4px;color:#d97706;font-size:12px;font-weight:800">Desviada</div>':''}</div></div>
           <div class="m"><div class="mk">Sesiones</div><div class="mv">${getWorkSessionsCount(task)}</div></div>
           <div class="m"><div class="mk">Última actividad</div><div class="mv">${escapeHtml(getLastWorkDate(task))}</div></div>
         </div>
         <div class="qa">
-          <button class="qbtn done" onclick="quickDone('${task.id}')">✓ Finalizar</button>
+          <button class="qbtn done" onclick="toggleDone('${task.id}')">${doneLabel}</button>
           <button class="qbtn pause" onclick="quickPause('${task.id}')">${pauseLabel}</button>
+          <button class="qbtn edit" onclick="openTaskModal('${task.id}')">Editar tarea</button>
+          <button class="qbtn time" onclick="openWorklogModal('${task.id}')">Registrar trabajo</button>
           <button class="qbtn time" onclick="quickAddTime('${task.id}',0.5)">+30m</button>
           <button class="qbtn time" onclick="quickAddTime('${task.id}',1)">+1h</button>
-          <button class="qbtn time" onclick="openWorklogModal('${task.id}')">Registrar trabajo</button>
           <button class="qbtn edit" onclick="openDetailModal('${task.id}')">Ver detalle</button>
         </div>
         ${renderGroupedWorklog(task)}
@@ -672,7 +699,7 @@
         <div class="panel">
           <div class="panel-head"><div><h2>⚠️ Riesgos</h2><p>Lo que te puede romper el día</p></div></div>
           <div class="panel-body">
-            ${risks.length ? risks.map(t=>`<div class="task"><div class="task-title">${escapeHtml(t.title)}</div><div class="task-sub">${escapeHtml(t.desc)}</div><div class="badges">${statusBadge(t.status)}${badgeDue(t)}${Number(t.spent||0)>Number(t.effort||0)?'<span class="badge overrun">Desviada</span>':''}</div></div>`).join('') : '<div class="empty">Sin riesgos críticos.</div>'}
+            ${risks.length ? risks.map(t=>`<div class="task"><div class="task-title">${escapeHtml(t.title)}</div><div class="task-sub">${escapeHtml(t.desc)}</div><div class="badges">${statusBadge(t.status)}${badgeDue(t)}</div></div>`).join('') : '<div class="empty">Sin riesgos críticos.</div>'}
           </div>
         </div>
       </div>`;
@@ -714,7 +741,7 @@
               <div class="score" style="min-width:58px;padding:10px 6px"><b style="font-size:22px">${i+1}</b><span>#</span></div>
               <div><div class="row-title">${escapeHtml(t.title)}</div><div class="row-sub">${escapeHtml(t.desc)}</div></div>
             </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">${statusBadge(t.status)}${badgeDue(t)}${Number(t.spent||0)>Number(t.effort||0)?'<span class="badge overrun">Desviada</span>':''}<span class="badge blue">Score ${t.score}</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">${statusBadge(t.status)}${badgeDue(t)}<span class="badge blue">Score ${t.score}</span></div>
           </div>
         `).join('')
       }</div></div>`;
@@ -1115,7 +1142,7 @@
           <div class="meta">
             <div class="m"><div class="mk">Creada</div><div class="mv">${escapeHtml(task.createdAt || '—')}</div></div>
             <div class="m"><div class="mk">Fecha objetivo</div><div class="mv">${task.due ? escapeHtml(task.due) : 'Sin fecha'}</div></div>
-            <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h</div></div>
+            <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h${Number(task.spent||0)>Number(task.effort||0)?'<div style="margin-top:4px;color:#d97706;font-size:12px;font-weight:800">Desviada</div>':''}</div></div>
             <div class="m"><div class="mk">Sesiones</div><div class="mv">${getWorkSessionsCount(task)}</div></div>
           </div>
           <div class="detail-block">
@@ -1152,10 +1179,10 @@
       state.detailTaskId = null;
     }
 
-    function quickDone(id){
+    function toggleDone(id){
       const t = state.tasks.find(x=>x.id===id);
       if(!t) return;
-      t.status = 'Finalizada';
+      t.status = t.status === 'Finalizada' ? 'En curso' : 'Finalizada';
       saveState();
       render();
     }
