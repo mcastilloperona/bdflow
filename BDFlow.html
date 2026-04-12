@@ -250,26 +250,19 @@
           <button class="btn secondary" onclick="openInitiativeModal()">+ Nueva iniciativa</button>
           <button class="btn primary" onclick="openTaskModal()">+ Nueva tarea</button>
           <input id="searchInput" class="search" placeholder="Buscar tareas, iniciativas, áreas..." />
-          <select id="visibilityFilter" class="select">
-            <option value="active_only">Solo activas</option>
-            <option value="include_done">Incluir finalizadas</option>
+          <select id="statusFilter" class="select">
+            <option value="active">Activas</option>
+            <option value="En curso">En curso</option>
+            <option value="Pendiente">Pendientes</option>
+            <option value="Pausada">Pausadas</option>
+            <option value="Finalizada">Finalizadas</option>
             <option value="all">Todas</option>
-            <option value="done_only">Solo finalizadas</option>
-            <option value="paused_only">Solo pausadas</option>
-            <option value="overdue_only">Solo vencidas</option>
           </select>
           <select id="areaFilter" class="select">
             <option value="all">Todas las áreas</option>
           </select>
           <select id="initiativeFilter" class="select">
             <option value="all">Todas las iniciativas</option>
-          </select>
-          <select id="statusFilter" class="select">
-            <option value="all">Todos los estados</option>
-            <option value="Pendiente">Pendiente</option>
-            <option value="En curso">En curso</option>
-            <option value="Pausada">Pausada</option>
-            <option value="Finalizada">Finalizada</option>
           </select>
         </div>
       </div>
@@ -589,7 +582,17 @@
       if(initiativeSelect){
         initiativeSelect.innerHTML = '<option value="all">Todas las iniciativas</option>' + state.initiatives.map(i=>`<option value="${i.id}" ${state.initiativeFilter===i.id?'selected':''}>${escapeHtml(i.name)}</option>`).join('');
       }
-            const status = document.getElementById('statusFilter');
+      const status = document.getElementById('statusFilter');
+      if(status) status.value = state.filterStatus;
+      const sort = document.getElementById('rankingSort');
+      if(sort) sort.value = state.rankingSort;
+      const group = document.getElementById('rankingGroup');
+      if(group) group.value = state.rankingGroup;
+    }
+      if(initiativeSelect){
+        initiativeSelect.innerHTML = '<option value="all">Todas las iniciativas</option>' + state.initiatives.map(i=>`<option value="${i.id}" ${state.initiativeFilter===i.id?'selected':''}>${escapeHtml(i.name)}</option>`).join('');
+      }
+      const status = document.getElementById('statusFilter');
       if(status) status.value = state.filterStatus;
     }
 
@@ -757,22 +760,23 @@
         state.currentView = 'initiatives';
         state.filterStatus = 'all';
       }
+      state.areaFilter = 'all';
+      state.initiativeFilter = 'all';
       state.search = '';
       const searchEl = document.getElementById('searchInput');
-      if(searchEl) searchEl.value = state.search;
+      if(searchEl) searchEl.value = '';
       render();
     }else if(type === 'critical'){
         state.currentView = 'today';
-                state.filterStatus = 'all';
+        state.filterStatus = 'all';
         state.search = '';
       }else if(type === 'paused'){
         state.currentView = 'kanban';
-        state.visibilityFilter = 'paused_only';
         state.filterStatus = 'all';
         state.search = '';
       }else if(type === 'structure'){
         state.currentView = 'initiatives';
-                state.filterStatus = 'all';
+        state.filterStatus = 'all';
         state.search = '';
       }
       const searchEl = document.getElementById('searchInput');
@@ -787,11 +791,9 @@
       else if(state.filterStatus === 'Pausada') parts.push(['Mostrando: Pausadas','Tareas detenidas pendientes de reactivación.']);
       else if(state.filterStatus === 'En curso') parts.push(['Mostrando: En curso','Trabajo actualmente en ejecución.']);
       else if(state.filterStatus === 'Pendiente') parts.push(['Mostrando: Pendientes','Trabajo todavía no iniciado.']);
+      else if(state.filterStatus === 'all') parts.push(['Mostrando: Todas','Vista completa sin exclusiones.']);
       if(state.areaFilter !== 'all') parts.push([`Área: ${state.areaFilter}`,'']);
-      if(state.initiativeFilter !== 'all') {
-        const name = getInitiativeName(state.initiativeFilter);
-        parts.push([`Iniciativa: ${name}`,'']);
-      }
+      if(state.initiativeFilter !== 'all') parts.push([`Iniciativa: ${getInitiativeName(state.initiativeFilter)}`,'']);
       if(!parts.length) return null;
       return {
         title: parts.map(p=>p[0]).join(' · '),
@@ -832,7 +834,6 @@
 
 
     function renderMetrics(tasks){
-      const k = kpiData(tasks);
       document.getElementById('metricsSection').innerHTML = `
         <div class="metric clickable" onclick="applyDrillDown('active')"><div class="k">Tareas activas</div><div class="v">${tasks.filter(t=>t.status!=='Finalizada').length}</div><div class="s">Carga operativa visible</div></div>
         <div class="metric clickable" onclick="applyDrillDown('critical')"><div class="k">Críticas</div><div class="v">${tasks.filter(t=>isCriticalTask(t)).length}</div><div class="s">Dentro de la vista actual</div></div>
