@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.0.2</title>
+  <title>BDFlow Ver. 3.0.3</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -193,7 +193,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.0.2</div>
+          <div class="version">Ver. 3.0.3</div>
         </div>
       </div>
 
@@ -498,6 +498,23 @@
     window.importData = importData;
     window.toggleSidebar = toggleSidebar;
     window.copyExecutiveReport = copyExecutiveReport;
+
+
+    window.addEventListener('focus', ()=>{
+      refreshFromStorage();
+    });
+
+    document.addEventListener('visibilitychange', ()=>{
+      if(!document.hidden){
+        refreshFromStorage();
+      }
+    });
+
+    window.addEventListener('storage', (e)=>{
+      if(e.key === STORAGE_KEY){
+        refreshFromStorage();
+      }
+    });
 
     loadState();
           render();
@@ -996,7 +1013,7 @@
       if(idx >= 0) state.tasks[idx] = task; else state.tasks.unshift(task);
       saveState();
       closeTaskModal();
-      render();
+      refreshFromStorage();
     }
 
     function deleteCurrentTask(){
@@ -1004,7 +1021,7 @@
       state.tasks = state.tasks.filter(x=>x.id!==state.editingTaskId);
       saveState();
       closeTaskModal();
-      render();
+      refreshFromStorage();
     }
 
     function refreshAreaOptions(selected=''){
@@ -1050,7 +1067,7 @@
       if(idx >= 0) state.initiatives[idx] = initiative; else state.initiatives.unshift(initiative);
       saveState();
       closeInitiativeModal();
-      render();
+      refreshFromStorage();
     }
 
     function deleteCurrentInitiative(){
@@ -1060,7 +1077,7 @@
       state.initiatives = state.initiatives.filter(x=>x.id!==state.editingInitiativeId);
       saveState();
       closeInitiativeModal();
-      render();
+      refreshFromStorage();
     }
 
     function openWorklogModal(taskId, entryId=null){
@@ -1105,7 +1122,7 @@
       if(task.status === 'Pendiente' || task.status === 'Pausada') task.status = 'En curso';
       saveState();
       closeWorklogModal();
-      render();
+      refreshFromStorage();
     }
 
     function deleteWorklogEntry(taskId, entryId){
@@ -1115,7 +1132,7 @@
       task.spent = Math.round(task.worklog.reduce((a,b)=>a+Number(b.hours||0),0) * 10) / 10;
       saveState();
       openDetailModal(taskId);
-      render();
+      refreshFromStorage();
     }
 
     function openDetailModal(taskId){
@@ -1184,7 +1201,7 @@
       if(!t) return;
       t.status = t.status === 'Finalizada' ? 'En curso' : 'Finalizada';
       saveState();
-      render();
+      refreshFromStorage();
     }
 
     function quickPause(id){
@@ -1192,7 +1209,7 @@
       if(!t) return;
       t.status = t.status === 'Pausada' ? 'En curso' : 'Pausada';
       saveState();
-      render();
+      refreshFromStorage();
     }
 
     function quickAddTime(id,h){
@@ -1203,7 +1220,7 @@
       t.spent = Math.round(t.worklog.reduce((a,b)=>a+Number(b.hours||0),0) * 10) / 10;
       if(t.status === 'Pendiente' || t.status === 'Pausada') t.status = 'En curso';
       saveState();
-      render();
+      refreshFromStorage();
     }
 
     function addArea(){
@@ -1215,7 +1232,7 @@
       state.areas.push(name);
       el.value = '';
       saveState();
-      render();
+      refreshFromStorage();
     }
 
     function renameArea(index){
@@ -1228,7 +1245,7 @@
       state.initiatives.forEach(i=>{ if(i.owner === current) i.owner = clean; });
       state.areas[index] = clean;
       saveState();
-      render();
+      refreshFromStorage();
     }
 
     function deleteArea(index){
@@ -1238,7 +1255,7 @@
       if(usedTasks || usedInitiatives){ alert('No puedes eliminar un área en uso.'); return; }
       state.areas.splice(index,1);
       saveState();
-      render();
+      refreshFromStorage();
     }
 
     function quickAddInitiative(){
@@ -1256,7 +1273,7 @@
       });
       nameEl.value = '';
       saveState();
-      render();
+      refreshFromStorage();
     }
 
     function copyExecutiveReport(){
@@ -1266,6 +1283,12 @@
     function toggleSidebar(open){
       document.getElementById('sidebar').classList.toggle('open', open);
       document.getElementById('overlay').classList.toggle('show', open);
+    }
+
+
+    function refreshFromStorage(){
+      loadState();
+      render();
     }
 
     function render(){
@@ -1310,7 +1333,7 @@
     document.querySelectorAll('.nav-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         state.currentView = btn.dataset.view;
-        render();
+        refreshFromStorage();
         if(window.innerWidth <= 820) toggleSidebar(false);
       });
     });
