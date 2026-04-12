@@ -26,8 +26,8 @@
       --teal-2:#ecfeff;
       --shadow:0 8px 24px rgba(15,23,42,.06);
       --radius:18px;
-      --sidebar:#1f3a34;
-      --sidebar-2:#213c35;
+      --sidebar:#ff6a00;
+      --sidebar-2:#e65c00;
       --sidebar-text:#f1f5f9;
     }
     *{box-sizing:border-box}
@@ -35,7 +35,17 @@
     body{min-height:100vh}
     button,input,select,textarea{font:inherit}
     .app{display:flex;min-height:100vh}
-    .sidebar{width:320px;background:linear-gradient(180deg,var(--sidebar),#1c322d);color:var(--sidebar-text);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid rgba(255,255,255,.06)}
+    .sidebar{
+  width:320px;
+  background:linear-gradient(180deg,#ff6a00,#e65c00);
+  color:var(--sidebar-text);
+  padding:18px 16px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow:auto;
+  border-right:1px solid rgba(255,255,255,.06)
+}}
     .brand{padding:8px 10px 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:16px}
     .brand-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .logo{font-size:28px;font-weight:800;letter-spacing:-.03em}
@@ -46,7 +56,7 @@
     .nav{display:flex;flex-direction:column;gap:8px}
     .nav-btn{display:flex;align-items:center;gap:14px;width:100%;border:none;background:transparent;color:var(--sidebar-text);border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left;font-weight:700;font-size:17px}
     .nav-btn:hover{background:rgba(255,255,255,.05)}
-    .nav-btn.active{background:#243f69;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+    .nav-btn.active{background:rgba(255,255,255,.2);}
     .nav-dot{width:12px;height:12px;border-radius:50%;display:inline-block}
     .nav .nav-btn:nth-child(1) .nav-dot{background:#7db1ff}
     .nav .nav-btn:nth-child(2) .nav-dot{background:#3dd598}
@@ -228,7 +238,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.5</div>
+          <div class="version">Ver. 3.7</div>
         </div>
       </div>
 
