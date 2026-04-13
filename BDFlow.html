@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.8.3</title>
+  <title>BDFlow Ver. 3.8.4</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -243,7 +243,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.8.3</div>
+          <div class="version">Ver. 3.8.4</div>
         </div>
       </div>
 
@@ -1379,6 +1379,53 @@
       `;
     }
 
+
+    function renderDashboardFocusCard(task){
+      if(!task) return '<div class="empty">Sin foco principal.</div>';
+      return `<div class="task compact" onclick="openDetailModal('${task.id}')" title="Abrir detalle" style="padding:18px">
+        <div class="task-top" style="align-items:center">
+          <div style="min-width:0">
+            <div class="task-title">${escapeHtml(task.title)}</div>
+            <div class="task-sub">${escapeHtml(task.initiative)} · ${escapeHtml(task.area)}</div>
+          </div>
+          <div class="score"><b>${task.score}</b><span>Score</span></div>
+        </div>
+        <div class="badges" style="margin-top:10px">
+          ${statusBadge(task.status)}
+          ${badgeDue(task)}
+        </div>
+        <div class="meta" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:12px">
+          <div class="m"><div class="mk">Objetivo</div><div class="mv">${task.due ? escapeHtml(task.due) : 'Sin fecha'}</div></div>
+          <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h</div></div>
+          <div class="m"><div class="mk">Siguiente paso</div><div class="mv">${escapeHtml(task.next || 'Ver detalle')}</div></div>
+        </div>
+        <div class="qa" style="padding-top:12px;margin-top:12px">
+          <button class="qbtn edit" onclick="event.stopPropagation();openDetailModal('${task.id}')">Abrir tarea</button>
+        </div>
+      </div>`;
+    }
+
+    function renderDashboardListItem(task, variant='default'){
+      const accent = variant === 'critical'
+        ? '<span class="badge red">Foco inmediato</span>'
+        : variant === 'completed'
+          ? `<span class="badge green">${escapeHtml(task.completedAt || 'Cerrada')}</span>`
+          : '<span class="badge blue">Alto valor</span>';
+      const sub = variant === 'completed'
+        ? `${escapeHtml(task.initiative)} · ${escapeHtml(task.completedAt || '—')}`
+        : `${escapeHtml(task.initiative)} · ${escapeHtml(task.area)}`;
+      return `<div class="row-card" onclick="openDetailModal('${task.id}')" style="cursor:pointer;padding:12px 14px;margin-bottom:10px">
+        <div style="min-width:0">
+          <div class="row-title">${escapeHtml(task.title)}</div>
+          <div class="row-sub">${sub}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+          ${variant === 'completed' ? '' : badgeDue(task)}
+          ${accent}
+        </div>
+      </div>`;
+    }
+
     function renderDashboard(tasks){
       const active = tasks.filter(t=>t.status!=='Finalizada');
       const mainTask = active.find(t=>isCriticalTask(t)) || active[0];
@@ -1388,20 +1435,20 @@
 
       return `<div class="grid-2">
         <div class="panel">
-          <div class="panel-head"><div><h2>🔥 Qué hacer ahora</h2><p>Una sola tarea foco para empezar.</p></div></div>
-          <div class="panel-body">${mainTask ? taskCard(mainTask) : '<div class="empty">Sin foco principal.</div>'}</div>
+          <div class="panel-head"><div><h2>🔥 Qué hacer ahora</h2><p>Resumen ejecutivo de la siguiente tarea foco.</p></div></div>
+          <div class="panel-body">${renderDashboardFocusCard(mainTask)}</div>
         </div>
         <div class="panel">
           <div class="panel-head"><div><h2>⚠️ Críticas</h2><p>Máximo 5 tareas que piden foco inmediato.</p></div></div>
-          <div class="panel-body">${critical.length ? critical.map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}</span></div>`).join('') : '<div class="empty">Sin tareas críticas.</div>'}</div>
+          <div class="panel-body">${critical.length ? critical.map(t=>renderDashboardListItem(t,'critical')).join('') : '<div class="empty">Sin tareas críticas.</div>'}</div>
         </div>
         <div class="panel">
-          <div class="panel-head"><div><h2>🚀 Importantes</h2><p>Máximo 5 tareas con alto valor.</p></div></div>
-          <div class="panel-body">${important.length ? important.map(t=>`<div class="mini-task"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)}</span></div>`).join('') : '<div class="empty">Sin importantes.</div>'}</div>
+          <div class="panel-head"><div><h2>🚀 Importantes</h2><p>Trabajo de alto valor que debería avanzar hoy.</p></div></div>
+          <div class="panel-body">${important.length ? important.map(t=>renderDashboardListItem(t,'important')).join('') : '<div class="empty">Sin importantes.</div>'}</div>
         </div>
         <div class="panel">
           <div class="panel-head"><div><h2>✅ Cierres recientes</h2><p>Trabajo resuelto recientemente.</p></div></div>
-          <div class="panel-body">${completed.length ? completed.map(t=>`<div class="mini-task completed"><strong>${escapeHtml(t.title)}</strong><br><span style="color:var(--muted)">${escapeHtml(t.initiative)} · ${escapeHtml(t.completedAt || '—')}</span></div>`).join('') : '<div class="empty">Sin cierres recientes.</div>'}</div>
+          <div class="panel-body">${completed.length ? completed.map(t=>renderDashboardListItem(t,'completed')).join('') : '<div class="empty">Sin cierres recientes.</div>'}</div>
         </div>
       </div>`;
     }
