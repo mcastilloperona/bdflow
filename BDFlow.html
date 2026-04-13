@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.8.2</title>
+  <title>BDFlow Ver. 3.8.3</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -128,20 +128,20 @@
     .score{min-width:92px;text-align:center;border:1px solid #cfe0ff;background:var(--blue-2);color:var(--blue);border-radius:18px;padding:12px 8px}
     .score b{display:block;font-size:28px;line-height:1}
     .score span{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
-    .task.compact{padding:12px;border-radius:16px}
-    .task.compact .task-title{font-size:15px;line-height:1.3}
-    .task.compact .task-sub{font-size:12px;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .task.compact .badges{margin-top:10px;gap:6px}
-    .task.compact .badge{padding:6px 10px;font-size:11px}
-    .task.compact .score{min-width:72px;padding:9px 6px;border-radius:16px}
-    .task.compact .score b{font-size:20px}
+    .task.compact{padding:10px;border-radius:16px;cursor:pointer}
+    .task.compact .task-title{font-size:14px;line-height:1.25}
+    .task.compact .task-sub{font-size:12px;margin-top:3px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+    .task.compact .badges{margin-top:8px;gap:6px}
+    .task.compact .badge{padding:5px 9px;font-size:11px}
+    .task.compact .score{min-width:64px;padding:8px 6px;border-radius:14px}
+    .task.compact .score b{font-size:18px}
     .task.compact .score span{font-size:10px}
-    .task.compact .meta{grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-    .task.compact .m{padding:9px 10px;border-radius:12px}
+    .task.compact .meta{grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+    .task.compact .m{padding:8px 9px;border-radius:12px}
     .task.compact .mk{font-size:10px}
-    .task.compact .mv{margin-top:4px;font-size:12px;line-height:1.3}
-    .task.compact .qa{margin-top:10px;padding-top:10px;gap:6px}
-    .task.compact .qbtn{padding:8px 10px;font-size:11px;border-radius:10px}
+    .task.compact .mv{margin-top:3px;font-size:11px;line-height:1.25}
+    .task.compact .qa{margin-top:8px;padding-top:8px;gap:6px}
+    .task.compact .qbtn{padding:7px 9px;font-size:11px;border-radius:10px}
     .task.compact .detail-block{display:none}
     .empty{border:1px dashed var(--border);border-radius:16px;background:var(--panel-2);padding:24px;text-align:center;color:var(--muted)}
     .mini-task{padding:9px 11px;border-radius:12px;background:var(--panel-2);border:1px solid var(--border);font-size:13px;margin-bottom:8px}
@@ -243,7 +243,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.8.2</div>
+          <div class="version">Ver. 3.8.3</div>
         </div>
       </div>
 
@@ -1237,7 +1237,35 @@
       const isCompleted = task.status === 'Finalizada';
       const pauseLabel = task.status === 'Pausada' ? '▶ Reanudar' : '⏸ Pausar';
       const doneLabel = isCompleted ? '↺ Reabrir' : '✓ Finalizar';
-      return `<article class="task ${isCompleted ? 'completed-card' : ''} ${compact ? 'compact' : ''}">
+
+      if(compact){
+        return `<article class="task ${isCompleted ? 'completed-card' : ''} compact" onclick="openDetailModal('${task.id}')" title="Abrir detalle">
+          <div class="task-top">
+            <div style="min-width:0">
+              <div class="task-title">${escapeHtml(task.title)}</div>
+              <div class="task-sub">${escapeHtml(task.desc || task.next || '')}</div>
+            </div>
+            <div class="score"><b>${task.score}</b><span>Score</span></div>
+          </div>
+          <div class="badges">
+            ${statusBadge(task.status)}
+            ${badgeDue(task)}
+            <span class="badge">${escapeHtml(task.area)}</span>
+          </div>
+          <div class="meta">
+            <div class="m"><div class="mk">Objetivo</div><div class="mv">${task.due ? escapeHtml(task.due) : 'Sin fecha'}</div></div>
+            <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h${Number(task.spent||0)>Number(task.effort||0)?'<div style="margin-top:3px;color:#d97706;font-size:11px;font-weight:800">Desviada</div>':''}</div></div>
+            <div class="m"><div class="mk">Siguiente</div><div class="mv">${escapeHtml(task.next || 'Ver detalle')}</div></div>
+          </div>
+          <div class="qa">
+            <button class="qbtn done" onclick="event.stopPropagation();toggleDone('${task.id}')">${doneLabel}</button>
+            <button class="qbtn time" onclick="event.stopPropagation();openWorklogModal('${task.id}')">Trabajo</button>
+            <button class="qbtn edit" onclick="event.stopPropagation();openTaskModal('${task.id}')">Editar</button>
+          </div>
+        </article>`;
+      }
+
+      return `<article class="task ${isCompleted ? 'completed-card' : ''}" onclick="openDetailModal('${task.id}')" title="Abrir detalle">
         <div class="task-top">
           <div style="min-width:0">
             <div class="task-title">${escapeHtml(task.title)}</div>
@@ -1261,13 +1289,13 @@
           <div class="m"><div class="mk">Siguiente paso</div><div class="mv">${escapeHtml(task.next || '—')}</div></div>
         </div>
         <div class="qa">
-          <button class="qbtn done" onclick="toggleDone('${task.id}')">${doneLabel}</button>
-          ${!isCompleted ? `<button class="qbtn pause" onclick="quickPause('${task.id}')">${pauseLabel}</button>` : ''}
-          <button class="qbtn edit" onclick="openTaskModal('${task.id}')">Editar tarea</button>
-          <button class="qbtn time" onclick="openWorklogModal('${task.id}')">Registrar trabajo</button>
-          <button class="qbtn edit" onclick="openDetailModal('${task.id}')">Ver detalle</button>
+          <button class="qbtn done" onclick="event.stopPropagation();toggleDone('${task.id}')">${doneLabel}</button>
+          ${!isCompleted ? `<button class="qbtn pause" onclick="event.stopPropagation();quickPause('${task.id}')">${pauseLabel}</button>` : ''}
+          <button class="qbtn edit" onclick="event.stopPropagation();openTaskModal('${task.id}')">Editar tarea</button>
+          <button class="qbtn time" onclick="event.stopPropagation();openWorklogModal('${task.id}')">Registrar trabajo</button>
+          <button class="qbtn edit" onclick="event.stopPropagation();openDetailModal('${task.id}')">Ver detalle</button>
         </div>
-        ${showLogs ? renderGroupedWorklog(task, compact ? 1 : 3) : ''}
+        ${showLogs ? renderGroupedWorklog(task, 3) : ''}
       </article>`;
     }
 
@@ -1379,14 +1407,17 @@
     }
 
     function renderToday(tasks){
-      const active = tasks.filter(t=>t.status!=='Finalizada');
-      const critical = active.filter(t=>isCriticalTask(t)).slice(0,4);
-      const important = active.filter(t=>!isCriticalTask(t) && t.score>=70).slice(0,4);
-      const optional = active.filter(t=>!isCriticalTask(t) && t.score<70).slice(0,4);
+      const active = sortTasks(tasks.filter(t=>t.status!=='Finalizada'));
+      const critical = active.filter(t=>isCriticalTask(t)).slice(0,3);
+      const nonCritical = active.filter(t=>!isCriticalTask(t));
+      const importantPool = nonCritical.filter(t=>t.status==='En curso' || t.priority==='Alta' || t.score>=55);
+      const important = importantPool.slice(0,3);
+      const used = new Set([...critical, ...important].map(t=>t.id));
+      const optional = nonCritical.filter(t=>!used.has(t.id)).slice(0,3);
       return `<div class="today-grid">
         <div class="lane"><div class="lane-head"><h3>Crítico</h3><p>Sí o sí hoy.</p></div><div class="lane-body">${critical.length?critical.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Nada crítico ahora mismo.</div>'}</div></div>
-        <div class="lane"><div class="lane-head"><h3>Importante</h3><p>Debe avanzar hoy.</p></div><div class="lane-body">${important.length?important.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin importantes.</div>'}</div></div>
-        <div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Hazlo si mantienes margen.</p></div><div class="lane-body">${optional.length?optional.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin opcionales.</div>'}</div></div>
+        <div class="lane"><div class="lane-head"><h3>Importante</h3><p>Trabajo que debería avanzar hoy.</p></div><div class="lane-body">${important.length?important.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin importantes ahora mismo.</div>'}</div></div>
+        <div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Reserva o trabajo delegable a mañana.</p></div><div class="lane-body">${optional.length?optional.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin opcionales.</div>'}</div></div>
       </div>`;
     }
 
