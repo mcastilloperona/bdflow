@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.8.1</title>
+  <title>BDFlow Ver. 3.8.1.1.1</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -35,17 +35,7 @@
     body{min-height:100vh}
     button,input,select,textarea{font:inherit}
     .app{display:flex;min-height:100vh}
-    .sidebar{
-  width:320px;
-  background:linear-gradient(180deg,#3b82f6,#2563eb);
-  color:var(--sidebar-text);
-  padding:18px 16px;
-  position:sticky;
-  top:0;
-  height:100vh;
-  overflow:auto;
-  border-right:1px solid rgba(255,255,255,.06)
-}
+    .sidebar{width:320px;background:linear-gradient(180deg,var(--sidebar),var(--sidebar-2));color:var(--sidebar-text);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid rgba(255,255,255,.06)}
     .brand{padding:8px 10px 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:16px}
     .brand-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .logo{font-size:28px;font-weight:800;letter-spacing:-.03em}
@@ -56,7 +46,7 @@
     .nav{display:flex;flex-direction:column;gap:8px}
     .nav-btn{display:flex;align-items:center;gap:14px;width:100%;border:none;background:transparent;color:var(--sidebar-text);border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left;font-weight:700;font-size:17px}
     .nav-btn:hover{background:rgba(255,255,255,.05)}
-    .nav-btn.active{background:#243f69;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+    .nav-btn.active{background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
     .nav-dot{width:12px;height:12px;border-radius:50%;display:inline-block}
     .nav .nav-btn:nth-child(1) .nav-dot{background:#7db1ff}
     .nav .nav-btn:nth-child(2) .nav-dot{background:#3dd598}
@@ -76,7 +66,7 @@
     .side-v{font-size:14px;font-weight:800;color:#fff}
     .backup-box{margin-top:14px}
     .btn{border:none;border-radius:14px;padding:11px 14px;cursor:pointer;font-weight:800}
-    .btn.primary{background:var(--blue);color:#fff}
+    .btn.primary{background:#ff6a00;color:#fff}
     .btn.secondary{background:#fff;border:1px solid var(--border);color:var(--text)}
     .btn.ghost{background:var(--panel-2);border:1px solid var(--border);color:var(--text)}
     .btn.dark{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.08)}
@@ -238,7 +228,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.8.1</div>
+          <div class="version">Ver. 3.8.1.1</div>
         </div>
       </div>
 
@@ -327,8 +317,8 @@
           <div class="field"><label for="fStatus">Estado</label><select id="fStatus"><option>Pendiente</option><option>En curso</option><option>Pausada</option><option>Finalizada</option></select></div>
           <div class="field"><label for="fPriority">Prioridad</label><select id="fPriority"><option>Alta</option><option>Media</option><option>Baja</option></select></div>
           <div class="field"><label for="fCreated">Fecha de creación</label><input id="fCreated" type="date" /></div>
-	<div class="field"><label for="fDue">Fecha objetivo (opcional)</label><input id="fDue" type="date" /><div style="margin-top:-4px;color:#64748b;font-size:12px">Sin fecha = tarea continua</div></div>
-	<div class="field"><label for="fEffort">Horas previstas</label><input id="fEffort" type="number" min="0" step="0.5" /></div>
+          <div class="field"><label for="fDue">Fecha objetivo (opcional)</label><input id="fDue" type="date" /><div style="margin-top:-4px;color:#64748b;font-size:12px">Sin fecha = tarea continua</div></div>
+          <div class="field"><label for="fEffort">Horas previstas</label><input id="fEffort" type="number" min="0" step="0.5" /></div>
           <div class="field full"><label for="fNext">Siguiente paso</label><input id="fNext" type="text" /></div>
         </div>
       </div>
@@ -1581,7 +1571,7 @@
             <div class="setting-box">
               <div class="field"><label>URL del proyecto</label><input id="sbUrl" value="${escapeHtml(cfg.url || '')}" placeholder="https://xxxx.supabase.co"></div>
               <div class="field" style="margin-top:12px"><label>Anon key</label><input id="sbAnonKey" value="${escapeHtml(cfg.anonKey || '')}" placeholder="eyJ..."></div>
-              <div class="field" style="margin-top:12px"><label>Workspace</label><input id="sbWorkspace" value="${escapeHtml(cfg.workspace || 'miguel_bdflow')}" placeholder="miguel_bdflow"></div>
+              <div class="field" style="margin-top:12px"><label>Workspace</label><input id="sbWorkspace" value="${escapeHtml(cfg.workspace || 'miguel')}" placeholder="miguel"></div>
               <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
                 <button class="btn primary" onclick="connectSupabaseFromUI()">Guardar conexión</button>
                 <button class="btn secondary" onclick="testSupabaseConnection()">Probar conexión</button>
@@ -1609,7 +1599,7 @@
                   <div class="row-title">Clave cargada</div>
                   <div class="row-sub">${maskedKey || 'Sin anon key guardada'}</div>
                 </div>
-                <div><span class="badge">workspace: ${escapeHtml(cfg.workspace || 'miguel_bdflow')}</span></div>
+                <div><span class="badge">workspace: ${escapeHtml(cfg.workspace || 'miguel')}</span></div>
               </div>
               <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
                 <button class="btn primary" onclick="saveStateToSupabase(true)">Subir estado ahora</button>
@@ -1919,10 +1909,10 @@ function renderConfig(){
       document.getElementById('fTitle').value = t ? t.title : '';
       document.getElementById('fDesc').value = t ? t.desc : '';
       document.getElementById('fStatus').value = t ? t.status : 'Pendiente';
-document.getElementById('fPriority').value = t ? t.priority : 'Alta';
-document.getElementById('fCreated').value = t ? (t.createdAt || '') : new Date().toISOString().slice(0,10);
-document.getElementById('fDue').value = t ? (t.due || '') : '';
-document.getElementById('fEffort').value = t ? t.effort : 1;
+      document.getElementById('fPriority').value = t ? t.priority : 'Alta';
+      document.getElementById('fCreated').value = t ? (t.createdAt || '') : new Date().toISOString().slice(0,10);
+      document.getElementById('fDue').value = t ? (t.due || '') : '';
+      document.getElementById('fEffort').value = t ? t.effort : 1;
       document.getElementById('fNext').value = t ? t.next : 'Definir siguiente paso.';
     }
 
@@ -1947,7 +1937,7 @@ document.getElementById('fEffort').value = t ? t.effort : 1;
         effort: Number(document.getElementById('fEffort').value || 0),
         spent: existing ? Number(existing.spent || 0) : 0,
         next: document.getElementById('fNext').value.trim() || 'Definir siguiente paso.',
-       createdAt: document.getElementById('fCreated').value || (existing ? (existing.createdAt || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10)),,
+        createdAt: document.getElementById('fCreated').value || (existing ? (existing.createdAt || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10)),
         completedAt: (document.getElementById('fStatus').value === 'Finalizada')
           ? (existing && existing.completedAt ? existing.completedAt : new Date().toISOString().slice(0,10))
           : '',
