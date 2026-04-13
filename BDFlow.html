@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.8</title>
+  <title>BDFlow Ver. 3.8.1</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -238,7 +238,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.8</div>
+          <div class="version">Ver. 3.8.1</div>
         </div>
       </div>
 
@@ -326,8 +326,9 @@
           <div class="field"><label for="fInitiative">Iniciativa</label><select id="fInitiative"></select></div>
           <div class="field"><label for="fStatus">Estado</label><select id="fStatus"><option>Pendiente</option><option>En curso</option><option>Pausada</option><option>Finalizada</option></select></div>
           <div class="field"><label for="fPriority">Prioridad</label><select id="fPriority"><option>Alta</option><option>Media</option><option>Baja</option></select></div>
-          <div class="field"><label for="fDue">Fecha objetivo (opcional)</label><input id="fDue" type="date" /><div style="margin-top:-4px;color:#64748b;font-size:12px">Sin fecha = tarea continua</div></div>
-          <div class="field"><label for="fEffort">Horas previstas</label><input id="fEffort" type="number" min="0" step="0.5" /></div>
+          <div class="field"><label for="fCreated">Fecha de creación</label><input id="fCreated" type="date" /></div>
+	<div class="field"><label for="fDue">Fecha objetivo (opcional)</label><input id="fDue" type="date" /><div style="margin-top:-4px;color:#64748b;font-size:12px">Sin fecha = tarea continua</div></div>
+	<div class="field"><label for="fEffort">Horas previstas</label><input id="fEffort" type="number" min="0" step="0.5" /></div>
           <div class="field full"><label for="fNext">Siguiente paso</label><input id="fNext" type="text" /></div>
         </div>
       </div>
@@ -1918,9 +1919,10 @@ function renderConfig(){
       document.getElementById('fTitle').value = t ? t.title : '';
       document.getElementById('fDesc').value = t ? t.desc : '';
       document.getElementById('fStatus').value = t ? t.status : 'Pendiente';
-      document.getElementById('fPriority').value = t ? t.priority : 'Alta';
-      document.getElementById('fDue').value = t ? (t.due || '') : '';
-      document.getElementById('fEffort').value = t ? t.effort : 1;
+document.getElementById('fPriority').value = t ? t.priority : 'Alta';
+document.getElementById('fCreated').value = t ? (t.createdAt || '') : new Date().toISOString().slice(0,10);
+document.getElementById('fDue').value = t ? (t.due || '') : '';
+document.getElementById('fEffort').value = t ? t.effort : 1;
       document.getElementById('fNext').value = t ? t.next : 'Definir siguiente paso.';
     }
 
@@ -1945,7 +1947,7 @@ function renderConfig(){
         effort: Number(document.getElementById('fEffort').value || 0),
         spent: existing ? Number(existing.spent || 0) : 0,
         next: document.getElementById('fNext').value.trim() || 'Definir siguiente paso.',
-        createdAt: existing ? (existing.createdAt || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10),
+       createdAt: document.getElementById('fCreated').value || (existing ? (existing.createdAt || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10)),,
         completedAt: (document.getElementById('fStatus').value === 'Finalizada')
           ? (existing && existing.completedAt ? existing.completedAt : new Date().toISOString().slice(0,10))
           : '',
