@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.8.4</title>
+  <title>BDFlow Ver. 3.8.5</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -215,6 +215,20 @@
     .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
     .setting-box{border:1px solid var(--border);border-radius:16px;background:#fff;padding:16px}
 
+
+    .alert-badge{position:relative;overflow:visible;transition:transform .18s ease, box-shadow .18s ease}
+    .alert-badge.has-alerts{box-shadow:0 10px 24px rgba(245,158,11,.18)}
+    .alert-badge.has-alerts::after{content:'';position:absolute;top:8px;right:10px;width:10px;height:10px;background:#ef4444;border-radius:50%;animation:pulse 1.6s infinite}
+    .alert-badge.alert-medium::after{background:#f97316}
+    .alert-badge.alert-low::after{background:#facc15}
+    .alert-badge.alert-pop{animation:alertPop .34s ease}
+    @keyframes pulse{0%{transform:scale(1);opacity:1}70%{transform:scale(1.7);opacity:0}100%{transform:scale(1);opacity:0}}
+    @keyframes alertPop{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+    .quote-card{background:linear-gradient(135deg,#fff7ed,#ffffff);border:1px solid #fed7aa;border-radius:18px;padding:18px 20px;box-shadow:var(--shadow);margin-bottom:18px}
+    .quote-label{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#c2410c}
+    .quote-text{margin-top:10px;font-size:20px;line-height:1.4;font-weight:800;color:#7c2d12}
+    .quote-sub{margin-top:8px;color:#9a3412;font-size:13px}
+
     @media (max-width:1180px){
       .layout,.grid-2,.exec-grid{grid-template-columns:1fr}
       .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -243,7 +257,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.8.4</div>
+          <div class="version">Ver. 3.8.5</div>
         </div>
       </div>
 
@@ -291,7 +305,7 @@
           <button class="mobile-toggle btn secondary" onclick="toggleSidebar(true)">☰ Menú</button>
           <button class="btn secondary" onclick="openInitiativeModal()">+ Nueva iniciativa</button>
           <button class="btn primary" onclick="openTaskModal()">+ Nueva tarea</button>
-          <button class="btn secondary" id="alertsBtn" onclick="openAlertsModal()">🔔 <span id="alertsCount">0</span></button>
+          <button class="btn secondary" id="alertsBtn" class="alert-badge" onclick="openAlertsModal()">🔔 <span id="alertsCount">0</span></button>
           <input id="searchInput" class="search" placeholder="Buscar tareas, iniciativas, áreas..." />
           <select id="statusFilter" class="select">
             <option value="active">Activas</option>
@@ -1380,6 +1394,45 @@
     }
 
 
+
+    function getDailyMotivationalQuote(){
+      const quotes = [
+        'Haz que hoy merezca el esfuerzo que ayer todavía no daba resultado.',
+        'La claridad no aparece pensando más; aparece avanzando mejor.',
+        'No necesitas hacerlo todo hoy, pero sí mover lo que de verdad importa.',
+        'La disciplina silenciosa suele ganar donde el impulso se agota.',
+        'Un día bien enfocado vale más que una semana dispersa.',
+        'Lo difícil no siempre avanza rápido, pero sí avanza cuando te mantienes firme.',
+        'Tu progreso real empieza cuando decides no negociar con lo importante.',
+        'Cada cierre pequeño libera espacio para una decisión grande.',
+        'No busques un día perfecto; construye un día útil y consistente.',
+        'La ventaja no está en correr más, sino en sostener el rumbo correcto.',
+        'Lo que hoy ordenas te devuelve tiempo, foco y margen mañana.',
+        'Cuando eliges bien en qué entrar, también eliges bien qué dejar fuera.',
+        'El trabajo con intención pesa menos que el trabajo con ruido.',
+        'No subestimes el poder de terminar una sola cosa relevante.',
+        'La constancia no impresiona en el momento, pero cambia los resultados.'
+      ];
+      const STORAGE = 'bdflow_daily_quote_state';
+      const today = new Date().toISOString().slice(0,10);
+      let data = null;
+      try{ data = JSON.parse(localStorage.getItem(STORAGE) || 'null'); }catch(e){ data = null; }
+      if(data && data.date === today && data.quote){
+        return data.quote;
+      }
+      let used = Array.isArray(data?.used) ? data.used.filter(q => quotes.includes(q)) : [];
+      let available = quotes.filter(q => !used.includes(q));
+      if(!available.length){
+        used = [];
+        available = [...quotes];
+      }
+      const seed = Number(today.replaceAll('-',''));
+      const pick = available[seed % available.length];
+      used.push(pick);
+      localStorage.setItem(STORAGE, JSON.stringify({date: today, quote: pick, used}));
+      return pick;
+    }
+
     function renderDashboardFocusCard(task){
       if(!task) return '<div class="empty">Sin foco principal.</div>';
       return `<div class="task compact" onclick="openDetailModal('${task.id}')" title="Abrir detalle" style="padding:18px">
@@ -1433,7 +1486,14 @@
       const important = active.filter(t=>!isCriticalTask(t) && t.score>=70).slice(0,5);
       const completed = getRecentCompletedTasks(5);
 
-      return `<div class="grid-2">
+      const quote = getDailyMotivationalQuote();
+      return `<div>
+        <div class="quote-card">
+          <div class="quote-label">Impulso del día</div>
+          <div class="quote-text">${escapeHtml(quote)}</div>
+          <div class="quote-sub">Una idea breve para empezar con foco y sostener el ritmo.</div>
+        </div>
+        <div class="grid-2">
         <div class="panel">
           <div class="panel-head"><div><h2>🔥 Qué hacer ahora</h2><p>Resumen ejecutivo de la siguiente tarea foco.</p></div></div>
           <div class="panel-body">${renderDashboardFocusCard(mainTask)}</div>
@@ -2330,10 +2390,26 @@ function renderConfig(){
     function updateAlertsBadge(tasks){
       const count = getAlerts(tasks).length;
       const el = document.getElementById('alertsCount');
-      if(el) el.textContent = String(count);
-      const btn = document.getElementById('alertsBtn');
-      if(btn){
-        btn.classList.toggle('completed-soft', count === 0);
+      if(el){
+        const prev = Number(el.dataset.prevCount || '0');
+        el.textContent = String(count);
+        el.dataset.prevCount = String(count);
+        const btn = document.getElementById('alertsBtn');
+        if(btn){
+          btn.classList.toggle('completed-soft', count === 0);
+          btn.classList.toggle('has-alerts', count > 0);
+          btn.classList.remove('alert-low','alert-medium','alert-high','alert-pop');
+          if(count > 0){
+            btn.classList.add(count > 5 ? 'alert-high' : count > 2 ? 'alert-medium' : 'alert-low');
+            btn.title = `${count} alerta${count===1?'':'s'} activa${count===1?'':'s'} en BDFlow`;
+            if(prev !== count){
+              void btn.offsetWidth;
+              btn.classList.add('alert-pop');
+            }
+          }else{
+            btn.title = 'Sin alertas activas';
+          }
+        }
       }
     }
 
