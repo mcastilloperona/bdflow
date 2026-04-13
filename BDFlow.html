@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.8.1.1.1</title>
+  <title>BDFlow Ver. 3.8.2</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -128,6 +128,21 @@
     .score{min-width:92px;text-align:center;border:1px solid #cfe0ff;background:var(--blue-2);color:var(--blue);border-radius:18px;padding:12px 8px}
     .score b{display:block;font-size:28px;line-height:1}
     .score span{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+    .task.compact{padding:12px;border-radius:16px}
+    .task.compact .task-title{font-size:15px;line-height:1.3}
+    .task.compact .task-sub{font-size:12px;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .task.compact .badges{margin-top:10px;gap:6px}
+    .task.compact .badge{padding:6px 10px;font-size:11px}
+    .task.compact .score{min-width:72px;padding:9px 6px;border-radius:16px}
+    .task.compact .score b{font-size:20px}
+    .task.compact .score span{font-size:10px}
+    .task.compact .meta{grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+    .task.compact .m{padding:9px 10px;border-radius:12px}
+    .task.compact .mk{font-size:10px}
+    .task.compact .mv{margin-top:4px;font-size:12px;line-height:1.3}
+    .task.compact .qa{margin-top:10px;padding-top:10px;gap:6px}
+    .task.compact .qbtn{padding:8px 10px;font-size:11px;border-radius:10px}
+    .task.compact .detail-block{display:none}
     .empty{border:1px dashed var(--border);border-radius:16px;background:var(--panel-2);padding:24px;text-align:center;color:var(--muted)}
     .mini-task{padding:9px 11px;border-radius:12px;background:var(--panel-2);border:1px solid var(--border);font-size:13px;margin-bottom:8px}
     .row-card{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px;border:1px solid var(--border);border-radius:14px;background:#fff;margin-bottom:10px}
@@ -228,7 +243,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.8.1.1</div>
+          <div class="version">Ver. 3.8.2</div>
         </div>
       </div>
 
@@ -1216,11 +1231,13 @@
       };
     }
 
-    function taskCard(task){
+    function taskCard(task, options = {}){
+      const compact = !!options.compact;
+      const showLogs = options.showLogs !== false && !compact;
       const isCompleted = task.status === 'Finalizada';
       const pauseLabel = task.status === 'Pausada' ? '▶ Reanudar' : '⏸ Pausar';
       const doneLabel = isCompleted ? '↺ Reabrir' : '✓ Finalizar';
-      return `<article class="task ${isCompleted ? 'completed-card' : ''}">
+      return `<article class="task ${isCompleted ? 'completed-card' : ''} ${compact ? 'compact' : ''}">
         <div class="task-top">
           <div style="min-width:0">
             <div class="task-title">${escapeHtml(task.title)}</div>
@@ -1250,7 +1267,7 @@
           <button class="qbtn time" onclick="openWorklogModal('${task.id}')">Registrar trabajo</button>
           <button class="qbtn edit" onclick="openDetailModal('${task.id}')">Ver detalle</button>
         </div>
-        ${renderGroupedWorklog(task)}
+        ${showLogs ? renderGroupedWorklog(task, compact ? 1 : 3) : ''}
       </article>`;
     }
 
@@ -1367,9 +1384,9 @@
       const important = active.filter(t=>!isCriticalTask(t) && t.score>=70).slice(0,4);
       const optional = active.filter(t=>!isCriticalTask(t) && t.score<70).slice(0,4);
       return `<div class="today-grid">
-        <div class="lane"><div class="lane-head"><h3>Crítico</h3><p>Sí o sí hoy.</p></div><div class="lane-body">${critical.length?critical.map(taskCard).join(''):'<div class="empty">Nada crítico ahora mismo.</div>'}</div></div>
-        <div class="lane"><div class="lane-head"><h3>Importante</h3><p>Debe avanzar hoy.</p></div><div class="lane-body">${important.length?important.map(taskCard).join(''):'<div class="empty">Sin importantes.</div>'}</div></div>
-        <div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Hazlo si mantienes margen.</p></div><div class="lane-body">${optional.length?optional.map(taskCard).join(''):'<div class="empty">Sin opcionales.</div>'}</div></div>
+        <div class="lane"><div class="lane-head"><h3>Crítico</h3><p>Sí o sí hoy.</p></div><div class="lane-body">${critical.length?critical.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Nada crítico ahora mismo.</div>'}</div></div>
+        <div class="lane"><div class="lane-head"><h3>Importante</h3><p>Debe avanzar hoy.</p></div><div class="lane-body">${important.length?important.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin importantes.</div>'}</div></div>
+        <div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Hazlo si mantienes margen.</p></div><div class="lane-body">${optional.length?optional.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin opcionales.</div>'}</div></div>
       </div>`;
     }
 
@@ -1475,7 +1492,7 @@
           const items = scoped.filter(t=>t.status===col);
           const visible = items.slice(0,8);
           const overflow = Math.max(0, items.length - visible.length);
-          return `<div class="kcol"><div class="khead">${col} · ${items.length}</div><div class="kbody">${visible.length?visible.map(taskCard).join(''):'<div class="empty">Sin tareas</div>'}${overflow?`<div class="empty">+ ${overflow} tareas más en esta columna</div>`:''}</div></div>`;
+          return `<div class="kcol"><div class="khead">${col} · ${items.length}</div><div class="kbody">${visible.length?visible.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin tareas</div>'}${overflow?`<div class="empty">+ ${overflow} tareas más en esta columna</div>`:''}</div></div>`;
         }).join('')
       }</div></div></div>`;
     }
@@ -2278,6 +2295,10 @@ function renderConfig(){
         state.currentView === 'initiatives' ? renderInitiatives() :
         state.currentView === 'config' ? renderConfig() :
         renderReport();
+
+      document.querySelectorAll('.nav-btn').forEach(btn=>{
+        btn.classList.toggle('active', btn.dataset.view === state.currentView);
+      });
 
     }
 
