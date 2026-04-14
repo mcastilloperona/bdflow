@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.9</title>
+  <title>BDFlow Ver. 4.0-A</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -310,7 +310,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.9</div>
+          <div class="version">Ver. 4.0-A</div>
         </div>
       </div>
 
@@ -527,6 +527,11 @@
         lastSyncAt: '',
         lastSyncStatus: 'Local'
       },
+      reporting: {
+        mode: 'week',
+        startDate: '',
+        endDate: ''
+      },
       areas: [],
       initiatives: [],
       tasks: []
@@ -557,6 +562,7 @@
         state.rankingSort = parsed.rankingSort || state.rankingSort || 'score';
         state.rankingGroup = parsed.rankingGroup || state.rankingGroup || 'flat';
         state.supabase = {...state.supabase, ...(parsed.supabase || {})};
+        state.reporting = {...state.reporting, ...(parsed.reporting || {})};
       }catch(e){
         state.areas = [...seed.areas];
         state.initiatives = [...seed.initiatives];
@@ -614,7 +620,8 @@
         rankingLimit: state.rankingLimit,
         rankingSort: state.rankingSort,
         rankingGroup: state.rankingGroup,
-        supabase: state.supabase
+        supabase: state.supabase,
+        reporting: state.reporting
       }));
       scheduleSupabaseSync();
     }
@@ -629,7 +636,8 @@
         rankingLimit: state.rankingLimit,
         rankingSort: state.rankingSort,
         rankingGroup: state.rankingGroup,
-        supabase: state.supabase
+        supabase: state.supabase,
+        reporting: state.reporting
       };
     }
 
@@ -644,6 +652,7 @@
       state.rankingSort = payload.rankingSort || state.rankingSort || 'score';
       state.rankingGroup = payload.rankingGroup || state.rankingGroup || 'flat';
       state.supabase = {...state.supabase, ...(payload.supabase || {})};
+      state.reporting = {...state.reporting, ...(payload.reporting || {})};
       migrateState();
       return true;
     }
@@ -2047,6 +2056,215 @@ function renderConfig(){
       </div>`;
     }
 
+
+    function formatDateES(dateStr){
+      if(!dateStr) return '—';
+      const d = new Date(dateStr + 'T12:00:00');
+      if(Number.isNaN(d.getTime())) return escapeHtml(dateStr);
+      return d.toLocaleDateString('es-ES');
+    }
+
+    function toISODate(date){
+      const d = new Date(date);
+      if(Number.isNaN(d.getTime())) return '';
+      return d.toISOString().slice(0,10);
+    }
+
+    function getStartOfWeek(date){
+      const d = new Date(date);
+      d.setHours(0,0,0,0);
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      return d;
+    }
+
+    function getEndOfWeek(date){
+      const d = getStartOfWeek(date);
+      d.setDate(d.getDate() + 6);
+      d.setHours(23,59,59,999);
+      return d;
+    }
+
+    function getStartOfMonth(date){
+      const d = new Date(date);
+      d.setHours(0,0,0,0);
+      return new Date(d.getFullYear(), d.getMonth(), 1);
+    }
+
+    function getEndOfMonth(date){
+      const d = new Date(date);
+      return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+    }
+
+    function getReportRange(){
+      const mode = state.reporting?.mode || 'week';
+      const today = new Date();
+      let start = new Date(today);
+      let end = new Date(today);
+
+      if(mode === 'day'){
+        start.setHours(0,0,0,0);
+        end.setHours(23,59,59,999);
+      }else if(mode === 'week'){
+        start = getStartOfWeek(today);
+        end = getEndOfWeek(today);
+      }else if(mode === 'month'){
+        start = getStartOfMonth(today);
+        end = getEndOfMonth(today);
+      }else{
+        start = state.reporting?.startDate ? new Date(state.reporting.startDate + 'T00:00:00') : new Date(today);
+        end = state.reporting?.endDate ? new Date(state.reporting.endDate + 'T23:59:59') : new Date(today);
+        if(Number.isNaN(start.getTime())){ start = new Date(today); start.setHours(0,0,0,0); }
+        if(Number.isNaN(end.getTime())){ end = new Date(today); end.setHours(23,59,59,999); }
+        if(start > end){ const tmp = start; start = end; end = tmp; }
+      }
+      return {
+        mode,
+        start,
+        end,
+        startIso: toISODate(start),
+        endIso: toISODate(end)
+      };
+    }
+
+    function getReportRangeLabel(range){
+      if(range.mode === 'day') return 'Día · ' + formatDateES(range.startIso);
+      if(range.mode === 'week') return 'Semana · ' + formatDateES(range.startIso) + ' - ' + formatDateES(range.endIso);
+      if(range.mode === 'month') return 'Mes · ' + formatDateES(range.startIso).slice(3);
+      return 'Rango · ' + formatDateES(range.startIso) + ' - ' + formatDateES(range.endIso);
+    }
+
+    function isDateWithinRange(dateStr, range){
+      if(!dateStr) return false;
+      const d = new Date(dateStr + 'T12:00:00');
+      if(Number.isNaN(d.getTime())) return false;
+      return d >= range.start && d <= range.end;
+    }
+
+    function getPeriodReportData(){
+      const range = getReportRange();
+      const entries = [];
+      state.tasks.forEach(task=>{
+        (task.worklog || []).forEach(w=>{
+          if(isDateWithinRange(w.date, range)){
+            entries.push({
+              date: w.date,
+              hours: Number(w.hours || 0),
+              note: w.note || '',
+              taskId: task.id,
+              taskTitle: task.title,
+              initiative: getInitiativeName(task.initiativeId),
+              area: task.area
+            });
+          }
+        });
+      });
+      entries.sort((a,b)=> String(b.date).localeCompare(String(a.date)));
+
+      const closed = state.tasks.filter(t=>t.status === 'Finalizada' && t.completedAt && isDateWithinRange(t.completedAt, range))
+        .sort((a,b)=> String(b.completedAt).localeCompare(String(a.completedAt)));
+
+      const hours = round1(entries.reduce((a,b)=> a + Number(b.hours || 0), 0));
+      const sessions = entries.length;
+      const touchedTaskIds = [...new Set(entries.map(e=>e.taskId))];
+      const touchedTasks = state.tasks.filter(t=> touchedTaskIds.includes(t.id));
+      const touchedInitiatives = [...new Set(entries.map(e=>e.initiative))];
+      const hoursPlannedTouched = round1(touchedTasks.reduce((a,b)=> a + Number(b.effort || 0), 0));
+      const productivity = hoursPlannedTouched > 0 ? Math.round((hours / hoursPlannedTouched) * 100) : 0;
+
+      const grouped = {};
+      entries.forEach(entry=>{
+        if(!grouped[entry.date]) grouped[entry.date] = [];
+        grouped[entry.date].push(entry);
+      });
+
+      const byInitiative = {};
+      entries.forEach(entry=>{
+        if(!byInitiative[entry.initiative]) byInitiative[entry.initiative] = {hours:0, sessions:0};
+        byInitiative[entry.initiative].hours += Number(entry.hours || 0);
+        byInitiative[entry.initiative].sessions += 1;
+      });
+
+      const topInitiatives = Object.entries(byInitiative)
+        .map(([name, data])=>({name, hours: round1(data.hours), sessions: data.sessions}))
+        .sort((a,b)=> b.hours - a.hours)
+        .slice(0,5);
+
+      return {
+        range,
+        entries,
+        grouped,
+        closed,
+        hours,
+        sessions,
+        touchedTasks,
+        touchedTaskCount: touchedTaskIds.length,
+        touchedInitiatives,
+        productivity,
+        hoursPlannedTouched,
+        topInitiatives
+      };
+    }
+
+    function setReportMode(mode){
+      state.reporting.mode = mode;
+      if(mode !== 'range'){
+        const range = getReportRange();
+        state.reporting.startDate = range.startIso;
+        state.reporting.endDate = range.endIso;
+      }
+      saveState();
+      render();
+    }
+
+    function setReportDate(field, value){
+      state.reporting[field] = value;
+      saveState();
+      render();
+    }
+
+    function buildPeriodExecutiveReport(){
+      const data = getPeriodReportData();
+      const lines = [];
+      lines.push('INFORME DE ACTIVIDAD BDFlow');
+      lines.push('Periodo: ' + getReportRangeLabel(data.range));
+      lines.push('');
+      lines.push('RESUMEN');
+      lines.push('- Horas registradas: ' + data.hours + 'h');
+      lines.push('- Sesiones: ' + data.sessions);
+      lines.push('- Tareas trabajadas: ' + data.touchedTaskCount);
+      lines.push('- Iniciativas tocadas: ' + data.touchedInitiatives.length);
+      lines.push('- Tareas cerradas: ' + data.closed.length);
+      lines.push('- Productividad del periodo: ' + data.productivity + '%' + (data.hoursPlannedTouched ? ' (' + data.hours + 'h / ' + data.hoursPlannedTouched + 'h previstas en tareas tocadas)' : ''));
+      lines.push('');
+      lines.push('ACTIVIDAD');
+      if(data.entries.length){
+        Object.entries(data.grouped).forEach(([date, items])=>{
+          lines.push('• ' + formatDateES(date) + ' · ' + round1(items.reduce((a,b)=>a+Number(b.hours||0),0)) + 'h');
+          items.forEach(item=>{
+            lines.push('  - ' + item.taskTitle + ' · ' + item.hours + 'h' + (item.note ? ' · ' + item.note : ''));
+          });
+        });
+      }else{
+        lines.push('- Sin actividad registrada en el periodo seleccionado.');
+      }
+      lines.push('');
+      lines.push('CIERRES');
+      if(data.closed.length){
+        data.closed.forEach(task=>{
+          lines.push('- ' + task.title + ' · ' + getInitiativeName(task.initiativeId) + ' · ' + formatDateES(task.completedAt));
+        });
+      }else{
+        lines.push('- Sin tareas cerradas en el periodo.');
+      }
+      return lines.join('\n');
+    }
+
+    function copyPeriodExecutiveReport(){
+      navigator.clipboard.writeText(buildPeriodExecutiveReport()).then(()=>alert('Informe del periodo copiado al portapapeles.'));
+    }
+
     function buildExecutiveReport(){
       const metrics = getReportMetrics();
       if(!state.initiatives.length && !state.tasks.length){
@@ -2128,7 +2346,72 @@ function renderConfig(){
       const committee = buildCommitteeView();
       const metrics = committee.metrics;
       const recommendations = getAutoRecommendations(metrics);
+      const period = getPeriodReportData();
+      const periodReport = buildPeriodExecutiveReport();
+      const rangeLabel = getReportRangeLabel(period.range);
       return `<div style="display:flex;flex-direction:column;gap:18px">
+        <div class="panel">
+          <div class="panel-head"><div><h2>Informe por periodo</h2><p>Extrae actividad real por día, semana, mes o rango personalizado.</p></div></div>
+          <div class="panel-body">
+            <div class="inline-form" style="margin-bottom:16px">
+              <select onchange="setReportMode(this.value)">
+                <option value="day" ${state.reporting.mode==='day'?'selected':''}>Día</option>
+                <option value="week" ${state.reporting.mode==='week'?'selected':''}>Semana</option>
+                <option value="month" ${state.reporting.mode==='month'?'selected':''}>Mes</option>
+                <option value="range" ${state.reporting.mode==='range'?'selected':''}>Rango personalizado</option>
+              </select>
+              <input type="date" value="${escapeHtml(period.range.startIso)}" ${state.reporting.mode!=='range'?'disabled':''} onchange="setReportDate('startDate', this.value)">
+              <input type="date" value="${escapeHtml(period.range.endIso)}" ${state.reporting.mode!=='range'?'disabled':''} onchange="setReportDate('endDate', this.value)">
+              <button class="btn primary" onclick="copyPeriodExecutiveReport()">Copiar informe del periodo</button>
+            </div>
+            <div class="grid-2" style="margin-bottom:16px">
+              <div class="exec-card"><h3>Periodo seleccionado</h3><p>${escapeHtml(rangeLabel)}</p></div>
+              <div class="exec-card"><h3>Productividad del periodo</h3><p>${period.productivity}%${period.hoursPlannedTouched ? ` · ${period.hours}h reales / ${period.hoursPlannedTouched}h previstas en tareas tocadas` : ' · sin base estimada suficiente'}</p></div>
+            </div>
+            <div class="metrics" style="margin-bottom:18px">
+              <div class="metric"><div class="k">Horas</div><div class="v">${period.hours}</div><div class="s">Horas registradas en el periodo</div></div>
+              <div class="metric"><div class="k">Sesiones</div><div class="v">${period.sessions}</div><div class="s">Entradas de worklog</div></div>
+              <div class="metric"><div class="k">Tareas trabajadas</div><div class="v">${period.touchedTaskCount}</div><div class="s">Tareas con actividad real</div></div>
+              <div class="metric"><div class="k">Cierres</div><div class="v">${period.closed.length}</div><div class="s">Tareas finalizadas en el periodo</div></div>
+            </div>
+            <div class="grid-2">
+              <div class="panel" style="box-shadow:none">
+                <div class="panel-head"><div><h2>Actividad detallada</h2><p>Qué hiciste realmente en el periodo.</p></div></div>
+                <div class="panel-body">${period.entries.length ? Object.entries(period.grouped).map(([date,items])=>`
+                  <div class="activity-day">
+                    <h3>${formatDateES(date)} · ${round1(items.reduce((a,b)=>a+Number(b.hours||0),0))}h</h3>
+                    ${items.map(item=>`
+                      <div class="activity-entry">
+                        <div class="activity-top">
+                          <div>
+                            <div class="row-title">${escapeHtml(item.taskTitle)}</div>
+                            <div class="row-sub">${escapeHtml(item.initiative)} · ${escapeHtml(item.area)}</div>
+                          </div>
+                          <div class="badge blue">${item.hours}h</div>
+                        </div>
+                        ${item.note ? `<div style="margin-top:8px;color:var(--muted);font-size:13px">${escapeHtml(item.note)}</div>` : ''}
+                      </div>
+                    `).join('')}
+                  </div>`).join('') : '<div class="empty">Sin actividad registrada para el periodo seleccionado.</div>'}
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:18px">
+                <div class="panel" style="box-shadow:none">
+                  <div class="panel-head"><div><h2>Cierres del periodo</h2><p>Trabajo realmente finalizado en el rango seleccionado.</p></div></div>
+                  <div class="panel-body">${period.closed.length ? period.closed.map(task=>`<div class="row-card completed-row"><div><div class="row-title">${escapeHtml(task.title)}</div><div class="row-sub">${escapeHtml(getInitiativeName(task.initiativeId))} · ${formatDateES(task.completedAt)}</div></div><div class="badge green">Cerrada</div></div>`).join('') : '<div class="empty">Sin tareas cerradas en este periodo.</div>'}</div>
+                </div>
+                <div class="panel" style="box-shadow:none">
+                  <div class="panel-head"><div><h2>Distribución por iniciativa</h2><p>En qué se ha ido el tiempo.</p></div></div>
+                  <div class="panel-body">${period.topInitiatives.length ? period.topInitiatives.map(item=>`<div class="row-card"><div><div class="row-title">${escapeHtml(item.name)}</div><div class="row-sub">${item.sessions} sesiones</div></div><div class="badge blue">${item.hours}h</div></div>`).join('') : '<div class="empty">Sin distribución disponible.</div>'}</div>
+                </div>
+                <div class="panel" style="box-shadow:none">
+                  <div class="panel-head"><div><h2>Informe del periodo</h2><p>Texto listo para copiar y compartir.</p></div></div>
+                  <div class="panel-body"><div class="report-box">${escapeHtml(periodReport)}</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         ${renderReportSummary(metrics)}
         <div class="grid-2">
           <div class="panel">
@@ -2597,6 +2880,9 @@ function renderConfig(){
     window.requestBrowserNotifications = requestBrowserNotifications;
     window.saveAlertsConfig = saveAlertsConfig;
     window.testAlertsNow = testAlertsNow;
+    window.setReportMode = setReportMode;
+    window.setReportDate = setReportDate;
+    window.copyPeriodExecutiveReport = copyPeriodExecutiveReport;
 
     document.querySelectorAll('.nav-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
