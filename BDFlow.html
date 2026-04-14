@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 4.0-A</title>
+  <title>BDFlow Ver. 3.9</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -310,7 +310,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 4.0-A</div>
+          <div class="version">Ver. 3.9</div>
         </div>
       </div>
 
@@ -517,9 +517,6 @@
         includeCompleted: true,
         emailTo: ''
       },
-      reportPeriodType: 'week',
-      reportStartDate: '',
-      reportEndDate: '',
       notified: {},
       supabase: {
         enabled: true,
@@ -2026,276 +2023,6 @@ function renderConfig(){
       return out.slice(0,3);
     }
 
-    function startOfWeek(date){
-      const d = new Date(date);
-      d.setHours(0,0,0,0);
-      const day = d.getDay();
-      const diff = day === 0 ? -6 : 1 - day;
-      d.setDate(d.getDate() + diff);
-      return d;
-    }
-
-    function endOfWeek(date){
-      const d = startOfWeek(date);
-      d.setDate(d.getDate() + 6);
-      d.setHours(23,59,59,999);
-      return d;
-    }
-
-    function startOfMonth(date){
-      const d = new Date(date.getFullYear(), date.getMonth(), 1);
-      d.setHours(0,0,0,0);
-      return d;
-    }
-
-    function endOfMonth(date){
-      const d = new Date(date.getFullYear(), date.getMonth()+1, 0);
-      d.setHours(23,59,59,999);
-      return d;
-    }
-
-    function toIsoDateLocal(date){
-      const d = new Date(date);
-      d.setHours(12,0,0,0);
-      return d.toISOString().slice(0,10);
-    }
-
-    function getReportPeriodRange(){
-      const today = new Date();
-      const type = state.reportPeriodType || 'week';
-      let start;
-      let end;
-      if(type === 'day'){
-        start = new Date(today);
-        start.setHours(0,0,0,0);
-        end = new Date(today);
-        end.setHours(23,59,59,999);
-      }else if(type === 'month'){
-        start = startOfMonth(today);
-        end = endOfMonth(today);
-      }else if(type === 'range'){
-        start = state.reportStartDate ? parseDate(state.reportStartDate) : startOfWeek(today);
-        end = state.reportEndDate ? parseDate(state.reportEndDate) : endOfWeek(today);
-        start.setHours(0,0,0,0);
-        end.setHours(23,59,59,999);
-      }else{
-        start = startOfWeek(today);
-        end = endOfWeek(today);
-      }
-      return {type, start, end, startIso: toIsoDateLocal(start), endIso: toIsoDateLocal(end)};
-    }
-
-    function isDateInRange(dateStr, start, end){
-      if(!dateStr) return false;
-      const d = parseDate(dateStr);
-      d.setHours(12,0,0,0);
-      return d >= start && d <= end;
-    }
-
-    function getPeriodLabel(range){
-      if(range.type === 'day') return 'Hoy';
-      if(range.type === 'week') return 'Semana actual';
-      if(range.type === 'month') return 'Mes actual';
-      return `Rango ${range.startIso} → ${range.endIso}`;
-    }
-
-    function getPeriodReportData(){
-      const range = getReportPeriodRange();
-      const worklogEntries = [];
-      const closedTasks = [];
-      const touchedTaskIds = new Set();
-      const touchedInitiatives = new Set();
-      const touchedAreas = new Set();
-      let periodPlannedHours = 0;
-
-      state.tasks.forEach(task => {
-        const initiative = getInitiativeName(task.initiativeId);
-        if(isDateInRange(task.completedAt, range.start, range.end)){
-          closedTasks.push({
-            id: task.id,
-            title: task.title,
-            initiative,
-            area: task.area,
-            completedAt: task.completedAt,
-            spent: Number(task.spent || 0),
-            effort: Number(task.effort || 0)
-          });
-        }
-        (task.worklog || []).forEach(w => {
-          if(isDateInRange(w.date, range.start, range.end)){
-            const hours = Number(w.hours || 0);
-            worklogEntries.push({
-              taskId: task.id,
-              taskTitle: task.title,
-              initiative,
-              area: task.area,
-              date: w.date,
-              hours,
-              note: w.note || ''
-            });
-            touchedTaskIds.add(task.id);
-            touchedInitiatives.add(initiative);
-            touchedAreas.add(task.area || 'General');
-            periodPlannedHours += Number(task.effort || 0);
-          }
-        });
-      });
-
-      worklogEntries.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-      closedTasks.sort((a,b)=>String(b.completedAt).localeCompare(String(a.completedAt)));
-
-      const totalHours = Math.round(worklogEntries.reduce((a,b)=>a + Number(b.hours || 0),0) * 10) / 10;
-      const sessions = worklogEntries.length;
-      const touchedTasks = state.tasks.filter(t => touchedTaskIds.has(t.id)).map(t => ({
-        id: t.id,
-        title: t.title,
-        initiative: getInitiativeName(t.initiativeId),
-        area: t.area,
-        spent: Number(t.spent || 0),
-        effort: Number(t.effort || 0)
-      }));
-      const productivity = periodPlannedHours > 0 ? Math.round((totalHours / periodPlannedHours) * 100) : 0;
-      const grouped = {};
-      worklogEntries.forEach(e => {
-        if(!grouped[e.date]) grouped[e.date] = [];
-        grouped[e.date].push(e);
-      });
-      return {
-        range,
-        label: getPeriodLabel(range),
-        worklogEntries,
-        groupedEntries: grouped,
-        totalHours,
-        sessions,
-        touchedTasks,
-        touchedTaskCount: touchedTaskIds.size,
-        touchedInitiativesCount: touchedInitiatives.size,
-        touchedAreasCount: touchedAreas.size,
-        closedTasks,
-        throughput: closedTasks.length,
-        productivity,
-        periodPlannedHours: Math.round(periodPlannedHours * 10) / 10
-      };
-    }
-
-    function buildPeriodExecutiveReport(period){
-      const lines = [];
-      lines.push('INFORME BDFlow POR PERIODO');
-      lines.push(`Periodo: ${period.label}`);
-      lines.push(`Rango: ${period.range.startIso} → ${period.range.endIso}`);
-      lines.push('');
-      lines.push('RESUMEN');
-      lines.push(`- Horas registradas: ${period.totalHours}h`);
-      lines.push(`- Sesiones: ${period.sessions}`);
-      lines.push(`- Tareas trabajadas: ${period.touchedTaskCount}`);
-      lines.push(`- Iniciativas tocadas: ${period.touchedInitiativesCount}`);
-      lines.push(`- Cierres del periodo: ${period.throughput}`);
-      lines.push(`- Productividad del periodo: ${period.productivity}%` + (period.periodPlannedHours ? ` (${period.totalHours}h reales / ${period.periodPlannedHours}h previstas)` : ''));
-      lines.push('');
-      lines.push('ACTIVIDAD');
-      if(period.worklogEntries.length){
-        Object.entries(period.groupedEntries).forEach(([date,items]) => {
-          lines.push(`• ${date} · ${items.reduce((a,b)=>a+Number(b.hours||0),0)}h`);
-          items.forEach(it => {
-            lines.push(`  - ${it.hours}h · ${it.taskTitle} · ${it.note || 'Sin comentario'}`);
-          });
-        });
-      }else{
-        lines.push('- Sin actividad registrada en el periodo.');
-      }
-      lines.push('');
-      lines.push('CIERRES');
-      if(period.closedTasks.length){
-        period.closedTasks.forEach(t => lines.push(`- ${t.completedAt} · ${t.title} · ${t.initiative}`));
-      }else{
-        lines.push('- Sin tareas finalizadas en el periodo.');
-      }
-      return lines.join('
-');
-    }
-
-    function onReportPeriodTypeChange(value){
-      state.reportPeriodType = value;
-      if(value !== 'range'){
-        const range = getReportPeriodRange();
-        state.reportStartDate = range.startIso;
-        state.reportEndDate = range.endIso;
-      }
-      render();
-    }
-
-    function onReportDateChange(which, value){
-      if(which === 'start') state.reportStartDate = value;
-      if(which === 'end') state.reportEndDate = value;
-      if(state.reportPeriodType !== 'range') state.reportPeriodType = 'range';
-      render();
-    }
-
-    function copyPeriodExecutiveReport(){
-      const period = getPeriodReportData();
-      navigator.clipboard.writeText(buildPeriodExecutiveReport(period)).then(()=>alert('Informe de periodo copiado al portapapeles.'));
-    }
-
-    function renderPeriodReport(period){
-      const rangeDisabled = period.range.type !== 'range';
-      return `<div class="panel">
-        <div class="panel-head"><div><h2>Informe por periodo</h2><p>Explota el worklog y los cierres por día, semana, mes o rango personalizado.</p></div></div>
-        <div class="panel-body">
-          <div class="inline-form" style="margin-bottom:14px">
-            <select onchange="onReportPeriodTypeChange(this.value)">
-              <option value="day" ${period.range.type==='day'?'selected':''}>Día</option>
-              <option value="week" ${period.range.type==='week'?'selected':''}>Semana</option>
-              <option value="month" ${period.range.type==='month'?'selected':''}>Mes</option>
-              <option value="range" ${period.range.type==='range'?'selected':''}>Rango personalizado</option>
-            </select>
-            <input type="date" value="${period.range.startIso}" ${rangeDisabled?'disabled':''} onchange="onReportDateChange('start', this.value)">
-            <input type="date" value="${period.range.endIso}" ${rangeDisabled?'disabled':''} onchange="onReportDateChange('end', this.value)">
-            <button class="btn primary" onclick="copyPeriodExecutiveReport()">Copiar informe del periodo</button>
-          </div>
-          <div class="metrics" style="margin-bottom:18px">
-            <div class="metric"><div class="k">Horas del periodo</div><div class="v">${period.totalHours}h</div><div class="s">Actividad registrada en ${period.label.toLowerCase()}</div></div>
-            <div class="metric"><div class="k">Sesiones</div><div class="v">${period.sessions}</div><div class="s">Entradas de worklog en el rango</div></div>
-            <div class="metric"><div class="k">Tareas trabajadas</div><div class="v">${period.touchedTaskCount}</div><div class="s">${period.touchedInitiativesCount} iniciativas · ${period.touchedAreasCount} áreas</div></div>
-            <div class="metric"><div class="k">Cierres</div><div class="v">${period.throughput}</div><div class="s">Tareas finalizadas en el periodo</div></div>
-          </div>
-          <div class="grid-2">
-            <div class="panel" style="box-shadow:none">
-              <div class="panel-head"><div><h2>Actividad detallada</h2><p>${escapeHtml(period.label)} · trabajo realmente realizado.</p></div></div>
-              <div class="panel-body">${period.worklogEntries.length ? Object.entries(period.groupedEntries).map(([date,items])=>`
-                <div class="activity-day">
-                  <h3>${date} · ${items.reduce((a,b)=>a+Number(b.hours||0),0)}h</h3>
-                  ${items.map(i=>`
-                    <div class="activity-entry">
-                      <div class="activity-top">
-                        <div>
-                          <div class="row-title">${escapeHtml(i.taskTitle)}</div>
-                          <div class="row-sub">${escapeHtml(i.initiative)} · ${escapeHtml(i.area)}</div>
-                        </div>
-                        <div class="badge blue">${i.hours}h</div>
-                      </div>
-                      <div style="margin-top:8px;color:var(--muted);font-size:13px">${escapeHtml(i.note || 'Sin comentario')}</div>
-                    </div>
-                  `).join('')}
-                </div>
-              `).join('') : '<div class="empty">No hay worklog registrado en este periodo.</div>'}</div>
-            </div>
-            <div class="panel" style="box-shadow:none">
-              <div class="panel-head"><div><h2>Resumen ejecutivo del periodo</h2><p>Listo para justificar trabajo por día, semana o mes.</p></div></div>
-              <div class="panel-body">
-                <div class="exec-grid" style="margin-bottom:16px">
-                  <div class="exec-card"><h3>Foco temporal</h3><p>${period.touchedTaskCount ? `Has trabajado sobre ${period.touchedTaskCount} tarea(s) y ${period.touchedInitiativesCount} iniciativa(s).` : 'Sin actividad registrada en el periodo.'}</p></div>
-                  <div class="exec-card"><h3>Productividad periodo</h3><p>${period.productivity}%${period.periodPlannedHours ? ` · ${period.totalHours}h reales / ${period.periodPlannedHours}h previstas` : ' · sin base suficiente de previsión para calcularla'}</p></div>
-                  <div class="exec-card" style="grid-column:1 / -1"><h3>Cierres del periodo</h3>${period.closedTasks.length ? `<ul class="exec-list">${period.closedTasks.map(t=>`<li>${escapeHtml(t.title)} · ${escapeHtml(t.initiative)} · ${escapeHtml(t.completedAt)}</li>`).join('')}</ul>` : '<p>Sin tareas finalizadas en el periodo.</p>'}</div>
-                </div>
-                <div class="report-toolbar"><button class="btn primary" onclick="copyPeriodExecutiveReport()">Copiar informe del periodo</button></div>
-                <div class="report-box">${escapeHtml(buildPeriodExecutiveReport(period))}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    }
-
     function renderReportSummary(metrics){
       const completionRate = metrics.tasks.length ? Math.round((metrics.completedTasks.length / metrics.tasks.length) * 100) : 0;
       return `<div class="metrics" style="margin-bottom:18px">
@@ -2401,14 +2128,7 @@ function renderConfig(){
       const committee = buildCommitteeView();
       const metrics = committee.metrics;
       const recommendations = getAutoRecommendations(metrics);
-      if(!state.reportStartDate || !state.reportEndDate){
-        const initialRange = getReportPeriodRange();
-        state.reportStartDate = initialRange.startIso;
-        state.reportEndDate = initialRange.endIso;
-      }
-      const period = getPeriodReportData();
       return `<div style="display:flex;flex-direction:column;gap:18px">
-        ${renderPeriodReport(period)}
         ${renderReportSummary(metrics)}
         <div class="grid-2">
           <div class="panel">
@@ -2814,7 +2534,7 @@ function renderConfig(){
         activity:['Actividad','Vista cronológica del trabajo realizado.'],
         initiatives:['Iniciativas','Contenedores de trabajo que agrupan tareas.'],
         config:['Configuración','Áreas e iniciativas gestionadas de forma rápida.'],
-        report:['Informe','Análisis ejecutivo y reporting por periodo.']
+        report:['Informe','Versión comité y resumen ejecutivo listo para compartir.']
       };
 
       document.getElementById('pageTitle').textContent = titles[state.currentView][0];
@@ -2863,9 +2583,6 @@ function renderConfig(){
     window.importData = importData;
     window.toggleSidebar = toggleSidebar;
     window.copyExecutiveReport = copyExecutiveReport;
-    window.copyPeriodExecutiveReport = copyPeriodExecutiveReport;
-    window.onReportPeriodTypeChange = onReportPeriodTypeChange;
-    window.onReportDateChange = onReportDateChange;
     window.applyDrillDown = applyDrillDown;
     window.clearDrillDown = clearDrillDown;
     window.loadMoreRanking = loadMoreRanking;
