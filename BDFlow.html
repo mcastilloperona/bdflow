@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 4.0</title>
+  <title>BDFlow Ver. 4.0.1</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -310,7 +310,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 4.0</div>
+          <div class="version">Ver. 4.0.1</div>
         </div>
       </div>
 
@@ -570,7 +570,40 @@
         rangeEnd: state.report?.rangeEnd || ''
       };
       state.dailyQuoteState = state.dailyQuoteState || {date:'', quote:'', used:[]};
+
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if(parsed && typeof parsed === 'object'){
+          state.alertsConfig = {...state.alertsConfig, ...(parsed.alertsConfig || {})};
+          state.dailyCapacity = Number(parsed.dailyCapacity || state.dailyCapacity || 6);
+          state.rankingLimit = Number(parsed.rankingLimit || state.rankingLimit || 20);
+          state.rankingSort = parsed.rankingSort || state.rankingSort || 'score';
+          state.rankingGroup = parsed.rankingGroup || state.rankingGroup || 'flat';
+          state.report = {
+            preset: parsed.report?.preset || state.report?.preset || 'week',
+            anchor: parsed.report?.anchor || state.report?.anchor || new Date().toISOString().slice(0,10),
+            rangeStart: parsed.report?.rangeStart || state.report?.rangeStart || '',
+            rangeEnd: parsed.report?.rangeEnd || state.report?.rangeEnd || ''
+          };
+          state.dailyQuoteState = parsed.dailyQuoteState || state.dailyQuoteState;
+          state.supabase = {...state.supabase, ...(parsed.supabase || {})};
+        }
+      }catch(e){ /* ignore legacy local parse errors */ }
+
       migrateState();
+    }
+
+    function readLegacyLocalState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if(!parsed || typeof parsed !== 'object') return null;
+        const hasStructuredData = (Array.isArray(parsed.tasks) && parsed.tasks.length) || (Array.isArray(parsed.initiatives) && parsed.initiatives.length) || (Array.isArray(parsed.areas) && parsed.areas.length);
+        return hasStructuredData ? parsed : null;
+      }catch(e){
+        return null;
+      }
     }
 
     function migrateState(){
@@ -2818,12 +2851,24 @@ CIERRES DEL PERIODO
     });
 
     async function bootstrapRemoteState(){
-      if(state.supabase?.enabled && state.supabase?.url && state.supabase?.anonKey){
-        const loaded = await loadStateFromSupabase(false);
-        if(!loaded){
-          await saveStateToSupabase(false);
+      if(!(state.supabase?.enabled && state.supabase?.url && state.supabase?.anonKey)) return;
+
+      const loaded = await loadStateFromSupabase(false);
+      if(loaded) return;
+
+      const legacy = readLegacyLocalState();
+      if(legacy){
+        applyRemoteState(legacy);
+        render();
+        const migrated = await saveStateToSupabase(false);
+        if(migrated){
+          showToast('BDFlow', 'Se ha migrado tu estado anterior a Supabase.');
+          try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+          return;
         }
       }
+
+      await saveStateToSupabase(false);
     }
 
     loadState();
