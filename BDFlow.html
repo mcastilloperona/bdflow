@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 4.0.1</title>
+  <title>BDFlow Ver. 3.9</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -310,7 +310,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 4.0.1</div>
+          <div class="version">Ver. 3.9</div>
         </div>
       </div>
 
@@ -527,17 +527,6 @@
         lastSyncAt: '',
         lastSyncStatus: 'Local'
       },
-      report: {
-        preset: 'week',
-        anchor: new Date().toISOString().slice(0,10),
-        rangeStart: '',
-        rangeEnd: ''
-      },
-      dailyQuoteState: {
-        date: '',
-        quote: '',
-        used: []
-      },
       areas: [],
       initiatives: [],
       tasks: []
@@ -556,54 +545,24 @@
     }
 
     function loadState(){
-      state.areas = [...seed.areas];
-      state.initiatives = [...seed.initiatives];
-      state.tasks = [];
-      state.dailyCapacity = Number(state.dailyCapacity || 6);
-      state.rankingLimit = Number(state.rankingLimit || 20);
-      state.rankingSort = state.rankingSort || 'score';
-      state.rankingGroup = state.rankingGroup || 'flat';
-      state.report = {
-        preset: state.report?.preset || 'week',
-        anchor: state.report?.anchor || new Date().toISOString().slice(0,10),
-        rangeStart: state.report?.rangeStart || '',
-        rangeEnd: state.report?.rangeEnd || ''
-      };
-      state.dailyQuoteState = state.dailyQuoteState || {date:'', quote:'', used:[]};
-
       try{
         const raw = localStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : null;
-        if(parsed && typeof parsed === 'object'){
-          state.alertsConfig = {...state.alertsConfig, ...(parsed.alertsConfig || {})};
-          state.dailyCapacity = Number(parsed.dailyCapacity || state.dailyCapacity || 6);
-          state.rankingLimit = Number(parsed.rankingLimit || state.rankingLimit || 20);
-          state.rankingSort = parsed.rankingSort || state.rankingSort || 'score';
-          state.rankingGroup = parsed.rankingGroup || state.rankingGroup || 'flat';
-          state.report = {
-            preset: parsed.report?.preset || state.report?.preset || 'week',
-            anchor: parsed.report?.anchor || state.report?.anchor || new Date().toISOString().slice(0,10),
-            rangeStart: parsed.report?.rangeStart || state.report?.rangeStart || '',
-            rangeEnd: parsed.report?.rangeEnd || state.report?.rangeEnd || ''
-          };
-          state.dailyQuoteState = parsed.dailyQuoteState || state.dailyQuoteState;
-          state.supabase = {...state.supabase, ...(parsed.supabase || {})};
-        }
-      }catch(e){ /* ignore legacy local parse errors */ }
-
-      migrateState();
-    }
-
-    function readLegacyLocalState(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : null;
-        if(!parsed || typeof parsed !== 'object') return null;
-        const hasStructuredData = (Array.isArray(parsed.tasks) && parsed.tasks.length) || (Array.isArray(parsed.initiatives) && parsed.initiatives.length) || (Array.isArray(parsed.areas) && parsed.areas.length);
-        return hasStructuredData ? parsed : null;
+        const parsed = raw ? JSON.parse(raw) : seed;
+        state.areas = Array.isArray(parsed.areas) && parsed.areas.length ? parsed.areas : [...seed.areas];
+        state.initiatives = Array.isArray(parsed.initiatives) ? parsed.initiatives : [];
+        state.tasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
+        state.alertsConfig = {...state.alertsConfig, ...(parsed.alertsConfig || {})};
+        state.dailyCapacity = Number(parsed.dailyCapacity || state.dailyCapacity || 6);
+        state.rankingLimit = Number(parsed.rankingLimit || state.rankingLimit || 20);
+        state.rankingSort = parsed.rankingSort || state.rankingSort || 'score';
+        state.rankingGroup = parsed.rankingGroup || state.rankingGroup || 'flat';
+        state.supabase = {...state.supabase, ...(parsed.supabase || {})};
       }catch(e){
-        return null;
+        state.areas = [...seed.areas];
+        state.initiatives = [...seed.initiatives];
+        state.tasks = [];
       }
+      migrateState();
     }
 
     function migrateState(){
@@ -646,6 +605,17 @@
     }
 
     function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        areas: state.areas,
+        initiatives: state.initiatives,
+        tasks: state.tasks,
+        alertsConfig: state.alertsConfig,
+        dailyCapacity: state.dailyCapacity,
+        rankingLimit: state.rankingLimit,
+        rankingSort: state.rankingSort,
+        rankingGroup: state.rankingGroup,
+        supabase: state.supabase
+      }));
       scheduleSupabaseSync();
     }
 
@@ -659,8 +629,6 @@
         rankingLimit: state.rankingLimit,
         rankingSort: state.rankingSort,
         rankingGroup: state.rankingGroup,
-        report: state.report,
-        dailyQuoteState: state.dailyQuoteState,
         supabase: state.supabase
       };
     }
@@ -675,17 +643,6 @@
       state.rankingLimit = Number(payload.rankingLimit || state.rankingLimit || 20);
       state.rankingSort = payload.rankingSort || state.rankingSort || 'score';
       state.rankingGroup = payload.rankingGroup || state.rankingGroup || 'flat';
-      state.report = {
-        preset: payload.report?.preset || state.report?.preset || 'week',
-        anchor: payload.report?.anchor || state.report?.anchor || new Date().toISOString().slice(0,10),
-        rangeStart: payload.report?.rangeStart || state.report?.rangeStart || '',
-        rangeEnd: payload.report?.rangeEnd || state.report?.rangeEnd || ''
-      };
-      state.dailyQuoteState = {
-        date: payload.dailyQuoteState?.date || '',
-        quote: payload.dailyQuoteState?.quote || '',
-        used: Array.isArray(payload.dailyQuoteState?.used) ? payload.dailyQuoteState.used : []
-      };
       state.supabase = {...state.supabase, ...(payload.supabase || {})};
       migrateState();
       return true;
@@ -734,12 +691,14 @@
         if(error) throw error;
         state.supabase.lastSyncAt = new Date().toISOString();
         state.supabase.lastSyncStatus = 'Sincronizado';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getSerializableState()));
         if(showFeedback) showToast('BDFlow', 'Sincronizado con Supabase.');
         render();
         return true;
       }catch(err){
         console.error('Supabase save error', err);
         state.supabase.lastSyncStatus = 'Error';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getSerializableState()));
         if(showFeedback) alert('No se pudo sincronizar con Supabase. Revisa URL, anon key y tabla bdflow_state.');
         render();
         return false;
@@ -764,6 +723,7 @@
         applyRemoteState(data.app_state);
         state.supabase.lastSyncAt = data.updated_at || new Date().toISOString();
         state.supabase.lastSyncStatus = 'Cargado desde Supabase';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getSerializableState()));
         render();
         if(showFeedback) showToast('BDFlow', 'Datos cargados desde Supabase.');
         return true;
@@ -809,11 +769,19 @@
     }
 
     async function disconnectSupabase(){
-      alert('En la versión 4, Supabase es la fuente única de verdad. No existe modo local.');
+      state.supabase.enabled = false;
+      state.supabase.lastSyncStatus = 'Local';
+      saveState();
+      render();
+      showToast('BDFlow', 'Supabase desactivado. Sigues trabajando en local.');
     }
 
     function exportData(){
-      const raw = JSON.stringify(getSerializableState(), null, 2);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw){
+        alert('No hay datos para exportar.');
+        return;
+      }
       const blob = new Blob([raw], {type:'application/json;charset=utf-8'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -829,17 +797,17 @@
       const file = event.target.files && event.target.files[0];
       if(!file) return;
       const reader = new FileReader();
-      reader.onload = async function(e){
+      reader.onload = function(e){
         try{
           const parsed = JSON.parse(e.target.result);
           if(typeof parsed !== 'object' || parsed === null){
             alert('Archivo no válido.');
             return;
           }
-          applyRemoteState(parsed);
-          await saveStateToSupabase(false);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+          loadState();
           render();
-          alert('Datos importados y sincronizados correctamente.');
+          alert('Datos importados correctamente.');
         }catch(err){
           alert('Error al importar archivo.');
         }finally{
@@ -1498,10 +1466,14 @@
         'No subestimes el poder de terminar una sola cosa relevante.',
         'La constancia no impresiona en el momento, pero cambia los resultados.'
       ];
+      const STORAGE = 'bdflow_daily_quote_state';
       const today = new Date().toISOString().slice(0,10);
-      const data = state.dailyQuoteState || {date:'', quote:'', used:[]};
-      if(data.date === today && data.quote) return data.quote;
-      let used = Array.isArray(data.used) ? data.used.filter(q => quotes.includes(q)) : [];
+      let data = null;
+      try{ data = JSON.parse(localStorage.getItem(STORAGE) || 'null'); }catch(e){ data = null; }
+      if(data && data.date === today && data.quote){
+        return data.quote;
+      }
+      let used = Array.isArray(data?.used) ? data.used.filter(q => quotes.includes(q)) : [];
       let available = quotes.filter(q => !used.includes(q));
       if(!available.length){
         used = [];
@@ -1510,8 +1482,7 @@
       const seed = Number(today.replaceAll('-',''));
       const pick = available[seed % available.length];
       used.push(pick);
-      state.dailyQuoteState = {date: today, quote: pick, used};
-      scheduleSupabaseSync();
+      localStorage.setItem(STORAGE, JSON.stringify({date: today, quote: pick, used}));
       return pick;
     }
 
@@ -1851,7 +1822,7 @@
       const cfg = state.supabase || {};
       const maskedKey = cfg.anonKey ? '•'.repeat(Math.max(8, Math.min(20, cfg.anonKey.length))) : '';
       return `<div class="panel">
-        <div class="panel-head"><div><h2>Supabase</h2><p>Fuente única de verdad de BDFlow. Todo se carga y guarda desde la nube.</p></div></div>
+        <div class="panel-head"><div><h2>Supabase</h2><p>Conexión remota para guardar y recuperar BDFlow desde la nube.</p></div></div>
         <div class="panel-body">
           <div class="settings-grid">
             <div class="setting-box">
@@ -1861,12 +1832,12 @@
               <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
                 <button class="btn primary" onclick="connectSupabaseFromUI()">Guardar conexión</button>
                 <button class="btn secondary" onclick="testSupabaseConnection()">Probar conexión</button>
-                
+                <button class="btn ghost" onclick="disconnectSupabase()">Trabajar en local</button>
               </div>
             </div>
             <div class="setting-box">
               <div class="toggle-row">
-                <div><div class="row-title">Supabase activo</div><div class="row-sub">En v4 no existe almacenamiento local persistente.</div></div>
+                <div><div class="row-title">Supabase activo</div><div class="row-sub">Si está apagado, BDFlow solo usa localStorage.</div></div>
                 <label class="switch"><input type="checkbox" id="sbEnabled" ${cfg.enabled?'checked':''}><span class="slider"></span></label>
               </div>
               <div class="toggle-row">
@@ -1878,7 +1849,7 @@
                   <div class="row-title">Estado</div>
                   <div class="row-sub">${escapeHtml(cfg.lastSyncStatus || 'Local')}${cfg.lastSyncAt ? ' · ' + escapeHtml(cfg.lastSyncAt.replace('T',' ').slice(0,16)) : ''}</div>
                 </div>
-                <div><span class="badge ${cfg.enabled ? 'blue' : ''}">${cfg.enabled ? 'Supabase' : 'Sin conexión'}</span></div>
+                <div><span class="badge ${cfg.enabled ? 'blue' : ''}">${cfg.enabled ? 'Supabase' : 'Local'}</span></div>
               </div>
               <div class="row-card">
                 <div>
@@ -1966,111 +1937,6 @@ function renderConfig(){
       return tasks.filter(t => getTaskWeekIndex(t) !== null);
     }
 
-
-    function toDateOnly(d){
-      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    }
-
-    function startOfWeek(date){
-      const d = toDateOnly(new Date(date + 'T12:00:00'));
-      const day = d.getDay();
-      const diff = day === 0 ? -6 : 1 - day;
-      d.setDate(d.getDate() + diff);
-      return d;
-    }
-
-    function endOfWeek(date){
-      const d = startOfWeek(date);
-      d.setDate(d.getDate() + 6);
-      return d;
-    }
-
-    function startOfMonth(date){
-      const d = toDateOnly(new Date(date + 'T12:00:00'));
-      return new Date(d.getFullYear(), d.getMonth(), 1);
-    }
-
-    function endOfMonth(date){
-      const d = toDateOnly(new Date(date + 'T12:00:00'));
-      return new Date(d.getFullYear(), d.getMonth() + 1, 0);
-    }
-
-    function formatDateYMD(d){
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-
-    function getReportRange(){
-      const preset = state.report?.preset || 'week';
-      const anchor = state.report?.anchor || new Date().toISOString().slice(0,10);
-      if(preset === 'day'){
-        return {start: anchor, end: anchor, label: `Día ${anchor}`};
-      }
-      if(preset === 'week'){
-        const s = startOfWeek(anchor), e = endOfWeek(anchor);
-        return {start: formatDateYMD(s), end: formatDateYMD(e), label: `Semana ${formatDateYMD(s)} a ${formatDateYMD(e)}`};
-      }
-      if(preset === 'month'){
-        const s = startOfMonth(anchor), e = endOfMonth(anchor);
-        return {start: formatDateYMD(s), end: formatDateYMD(e), label: `Mes ${s.toLocaleDateString('es-ES', {month:'long', year:'numeric'})}`};
-      }
-      const start = state.report?.rangeStart || anchor;
-      const end = state.report?.rangeEnd || start;
-      return {start, end, label: `Rango ${start} a ${end}`};
-    }
-
-    function isDateWithinRange(dateStr, range){
-      if(!dateStr) return false;
-      return String(dateStr) >= String(range.start) && String(dateStr) <= String(range.end);
-    }
-
-    function getPeriodWorklogEntries(){
-      const range = getReportRange();
-      const rows = [];
-      baseTasks().forEach(task=>{
-        (task.worklog || []).forEach(w=>{
-          if(isDateWithinRange(w.date, range)){
-            rows.push({
-              taskId: task.id,
-              title: task.title,
-              initiative: task.initiative,
-              area: task.area,
-              status: task.status,
-              date: w.date,
-              hours: Number(w.hours || 0),
-              note: w.note || '',
-              next: task.next || '',
-              completedAt: task.completedAt || ''
-            });
-          }
-        });
-      });
-      rows.sort((a,b)=> String(b.date).localeCompare(String(a.date)));
-      return rows;
-    }
-
-    function getPeriodCompletedTasks(){
-      const range = getReportRange();
-      return baseTasks().filter(t => t.status === 'Finalizada' && isDateWithinRange(t.completedAt, range));
-    }
-
-    function renderReportPeriodControls(){
-      const r = state.report || {};
-      const range = getReportRange();
-      return `<div class="inline-form" style="margin-bottom:14px">
-        <select id="reportPreset">
-          <option value="day" ${r.preset==='day'?'selected':''}>Día</option>
-          <option value="week" ${r.preset==='week'?'selected':''}>Semana</option>
-          <option value="month" ${r.preset==='month'?'selected':''}>Mes</option>
-          <option value="custom" ${r.preset==='custom'?'selected':''}>Rango personalizado</option>
-        </select>
-        <input id="reportAnchor" type="date" value="${escapeHtml(r.anchor || new Date().toISOString().slice(0,10))}">
-        <input id="reportStart" type="date" value="${escapeHtml(r.rangeStart || '')}" ${r.preset==='custom' ? '' : 'disabled'}>
-        <input id="reportEnd" type="date" value="${escapeHtml(r.rangeEnd || '')}" ${r.preset==='custom' ? '' : 'disabled'}>
-        <button class="btn secondary" onclick="applyReportRange()">Aplicar periodo</button>
-        <span class="badge blue">${escapeHtml(range.label)}</span>
-      </div>`;
-    }
-
     function getReportMetrics(){
       const tasks = filteredTasks();
       const allTasks = [...tasks];
@@ -2093,19 +1959,6 @@ function renderConfig(){
       const weeklyLoad = round1(currentWeekTasks.filter(t=>t.status!=='Finalizada').reduce((a,b)=>a + getRemainingEffort(b), 0));
       const loadVsCapacity = weeklyCapacity > 0 ? Math.round((weeklyLoad / weeklyCapacity) * 100) : 0;
 
-      const range = getReportRange();
-      const periodEntries = getPeriodWorklogEntries();
-      const periodHours = round1(periodEntries.reduce((a,b)=>a+Number(b.hours||0),0));
-      const periodSessions = periodEntries.length;
-      const periodCompletedTasks = getPeriodCompletedTasks();
-      const periodTouchedTaskIds = [...new Set(periodEntries.map(x=>x.taskId))];
-      const periodTouchedTasks = allTasks.filter(t=>periodTouchedTaskIds.includes(t.id));
-      const periodAreas = [...new Set(periodEntries.map(x=>x.area).filter(Boolean))];
-      const periodInitiatives = [...new Set(periodEntries.map(x=>x.initiative).filter(Boolean))];
-      const periodTouchedPlannedHours = round1(periodTouchedTasks.reduce((a,b)=>a + Number(b.effort || 0), 0));
-      const periodProductivity = periodTouchedPlannedHours > 0 ? Math.round((periodHours / periodTouchedPlannedHours) * 100) : 0;
-      const periodThroughput = periodCompletedTasks.length;
-
       return {
         tasks: allTasks,
         activeTasks,
@@ -2123,17 +1976,7 @@ function renderConfig(){
         recentCompleted,
         weeklyCapacity,
         weeklyLoad,
-        loadVsCapacity,
-        range,
-        periodEntries,
-        periodHours,
-        periodSessions,
-        periodCompletedTasks,
-        periodTouchedTasks,
-        periodAreas,
-        periodInitiatives,
-        periodProductivity,
-        periodThroughput
+        loadVsCapacity
       };
     }
 
@@ -2181,11 +2024,12 @@ function renderConfig(){
     }
 
     function renderReportSummary(metrics){
+      const completionRate = metrics.tasks.length ? Math.round((metrics.completedTasks.length / metrics.tasks.length) * 100) : 0;
       return `<div class="metrics" style="margin-bottom:18px">
-        <div class="metric"><div class="k">Horas periodo</div><div class="v">${metrics.periodHours}h</div><div class="s">${metrics.periodSessions} sesiones · ${escapeHtml(metrics.range.label)}</div></div>
-        <div class="metric"><div class="k">Tareas tocadas</div><div class="v">${metrics.periodTouchedTasks.length}</div><div class="s">${metrics.periodInitiatives.length} iniciativas · ${metrics.periodAreas.length} áreas</div></div>
-        <div class="metric"><div class="k">Cierres periodo</div><div class="v">${metrics.periodThroughput}</div><div class="s">Tareas finalizadas en el periodo seleccionado</div></div>
-        <div class="metric"><div class="k">Productividad periodo</div><div class="v">${metrics.periodProductivity}%</div><div class="s">Sobre tareas en las que realmente trabajaste</div></div>
+        <div class="metric"><div class="k">Productividad</div><div class="v">${metrics.productivity}%</div><div class="s">${metrics.spentHours}h reales / ${metrics.plannedHours}h previstas</div></div>
+        <div class="metric"><div class="k">Fiabilidad planificación</div><div class="v">${metrics.planningReliability}%</div><div class="s">Tareas dentro de esfuerzo estimado</div></div>
+        <div class="metric"><div class="k">Throughput semanal</div><div class="v">${metrics.weeklyCompleted}</div><div class="s">Tareas finalizadas en semana visible</div></div>
+        <div class="metric"><div class="k">Cierre total</div><div class="v">${completionRate}%</div><div class="s">${metrics.completedTasks.length} de ${metrics.tasks.length} tareas cerradas</div></div>
       </div>`;
     }
 
@@ -2215,63 +2059,51 @@ function renderConfig(){
           '',
           'SIGUIENTE PASO RECOMENDADO',
           '- Crear áreas, iniciativas y primeras tareas reales.'
-        ].join('
-');
+        ].join('\n');
       }
       const recommendations = getAutoRecommendations(metrics);
-      const grouped = {};
-      metrics.periodEntries.forEach(e=>{ if(!grouped[e.date]) grouped[e.date] = []; grouped[e.date].push(e); });
+      const top = metrics.activeTasks.slice(0,3);
       let txt = '';
-      txt += 'INFORME EJECUTIVO BDFLOW
-';
-      txt += 'Fecha: ' + new Date().toLocaleDateString('es-ES') + '
-';
-      txt += 'Periodo: ' + metrics.range.label + '
-
-';
-      txt += 'RESUMEN DEL PERIODO
-';
-      txt += '- Horas registradas: ' + metrics.periodHours + 'h
-';
-      txt += '- Sesiones: ' + metrics.periodSessions + '
-';
-      txt += '- Tareas tocadas: ' + metrics.periodTouchedTasks.length + '
-';
-      txt += '- Tareas cerradas: ' + metrics.periodThroughput + '
-';
-      txt += '- Productividad del periodo: ' + metrics.periodProductivity + '%
-';
-      txt += '- Iniciativas trabajadas: ' + metrics.periodInitiatives.length + '
-
-';
-      txt += 'DECISIONES RECOMENDADAS
-';
-      recommendations.forEach(r=>{ txt += '- ' + r + '
-'; });
-      txt += '
-ACTIVIDAD DETALLADA
-';
-      const days = Object.keys(grouped).sort().reverse();
-      if(!days.length){
-        txt += '- Sin actividad registrada en el periodo seleccionado.
-';
-      }else{
-        days.forEach(day=>{
-          const items = grouped[day];
-          const hours = round1(items.reduce((a,b)=>a+Number(b.hours||0),0));
-          txt += '• ' + day + ' · ' + hours + 'h
-';
-          items.forEach(i=>{ txt += '  - ' + i.title + ' · ' + i.hours + 'h' + (i.note ? ' · ' + i.note : '') + '
-'; });
-        });
+      txt += 'INFORME EJECUTIVO BDFlow\n';
+      txt += 'Fecha: ' + new Date().toLocaleDateString('es-ES') + '\n\n';
+      txt += 'RESUMEN EJECUTIVO\n';
+      txt += '- Productividad: ' + metrics.productivity + '% (' + metrics.spentHours + 'h reales / ' + metrics.plannedHours + 'h previstas)\n';
+      txt += '- Fiabilidad de planificación: ' + metrics.planningReliability + '%\n';
+      txt += '- Tareas activas: ' + metrics.activeTasks.length + '\n';
+      txt += '- Tareas críticas: ' + metrics.criticalTasks.length + '\n';
+      txt += '- Tareas pausadas: ' + metrics.pausedTasks.length + '\n';
+      txt += '- Tareas vencidas: ' + metrics.overdueTasks.length + '\n';
+      txt += '- Throughput semanal: ' + metrics.weeklyCompleted + ' cierres\n';
+      txt += '- WIP actual: ' + metrics.wip + ' tareas en curso\n';
+      txt += '- Carga semanal: ' + metrics.weeklyLoad + 'h / ' + metrics.weeklyCapacity + 'h (' + metrics.loadVsCapacity + '%)\n\n';
+      txt += 'DECISIONES RECOMENDADAS\n';
+      recommendations.forEach(r=>{ txt += '- ' + r + '\n'; });
+      txt += '\nRIESGOS Y DESVIACIONES\n';
+      if(metrics.overdueTasks.length || metrics.pausedTasks.length || metrics.overrunTasks.length){
+        metrics.overdueTasks.slice(0,4).forEach(t=>{ txt += '- Vencida: ' + t.title + ' · ' + t.initiative + ' · ' + Math.abs(t.daysLeft) + ' día(s) de retraso\n'; });
+        metrics.pausedTasks.slice(0,4).forEach(t=>{ txt += '- Pausada: ' + t.title + ' · ' + t.initiative + '\n'; });
+        metrics.overrunTasks.slice(0,4).forEach(t=>{ txt += '- Desviada: ' + t.title + ' · ' + t.spent + 'h vs ' + t.effort + 'h previstas\n'; });
+      } else {
+        txt += '- No se aprecian desviaciones relevantes en la vista actual.\n';
       }
-      if(metrics.periodCompletedTasks.length){
-        txt += '
-CIERRES DEL PERIODO
-';
-        metrics.periodCompletedTasks.forEach(t=>{ txt += '- ' + t.title + ' · ' + t.initiative + ' · ' + (t.completedAt || '—') + '
-'; });
+      txt += '\nFOCO OPERATIVO\n';
+      if(top.length){
+        top.forEach(t=>{ txt += '- ' + t.title + ' · ' + t.initiative + ' · siguiente paso: ' + t.next + '\n'; });
+      } else {
+        txt += '- Sin foco operativo pendiente.\n';
       }
+      txt += '\nDETALLE POR INICIATIVA\n';
+      state.initiatives.forEach(i=>{
+        const linked = metrics.tasks.filter(t=>t.initiativeId===i.id);
+        txt += '• ' + i.name + '\n';
+        txt += '  Objetivo: ' + i.objective + '\n';
+        txt += '  Responsable / Área: ' + i.owner + '\n';
+        txt += '  Estado: ' + i.status + '\n';
+        txt += '  Progreso: ' + recalcInitiativeProgress(i.id) + '%\n';
+        txt += '  Tareas activas: ' + linked.filter(t=>t.status!=='Finalizada').length + '\n';
+        linked.slice(0,4).forEach(t=>{ txt += '   - ' + t.title + ' | ' + t.status + ' | ' + (t.due || 'Sin fecha') + ' | ' + t.next + '\n'; });
+        txt += '\n';
+      });
       return txt.trim();
     }
 
@@ -2296,20 +2128,17 @@ CIERRES DEL PERIODO
       const committee = buildCommitteeView();
       const metrics = committee.metrics;
       const recommendations = getAutoRecommendations(metrics);
-      const grouped = {};
-      metrics.periodEntries.forEach(e=>{ if(!grouped[e.date]) grouped[e.date] = []; grouped[e.date].push(e); });
       return `<div style="display:flex;flex-direction:column;gap:18px">
-        ${renderReportPeriodControls()}
         ${renderReportSummary(metrics)}
         <div class="grid-2">
           <div class="panel">
-            <div class="panel-head"><div><h2>Resumen para comité</h2><p>Visión ejecutiva, lectura rápida y decisión por periodo.</p></div></div>
+            <div class="panel-head"><div><h2>Resumen para comité</h2><p>Visión ejecutiva, lectura rápida y decisión.</p></div></div>
             <div class="panel-body">
               <div class="exec-grid">
-                <div class="exec-card"><h3>Situación</h3><p>En ${escapeHtml(metrics.range.label)} se registraron ${metrics.periodHours}h, ${metrics.periodSessions} sesiones y ${metrics.periodThroughput} cierres.</p></div>
+                <div class="exec-card"><h3>Situación</h3><p>${escapeHtml(committee.situation)}</p></div>
                 <div class="exec-card"><h3>Riesgo principal</h3><p>${escapeHtml(committee.risk)}</p></div>
-                <div class="exec-card"><h3>Productividad periodo</h3><p>${metrics.periodProductivity}% · ${metrics.periodTouchedTasks.length} tareas con actividad.</p></div>
-                <div class="exec-card"><h3>Foco y dispersión</h3><p>${metrics.periodInitiatives.length} iniciativas · ${metrics.periodAreas.length} áreas · WIP actual ${metrics.wip}.</p></div>
+                <div class="exec-card"><h3>Productividad</h3><p>${metrics.productivity}% · ${metrics.spentHours}h reales / ${metrics.plannedHours}h previstas.</p></div>
+                <div class="exec-card"><h3>Fiabilidad</h3><p>${metrics.planningReliability}% · ${metrics.wip} tareas en curso · ${metrics.weeklyCompleted} cierres en semana.</p></div>
                 <div class="exec-card" style="grid-column:1 / -1"><h3>Decisiones recomendadas</h3><ul class="exec-list">${recommendations.map(d=>`<li>${escapeHtml(d)}</li>`).join('')}</ul></div>
               </div>
             </div>
@@ -2319,24 +2148,6 @@ CIERRES DEL PERIODO
             <div class="panel-body">
               <div class="report-toolbar"><button class="btn primary" onclick="copyExecutiveReport()">Copiar informe</button></div>
               <div class="report-box">${escapeHtml(report)}</div>
-            </div>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div class="panel">
-            <div class="panel-head"><div><h2>Actividad del periodo</h2><p>Detalle real de lo trabajado por día.</p></div></div>
-            <div class="panel-body">
-              ${Object.keys(grouped).length ? Object.entries(grouped).sort((a,b)=>String(b[0]).localeCompare(String(a[0]))).map(([day,items])=>`
-                <div class="activity-day">
-                  <h3>${escapeHtml(day)} · ${round1(items.reduce((a,b)=>a+Number(b.hours||0),0))}h</h3>
-                  ${items.map(i=>`<div class="activity-entry"><div class="activity-top"><div><div class="row-title">${escapeHtml(i.title)}</div><div class="row-sub">${escapeHtml(i.initiative)} · ${escapeHtml(i.area)}</div></div><div class="badge blue">${i.hours}h</div></div>${i.note ? `<div style="margin-top:8px;color:var(--muted);font-size:13px">${escapeHtml(i.note)}</div>` : ''}</div>`).join('')}
-                </div>`).join('') : '<div class="empty">No hay actividad registrada en el periodo seleccionado.</div>'}
-            </div>
-          </div>
-          <div class="panel">
-            <div class="panel-head"><div><h2>Cierres del periodo</h2><p>Tareas finalizadas dentro del rango seleccionado.</p></div></div>
-            <div class="panel-body">
-              ${metrics.periodCompletedTasks.length ? metrics.periodCompletedTasks.map(t=>`<div class="row-card"><div><div class="row-title">${escapeHtml(t.title)}</div><div class="row-sub">${escapeHtml(t.initiative)} · ${escapeHtml(t.completedAt || '—')}</div></div><div>${statusBadge(t.status)}</div></div>`).join('') : '<div class="empty">No hay tareas finalizadas en el periodo.</div>'}
             </div>
           </div>
         </div>
@@ -2668,15 +2479,6 @@ CIERRES DEL PERIODO
       render();
     }
 
-    function applyReportRange(){
-      state.report.preset = document.getElementById('reportPreset')?.value || 'week';
-      state.report.anchor = document.getElementById('reportAnchor')?.value || new Date().toISOString().slice(0,10);
-      state.report.rangeStart = document.getElementById('reportStart')?.value || '';
-      state.report.rangeEnd = document.getElementById('reportEnd')?.value || '';
-      saveState();
-      render();
-    }
-
     function copyExecutiveReport(){
       navigator.clipboard.writeText(buildExecutiveReport()).then(()=>alert('Informe copiado al portapapeles.'));
     }
@@ -2784,7 +2586,6 @@ CIERRES DEL PERIODO
     window.applyDrillDown = applyDrillDown;
     window.clearDrillDown = clearDrillDown;
     window.loadMoreRanking = loadMoreRanking;
-    window.applyReportRange = applyReportRange;
     window.connectSupabaseFromUI = connectSupabaseFromUI;
     window.testSupabaseConnection = testSupabaseConnection;
     window.saveStateToSupabase = saveStateToSupabase;
@@ -2826,13 +2627,6 @@ CIERRES DEL PERIODO
     });
 
     document.addEventListener('change', e=>{
-      if(e.target && e.target.id === 'reportPreset'){
-        const isCustom = e.target.value === 'custom';
-        const start = document.getElementById('reportStart');
-        const end = document.getElementById('reportEnd');
-        if(start) start.disabled = !isCustom;
-        if(end) end.disabled = !isCustom;
-      }
       if(e.target && e.target.id === 'rankingSort'){
         state.rankingSort = e.target.value;
         render();
@@ -2851,24 +2645,9 @@ CIERRES DEL PERIODO
     });
 
     async function bootstrapRemoteState(){
-      if(!(state.supabase?.enabled && state.supabase?.url && state.supabase?.anonKey)) return;
-
-      const loaded = await loadStateFromSupabase(false);
-      if(loaded) return;
-
-      const legacy = readLegacyLocalState();
-      if(legacy){
-        applyRemoteState(legacy);
-        render();
-        const migrated = await saveStateToSupabase(false);
-        if(migrated){
-          showToast('BDFlow', 'Se ha migrado tu estado anterior a Supabase.');
-          try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
-          return;
-        }
+      if(state.supabase?.enabled && state.supabase?.url && state.supabase?.anonKey){
+        await loadStateFromSupabase(false);
       }
-
-      await saveStateToSupabase(false);
     }
 
     loadState();
