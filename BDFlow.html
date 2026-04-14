@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.8.5</title>
+  <title>BDFlow Ver. 3.8.6</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -257,7 +257,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.8.5</div>
+          <div class="version">Ver. 3.8.6</div>
         </div>
       </div>
 
@@ -1515,16 +1515,21 @@
 
     function renderToday(tasks){
       const active = sortTasks(tasks.filter(t=>t.status!=='Finalizada'));
-      const critical = active.filter(t=>isCriticalTask(t)).slice(0,3);
+      const criticalPool = active.filter(t=>isCriticalTask(t));
+      const critical = criticalPool.slice(0,5);
       const nonCritical = active.filter(t=>!isCriticalTask(t));
       const importantPool = nonCritical.filter(t=>t.status==='En curso' || t.priority==='Alta' || t.score>=55);
-      const important = importantPool.slice(0,3);
+      const important = importantPool.slice(0,4);
       const used = new Set([...critical, ...important].map(t=>t.id));
-      const optional = nonCritical.filter(t=>!used.has(t.id)).slice(0,3);
+      const optionalPool = nonCritical.filter(t=>!used.has(t.id));
+      const optional = optionalPool.slice(0,4);
+      const criticalOverflow = Math.max(0, criticalPool.length - critical.length);
+      const importantOverflow = Math.max(0, importantPool.length - important.length);
+      const optionalOverflow = Math.max(0, optionalPool.length - optional.length);
       return `<div class="today-grid">
-        <div class="lane"><div class="lane-head"><h3>Crítico</h3><p>Sí o sí hoy.</p></div><div class="lane-body">${critical.length?critical.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Nada crítico ahora mismo.</div>'}</div></div>
-        <div class="lane"><div class="lane-head"><h3>Importante</h3><p>Trabajo que debería avanzar hoy.</p></div><div class="lane-body">${important.length?important.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin importantes ahora mismo.</div>'}</div></div>
-        <div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Reserva o trabajo delegable a mañana.</p></div><div class="lane-body">${optional.length?optional.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin opcionales.</div>'}</div></div>
+        <div class="lane"><div class="lane-head"><h3>Crítico</h3><p>Sí o sí hoy.</p></div><div class="lane-body">${critical.length?critical.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Nada crítico ahora mismo.</div>'}${criticalOverflow?`<div class="mini-task">+ ${criticalOverflow} crítica(s) más</div>`:''}</div></div>
+        <div class="lane"><div class="lane-head"><h3>Importante</h3><p>Trabajo que debería avanzar hoy.</p></div><div class="lane-body">${important.length?important.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin importantes ahora mismo.</div>'}${importantOverflow?`<div class="mini-task">+ ${importantOverflow} importante(s) más</div>`:''}</div></div>
+        <div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Reserva o trabajo delegable a mañana.</p></div><div class="lane-body">${optional.length?optional.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin opcionales.</div>'}${optionalOverflow?`<div class="mini-task">+ ${optionalOverflow} opcional(es) más</div>`:''}</div></div>
       </div>`;
     }
 
