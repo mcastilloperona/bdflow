@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 3.8.6</title>
+  <title>BDFlow Ver. 3.9</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -229,6 +229,59 @@
     .quote-text{margin-top:10px;font-size:20px;line-height:1.4;font-weight:800;color:#7c2d12}
     .quote-sub{margin-top:8px;color:#9a3412;font-size:13px}
 
+    
+
+    .task.compact{padding:12px;border-radius:16px}
+    .task.compact .task-title{font-size:15px;line-height:1.3}
+    .task.compact .task-sub{margin-top:4px;font-size:12px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .task.compact .badges{margin-top:9px;gap:6px}
+    .task.compact .badge{padding:6px 10px;font-size:11px}
+    .task.compact .score{min-width:72px;padding:10px 6px;border-radius:16px}
+    .task.compact .score b{font-size:22px}
+    .task.compact .meta{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+    .task.compact .m{padding:9px 10px;border-radius:12px}
+    .task.compact .mk{font-size:10px}
+    .task.compact .mv{font-size:12px}
+    .task.compact .qa{gap:6px;margin-top:10px;padding-top:10px}
+    .task.compact .qbtn{padding:7px 10px;border-radius:10px;font-size:11px}
+    .task.compact .qbtn.pause{display:none}
+    .focus-why{margin-top:12px;padding:12px;border:1px dashed var(--border);border-radius:14px;background:var(--panel-2)}
+    .focus-why .why-title{font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:900;letter-spacing:.08em;margin-bottom:8px}
+    .focus-why ul{margin:0;padding-left:18px}
+    .focus-why li{margin:0 0 6px 0;color:var(--text);font-size:13px}
+    .focus-why li:last-child{margin-bottom:0}
+
+    @media (max-width:1500px){
+      .sidebar{width:260px}
+      .main{padding:14px}
+      .topbar{gap:10px}
+      .actions{gap:8px}
+      .search{min-width:220px;padding:11px 12px}
+      .select{min-width:185px;padding:11px 12px}
+      .metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+      .today-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+      .today-grid > .lane:last-child{grid-column:1 / -1}
+      .panel-head{padding:14px 14px 10px}
+      .panel-body{padding:0 14px 14px}
+      .metric{padding:16px}
+      .metric .v{font-size:30px}
+    }
+
+    @media (max-width:1280px){
+      .sidebar{width:238px}
+      .logo{font-size:24px}
+      .nav-btn{font-size:15px;padding:12px 14px}
+      .topbar{align-items:flex-start}
+      .actions{width:100%}
+      .search{flex:1;min-width:200px}
+      .select{min-width:170px}
+      .today-grid,.kanban{grid-template-columns:1fr}
+      .today-grid > .lane:last-child{grid-column:auto}
+      .week-grid{grid-template-columns:repeat(2,1fr)}
+      .month-grid{grid-template-columns:repeat(4,1fr)}
+      .task.compact .meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
     @media (max-width:1180px){
       .layout,.grid-2,.exec-grid{grid-template-columns:1fr}
       .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -257,7 +310,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 3.8.6</div>
+          <div class="version">Ver. 3.9</div>
         </div>
       </div>
 
@@ -1433,8 +1486,48 @@
       return pick;
     }
 
-    function renderDashboardFocusCard(task){
-      if(!task) return '<div class="empty">Sin foco principal.</div>';
+    function getFocusRecommendation(tasks){
+      const active = sortTasks(tasks.filter(t=>t.status!=='Finalizada'));
+      if(!active.length) return null;
+
+      const scored = active.map(task=>{
+        let rec = 0;
+        const why = [];
+        const d = task.daysLeft;
+        const remaining = Math.max(0, Number(task.effort||0) - Number(task.spent||0));
+        const hasNext = !!(task.next && task.next.trim() && task.next.trim() !== 'Definir siguiente paso.');
+
+        if(d !== null && d < 0){ rec += 70; why.push('Está vencida y necesita recuperación inmediata.'); }
+        else if(d === 0){ rec += 55; why.push('Vence hoy.'); }
+        else if(d === 1){ rec += task.priority === 'Alta' ? 40 : 24; why.push(task.priority === 'Alta' ? 'Vence mañana y tiene prioridad alta.' : 'Vence mañana.'); }
+        else if(d !== null && d <= 3){ rec += 18; why.push(`Tiene vencimiento próximo (${d} día(s)).`); }
+
+        if(task.status === 'En curso'){ rec += 18; why.push('Ya está en marcha, así que avanzar hoy reduce cambio de contexto.'); }
+        if(task.status === 'Pendiente'){ rec += 6; }
+        if(task.status === 'Pausada'){ rec -= 22; why.push('Está pausada, así que puede depender de terceros.'); }
+
+        if(task.priority === 'Alta'){ rec += 14; why.push('Tiene prioridad alta.'); }
+        if(hasNext){ rec += 16; why.push('El siguiente paso está claro y es accionable.'); }
+        else { rec -= 10; }
+
+        if(remaining > 0 && remaining <= 2){ rec += 10; why.push('Se puede mover rápido con poco esfuerzo restante.'); }
+        else if(remaining > 4){ rec -= 4; }
+
+        if(task.score >= 80){ rec += 18; why.push('Tiene impacto muy alto en el score global.'); }
+        else if(task.score >= 70){ rec += 10; why.push('Tiene impacto alto en el score global.'); }
+
+        if(isCriticalTask(task)){ rec += 22; }
+
+        return { task, recommendationScore: rec, why: [...new Set(why)].slice(0,3) };
+      }).sort((a,b)=> b.recommendationScore - a.recommendationScore || b.task.score - a.task.score);
+
+      return scored[0];
+    }
+
+    function renderDashboardFocusCard(recommendation){
+      if(!recommendation) return '<div class="empty">Sin foco principal.</div>';
+      const task = recommendation.task;
+      const why = recommendation.why.length ? recommendation.why : ['Es la mejor combinación actual entre urgencia, impacto y accionabilidad.'];
       return `<div class="task compact" onclick="openDetailModal('${task.id}')" title="Abrir detalle" style="padding:18px">
         <div class="task-top" style="align-items:center">
           <div style="min-width:0">
@@ -1451,6 +1544,10 @@
           <div class="m"><div class="mk">Objetivo</div><div class="mv">${task.due ? escapeHtml(task.due) : 'Sin fecha'}</div></div>
           <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h</div></div>
           <div class="m"><div class="mk">Siguiente paso</div><div class="mv">${escapeHtml(task.next || 'Ver detalle')}</div></div>
+        </div>
+        <div class="focus-why">
+          <div class="why-title">Por qué esta tarea</div>
+          <ul>${why.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul>
         </div>
         <div class="qa" style="padding-top:12px;margin-top:12px">
           <button class="qbtn edit" onclick="event.stopPropagation();openDetailModal('${task.id}')">Abrir tarea</button>
@@ -1481,7 +1578,7 @@
 
     function renderDashboard(tasks){
       const active = tasks.filter(t=>t.status!=='Finalizada');
-      const mainTask = active.find(t=>isCriticalTask(t)) || active[0];
+      const recommendation = getFocusRecommendation(active);
       const critical = active.filter(t=>isCriticalTask(t)).slice(0,5);
       const important = active.filter(t=>!isCriticalTask(t) && t.score>=70).slice(0,5);
       const completed = getRecentCompletedTasks(5);
@@ -1496,7 +1593,7 @@
         <div class="grid-2">
         <div class="panel">
           <div class="panel-head"><div><h2>🔥 Qué hacer ahora</h2><p>Resumen ejecutivo de la siguiente tarea foco.</p></div></div>
-          <div class="panel-body">${renderDashboardFocusCard(mainTask)}</div>
+          <div class="panel-body">${renderDashboardFocusCard(recommendation)}</div>
         </div>
         <div class="panel">
           <div class="panel-head"><div><h2>⚠️ Críticas</h2><p>Máximo 5 tareas que piden foco inmediato.</p></div></div>
