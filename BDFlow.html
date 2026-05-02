@@ -556,13 +556,13 @@
         state.areas = Array.isArray(parsed.areas) && parsed.areas.length ? parsed.areas : [...seed.areas];
         state.initiatives = Array.isArray(parsed.initiatives) ? parsed.initiatives : [];
         state.tasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
-        state.alertsConfig = {...state.alertsConfig, ...(parsed.alertsConfig || {})};
+        state.alertsConfig = Object.assign({}, state.alertsConfig, parsed.alertsConfig || {});
         state.dailyCapacity = Number(parsed.dailyCapacity || state.dailyCapacity || 6);
         state.rankingLimit = Number(parsed.rankingLimit || state.rankingLimit || 20);
         state.rankingSort = parsed.rankingSort || state.rankingSort || 'score';
         state.rankingGroup = parsed.rankingGroup || state.rankingGroup || 'flat';
-        state.supabase = {...state.supabase, ...(parsed.supabase || {})};
-        state.reporting = {...state.reporting, ...(parsed.reporting || {})};
+        state.supabase = Object.assign({}, state.supabase, parsed.supabase || {});
+        state.reporting = Object.assign({}, state.reporting, parsed.reporting || {});
       }catch(e){
         state.areas = [...seed.areas];
         state.initiatives = [...seed.initiatives];
@@ -646,13 +646,13 @@
       state.areas = Array.isArray(payload.areas) && payload.areas.length ? payload.areas : [...seed.areas];
       state.initiatives = Array.isArray(payload.initiatives) ? payload.initiatives : [];
       state.tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
-      state.alertsConfig = {...state.alertsConfig, ...(payload.alertsConfig || {})};
+      state.alertsConfig = Object.assign({}, state.alertsConfig, payload.alertsConfig || {});
       state.dailyCapacity = Number(payload.dailyCapacity || state.dailyCapacity || 6);
       state.rankingLimit = Number(payload.rankingLimit || state.rankingLimit || 20);
       state.rankingSort = payload.rankingSort || state.rankingSort || 'score';
       state.rankingGroup = payload.rankingGroup || state.rankingGroup || 'flat';
-      state.supabase = {...state.supabase, ...(payload.supabase || {})};
-      state.reporting = {...state.reporting, ...(payload.reporting || {})};
+      state.supabase = Object.assign({}, state.supabase, payload.supabase || {});
+      state.reporting = Object.assign({}, state.reporting, payload.reporting || {});
       migrateState();
       return true;
     }
@@ -677,7 +677,7 @@
     }
 
     function scheduleSupabaseSync(){
-      if(!state.(supabase && supabase.enabled) || !state.(supabase && supabase.autoSync)) return;
+      if(!state.supabase || !state.supabase.enabled || !state.supabase.autoSync) return;
       clearTimeout(supabaseSyncTimer);
       supabaseSyncTimer = setTimeout(()=>saveStateToSupabase(false), 900);
     }
@@ -963,7 +963,7 @@
         .filter(t => t.status === 'Finalizada' && t.completedAt)
         .sort((a,b)=>String(b.completedAt).localeCompare(String(a.completedAt)))
         .slice(0, limit)
-        .map(t => ({...t, initiative:getInitiativeName(t.initiativeId), score:scoreTask(t), daysLeft:daysToDue(t)}));
+        .map(t => Object.assign({}, t, {initiative:getInitiativeName(t.initiativeId), score:scoreTask(t), daysLeft:daysToDue(t)}));
     }
 
     function getAlerts(tasks){
@@ -2145,7 +2145,7 @@ function renderConfig(){
     }
 
     function getReportRange(){
-      const mode = state.(reporting && reporting.mode) || 'week';
+      const mode = state.reporting && state.reporting.mode || 'week';
       const today = new Date();
       let start = new Date(today);
       let end = new Date(today);
@@ -2160,8 +2160,8 @@ function renderConfig(){
         start = getStartOfMonth(today);
         end = getEndOfMonth(today);
       }else{
-        start = state.(reporting && reporting.startDate) ? new Date(state.reporting.startDate + 'T00:00:00') : new Date(today);
-        end = state.(reporting && reporting.endDate) ? new Date(state.reporting.endDate + 'T23:59:59') : new Date(today);
+        start = state.reporting && state.reporting.startDate ? new Date(state.reporting.startDate + 'T00:00:00') : new Date(today);
+        end = state.reporting && state.reporting.endDate ? new Date(state.reporting.endDate + 'T23:59:59') : new Date(today);
         if(Number.isNaN(start.getTime())){ start = new Date(today); start.setHours(0,0,0,0); }
         if(Number.isNaN(end.getTime())){ end = new Date(today); end.setHours(23,59,59,999); }
         if(start > end){ const tmp = start; start = end; end = tmp; }
