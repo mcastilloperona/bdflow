@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 4.2</title>
+  <title>BDFlow Ver. 4.3</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -298,6 +298,53 @@
       .form-grid{grid-template-columns:1fr}
       .search{min-width:unset;width:100%}
     }
+
+    /* ── ANIMACIONES V4.3 ── */
+    @keyframes fadeInUp {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes confettiFall {
+      0%   { transform:translateY(-10px) rotate(0deg); opacity:1; }
+      100% { transform:translateY(60px) rotate(720deg); opacity:0; }
+    }
+    @keyframes barGrow {
+      from { width:0%; }
+    }
+    @keyframes alertSlideIn {
+      from { opacity:0; transform:translateX(40px); }
+      to   { opacity:1; transform:translateX(0); }
+    }
+    @keyframes pulse {
+      0%,100% { transform:scale(1); }
+      50%      { transform:scale(1.06); }
+    }
+    @keyframes shimmer {
+      0%   { background-position:-400px 0; }
+      100% { background-position:400px 0; }
+    }
+    .smart-alert-panel {
+      position:fixed; top:16px; right:16px; width:340px; max-width:94vw;
+      z-index:1000; display:flex; flex-direction:column; gap:8px;
+      pointer-events:none;
+    }
+    .smart-alert-item {
+      background:#fff; border-radius:14px; padding:13px 15px;
+      box-shadow:0 8px 32px rgba(15,23,42,.14); border:1px solid;
+      display:flex; align-items:flex-start; gap:10px;
+      pointer-events:all; cursor:pointer;
+      animation: alertSlideIn .4s cubic-bezier(.22,1,.36,1) both;
+    }
+    .smart-alert-item.red   { border-color:#fecdd3; background:#fff1f2; }
+    .smart-alert-item.amber { border-color:#fed7aa; background:#fff7ed; }
+    .smart-alert-item.blue  { border-color:#bfdbfe; background:#eff6ff; }
+    .smart-alert-item .al-icon  { font-size:18px; flex-shrink:0; margin-top:1px; }
+    .smart-alert-item .al-body  { flex:1; min-width:0; }
+    .smart-alert-item .al-title { font-size:12px; font-weight:800; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:2px; }
+    .smart-alert-item .al-sub   { font-size:11px; color:#64748b; }
+    .smart-alert-item .al-close { background:none; border:none; cursor:pointer; color:#94a3b8; font-size:16px; padding:0; flex-shrink:0; line-height:1; }
+    .smart-alert-item .al-close:hover { color:#334155; }
+
   </style>
 </head>
 <body>
@@ -310,7 +357,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 4.2</div>
+          <div class="version">Ver. 4.3</div>
         </div>
       </div>
 
@@ -547,6 +594,168 @@
         .replaceAll('>','&gt;')
         .replaceAll('"','&quot;')
         .replaceAll("'",'&#39;');
+    }
+
+
+    // ── SMART ALERTS V4.3 ──
+    var alertDismissed = {};
+
+    function getSmartAlerts(){
+      var today = new Date().toISOString().slice(0,10);
+      var alerts = [];
+      var tasks = baseTasks ? baseTasks() : state.tasks;
+      tasks.forEach(function(t){
+        if(t.status === 'Finalizada') return;
+        // Vencidas
+        if(t.due && t.due < today){
+          var days = Math.ceil((new Date(today) - new Date(t.due)) / 86400000);
+          alerts.push({id:'ov-'+t.id, type:'red', icon:'🔴', title:t.title, sub:'Vencida hace '+days+'d · '+t.area, taskId:t.id, priority:0});
+        }
+        // Vencen hoy
+        else if(t.due === today){
+          alerts.push({id:'td-'+t.id, type:'red', icon:'⚠️', title:t.title, sub:'Vence HOY · '+t.area, taskId:t.id, priority:1});
+        }
+        // Vencen en 48h
+        else if(t.due){
+          var dl = Math.ceil((new Date(t.due) - new Date(today)) / 86400000);
+          if(dl <= 2) alerts.push({id:'s2-'+t.id, type:'amber', icon:'⏰', title:t.title, sub:'Vence en '+dl+'d · '+t.area, taskId:t.id, priority:2});
+        }
+        // Bloqueadas >3 días
+        if(t.status === 'Bloqueada'){
+          var created = t.createdAt || today;
+          var bd = Math.ceil((new Date(today) - new Date(created)) / 86400000);
+          if(bd >= 3) alerts.push({id:'bl-'+t.id, type:'amber', icon:'⛔', title:t.title, sub:'Bloqueada '+bd+'d · requiere acción', taskId:t.id, priority:2});
+        }
+        // Sin actividad >5 días (en curso)
+        if(t.status === 'En curso'){
+          var wl = t.worklog || [];
+          var lastDate = wl.length ? wl.slice().sort(function(a,b){return b.date.localeCompare(a.date);})[0].date : t.createdAt;
+          if(lastDate){
+            var idle = Math.ceil((new Date(today) - new Date(lastDate)) / 86400000);
+            if(idle >= 5) alerts.push({id:'id-'+t.id, type:'blue', icon:'💤', title:t.title, sub:'Sin actividad '+idle+'d · ¿qué pasó?', taskId:t.id, priority:3});
+          }
+        }
+      });
+      // Sort by priority then filter dismissed
+      alerts.sort(function(a,b){ return a.priority - b.priority; });
+      return alerts.filter(function(a){ return !alertDismissed[a.id]; });
+    }
+
+    function renderSmartAlerts(){
+      var existing = document.getElementById('smartAlertPanel');
+      if(existing) existing.remove();
+
+      var alerts = getSmartAlerts().slice(0,5);
+      if(!alerts.length) return;
+
+      var panel = document.createElement('div');
+      panel.id = 'smartAlertPanel';
+      panel.className = 'smart-alert-panel';
+
+      alerts.forEach(function(al, idx){
+        var item = document.createElement('div');
+        item.className = 'smart-alert-item ' + al.type;
+        item.style.animationDelay = (idx * 0.08) + 's';
+        item.innerHTML =
+          '<span class="al-icon">'+al.icon+'</span>'+
+          '<div class="al-body">'+
+            '<div class="al-title">'+escapeHtml(al.title)+'</div>'+
+            '<div class="al-sub">'+escapeHtml(al.sub)+'</div>'+
+          '</div>'+
+          '<button class="al-close" onclick="dismissAlert(''+al.id+'',event)">✕</button>';
+        item.addEventListener('click', function(){
+          if(al.taskId){ openDetailModal(al.taskId); }
+        });
+        panel.appendChild(item);
+      });
+
+      // "Ver todas" if more than 5
+      var total = getSmartAlerts().length;
+      if(total > 5){
+        var more = document.createElement('div');
+        more.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#64748b;padding:6px;cursor:pointer;background:#fff;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.08);pointer-events:all;animation:alertSlideIn .4s ease both;animation-delay:0.4s';
+        more.textContent = '+ '+(total-5)+' alertas más';
+        more.onclick = function(){ showAllAlertsModal(); };
+        panel.appendChild(more);
+      }
+
+      document.body.appendChild(panel);
+
+      // Auto-hide after 8s
+      setTimeout(function(){
+        if(panel.parentNode){
+          panel.style.transition = 'opacity .5s, transform .5s';
+          panel.style.opacity = '0';
+          panel.style.transform = 'translateX(20px)';
+          setTimeout(function(){ if(panel.parentNode) panel.remove(); }, 500);
+        }
+      }, 8000);
+    }
+
+    function dismissAlert(id, e){
+      if(e) e.stopPropagation();
+      alertDismissed[id] = true;
+      var panel = document.getElementById('smartAlertPanel');
+      if(panel) panel.remove();
+      renderSmartAlerts();
+    }
+
+    function showAllAlertsModal(){
+      var alerts = getSmartAlerts();
+      var html = '<div class="mhdr"><div><div class="mtitle">Alertas activas</div><div class="msubt">'+alerts.length+' situaciones que requieren atención</div></div><button class="btn icon" onclick="closeModal()">✕</button></div>';
+      if(!alerts.length){
+        html += '<div style="text-align:center;padding:30px;color:#64748b;font-size:14px">✅ Sin alertas activas. Todo bajo control.</div>';
+      } else {
+        html += '<div style="display:flex;flex-direction:column;gap:8px">';
+        alerts.forEach(function(al){
+          html += '<div onclick="closeModal();openDetailModal(''+al.taskId+'')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:'+(al.type==='red'?'#fff1f2':al.type==='amber'?'#fff7ed':'#eff6ff')+';border-radius:12px;cursor:pointer;border:1px solid '+(al.type==='red'?'#fecdd3':al.type==='amber'?'#fed7aa':'#bfdbfe')+'">'+
+            '<span style="font-size:20px">'+al.icon+'</span>'+
+            '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(al.title)+'</div>'+
+            '<div style="font-size:12px;color:#64748b;margin-top:2px">'+escapeHtml(al.sub)+'</div></div>'+
+            '<span style="font-size:12px;color:#94a3b8">→</span></div>';
+        });
+        html += '</div>';
+      }
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">'+
+        '<button onclick="dismissAllAlerts()" style="background:none;border:none;cursor:pointer;font-size:12px;color:#94a3b8;font-weight:600">Descartar todas</button>'+
+        '<button class="btn primary" onclick="closeModal()">Cerrar</button></div>';
+      showModal(html);
+    }
+
+    function dismissAllAlerts(){
+      getSmartAlerts().forEach(function(al){ alertDismissed[al.id] = true; });
+      closeModal();
+    }
+
+    // ── CONFETTI on task complete ──
+    function showCompletionCelebration(taskTitle){
+      var colors = ['#2563eb','#16a34a','#d97706','#7c3aed','#ea580c','#0891b2'];
+      var container = document.createElement('div');
+      container.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9999;overflow:hidden';
+      for(var i=0;i<28;i++){
+        var dot = document.createElement('div');
+        var size = 6 + Math.random()*8;
+        dot.style.cssText = 'position:absolute;width:'+size+'px;height:'+size+'px;border-radius:'+(Math.random()>.5?'50%':'3px')+';background:'+colors[Math.floor(Math.random()*colors.length)]+';left:'+Math.random()*100+'vw;top:-10px;animation:confettiFall '+(0.8+Math.random()*0.8)+'s ease '+(Math.random()*0.5)+'s both';
+        container.appendChild(dot);
+      }
+      document.body.appendChild(container);
+      // Success toast
+      showToast('¡Tarea completada!', '✅ '+taskTitle);
+      setTimeout(function(){ if(container.parentNode) container.remove(); }, 2000);
+    }
+
+    // ── VIEW TRANSITION ──
+    function animateViewTransition(fn){
+      var main = document.getElementById('mainContent') || document.querySelector('.main-content') || document.querySelector('main');
+      if(!main){ fn(); return; }
+      main.style.transition = 'opacity .15s, transform .15s';
+      main.style.opacity = '0';
+      main.style.transform = 'translateY(6px)';
+      setTimeout(function(){
+        fn();
+        main.style.opacity = '1';
+        main.style.transform = 'translateY(0)';
+      }, 150);
     }
 
     function loadState(){
@@ -1646,7 +1855,7 @@
             <div style="font-size:14px;font-weight:800;color:${pctColor}">${hoursToday}h / ${dailyCap}h</div>
           </div>
           <div style="height:10px;background:#f1f5f9;border-radius:10px;overflow:hidden;margin-bottom:12px">
-            <div style="height:100%;border-radius:10px;background:${pctColor};width:${pct}%"></div>
+            <div style="height:100%;border-radius:10px;background:${pctColor};width:${pct}%;animation:barGrow .8s cubic-bezier(.22,1,.36,1) both"></div>
           </div>
           ${todayWorkDetail.length?`
             <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Registrado hoy</div>
@@ -1670,7 +1879,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div>
             <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Crítico · ${critical.length}</div>
-            ${critical.length?critical.map(taskCardCompact).join(''):'<div style="color:#94a3b8;font-size:13px;padding:10px 0">Nada crítico. ✓</div>'}
+            ${critical.length?critical.map(function(t,i){ const c=taskCardCompact(t); return c.replace('background:#fff;border:1px','style="animation-delay:'+i*0.06+'s" style="background:#fff;border:1px'); }).join(''):'<div style="color:#94a3b8;font-size:13px;padding:10px 0">Nada crítico. ✓</div>'}
           </div>
           <div>
             <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">En curso · ${inProgress.length}</div>
@@ -2794,14 +3003,17 @@ function renderConfig(){
     function toggleDone(id){
       const t = state.tasks.find(x=>x.id===id);
       if(!t) return;
-      if(t.status === 'Finalizada'){
+      const wasDone = t.status === 'Finalizada';
+      if(wasDone){
         t.status = (Array.isArray(t.worklog) && t.worklog.length) || Number(t.spent||0) > 0 ? 'En curso' : 'Pendiente';
         t.completedAt = '';
       }else{
         t.status = 'Finalizada';
         t.completedAt = new Date().toISOString().slice(0,10);
+        showCompletionCelebration(t.title);
       }
       saveState();
+      scheduleSupabaseSync();
       render();
     }
 
@@ -2941,7 +3153,8 @@ function renderConfig(){
       document.getElementById('pageTitle').textContent = titles[state.currentView][0];
       document.getElementById('pageSubtitle').textContent = titles[state.currentView][1];
 
-      document.getElementById('viewContainer').innerHTML =
+      const vc = document.getElementById('viewContainer');
+      const newHTML =
         state.currentView === 'dashboard' ? renderDashboard(tasks) :
         state.currentView === 'today' ? renderToday(tasks) :
         state.currentView === 'week' ? renderWeek(tasks) :
@@ -2952,6 +3165,15 @@ function renderConfig(){
         state.currentView === 'initiatives' ? renderInitiatives() :
         state.currentView === 'config' ? renderConfig() :
         renderReport();
+      vc.style.opacity = '0';
+      vc.style.transform = 'translateY(8px)';
+      vc.style.transition = 'none';
+      vc.innerHTML = newHTML;
+      requestAnimationFrame(function(){
+        vc.style.transition = 'opacity .25s ease, transform .25s cubic-bezier(.22,1,.36,1)';
+        vc.style.opacity = '1';
+        vc.style.transform = 'translateY(0)';
+      });
 
       document.querySelectorAll('.nav-btn').forEach(btn=>{
         btn.classList.toggle('active', btn.dataset.view === state.currentView);
