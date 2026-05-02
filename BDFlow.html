@@ -677,112 +677,79 @@
     }
 
     function scheduleSupabaseSync(){
-      if(!state.supabase && state.supabase.enabled || !state.supabase && state.supabase.autoSync) return;
+      if(!state.supabase || !state.supabase.enabled || !state.supabase.autoSync) return;
       clearTimeout(supabaseSyncTimer);
       supabaseSyncTimer = setTimeout(()=>saveStateToSupabase(false), 900);
     }
 
-    async function saveStateToSupabase(showFeedback=true){
-      const client = initSupabaseClient();
-      if(!client){
-        if(showFeedback) alert('Configura primero Supabase URL y anon key.');
-        return false;
-      }
-      try{
-        const workspace = sanitizeWorkspace(state.supabase.workspace);
-        state.supabase.workspace = workspace;
-        const snapshot = getSerializableState();
-        const { error } = await client.from('bdflow_state').upsert({
-          workspace,
-          app_state: snapshot,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'workspace' });
-        if(error) throw error;
+    function saveStateToSupabase(showFeedback){
+      if(showFeedback === undefined) showFeedback = true;
+      var client = initSupabaseClient();
+      if(!client){ if(showFeedback) alert('Configura Supabase primero.'); return; }
+      var workspace = sanitizeWorkspace(state.supabase.workspace);
+      state.supabase.workspace = workspace;
+      var snapshot = getSerializableState();
+      client.from('bdflow_state').upsert({workspace:workspace,app_state:snapshot,updated_at:new Date().toISOString()},{onConflict:'workspace'}).then(function(res){
+        if(res.error){ console.error(res.error); state.supabase.lastSyncStatus='Error'; if(showFeedback) alert('Error al guardar en Supabase.'); render(); return; }
         state.supabase.lastSyncAt = new Date().toISOString();
         state.supabase.lastSyncStatus = 'Sincronizado';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(getSerializableState()));
-        if(showFeedback) showToast('BDFlow', 'Sincronizado con Supabase.');
+        if(showFeedback) showToast('BDFlow','Sincronizado con Supabase.');
         render();
-        return true;
-      }catch(err){
-        console.error('Supabase save error', err);
-        state.supabase.lastSyncStatus = 'Error';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(getSerializableState()));
-        if(showFeedback) alert('No se pudo sincronizar con Supabase. Revisa URL, anon key y tabla bdflow_state.');
-        render();
-        return false;
-      }
+      });
     }
 
-    async function loadStateFromSupabase(showFeedback=true){
-      const client = initSupabaseClient();
-      if(!client){
-        if(showFeedback) alert('Configura primero Supabase URL y anon key.');
-        return false;
-      }
-      try{
-        const workspace = sanitizeWorkspace(state.supabase.workspace);
-        state.supabase.workspace = workspace;
-        const { data, error } = await client.from('bdflow_state').select('app_state, updated_at').eq('workspace', workspace).maybeSingle();
-        if(error) throw error;
-        if(!data || !data.app_state){
-          if(showFeedback) showToast('BDFlow', 'No hay estado remoto todavía para este workspace.');
-          return false;
-        }
-        applyRemoteState(data.app_state);
-        state.supabase.lastSyncAt = data.updated_at || new Date().toISOString();
-        state.supabase.lastSyncStatus = 'Cargado desde Supabase';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(getSerializableState()));
+    function loadStateFromSupabase(showFeedback){
+      if(showFeedback === undefined) showFeedback = true;
+      var client = initSupabaseClient();
+      if(!client){ if(showFeedback) alert('Configura Supabase primero.'); return Promise.resolve(false); }
+      var workspace = sanitizeWorkspace(state.supabase.workspace);
+      state.supabase.workspace = workspace;
+      return client.from('bdflow_state').select('app_state,updated_at').eq('workspace',workspace).maybeSingle().then(function(res){
+        if(res.error){ console.error(res.error); state.supabase.lastSyncStatus='Error'; if(showFeedback) alert('Error al cargar desde Supabase.'); render(); return false; }
+        if(!res.data || !res.data.app_state){ if(showFeedback) showToast('BDFlow','Sin datos remotos para este workspace.'); return false; }
+        applyRemoteState(res.data.app_state);
+        state.supabase.lastSyncAt = res.data.updated_at || new Date().toISOString();
+        state.supabase.lastSyncStatus = 'Sincronizado';
         render();
-        if(showFeedback) showToast('BDFlow', 'Datos cargados desde Supabase.');
+        if(showFeedback) showToast('BDFlow','Datos cargados desde Supabase.');
         return true;
-      }catch(err){
-        console.error('Supabase load error', err);
-        state.supabase.lastSyncStatus = 'Error';
-        if(showFeedback) alert('No se pudo cargar desde Supabase. Revisa URL, anon key y tabla bdflow_state.');
-        render();
-        return false;
-      }
+      });
     }
 
-    async function connectSupabaseFromUI(){
-      state.supabase.url = document.(document.getElementById('sbUrl')||{}).value.trim() || '';
-      state.supabase.anonKey = document.(document.getElementById('sbAnonKey')||{}).value.trim() || '';
-      state.supabase.workspace = sanitizeWorkspace(document.(document.getElementById('sbWorkspace')||{}).value || state.supabase.workspace);
-      state.supabase.enabled = !!document.(document.getElementById('sbEnabled')||{}).checked;
-      state.supabase.autoSync = !!document.(document.getElementById('sbAutoSync')||{}).checked;
+    function connectSupabaseFromUI(){
+      var urlEl = document.getElementById('sbUrl');
+      var keyEl = document.getElementById('sbAnonKey');
+      var wsEl = document.getElementById('sbWorkspace');
+      var enEl = document.getElementById('sbEnabled');
+      var asEl = document.getElementById('sbAutoSync');
+      if(urlEl) state.supabase.url = urlEl.value.trim();
+      if(keyEl) state.supabase.anonKey = keyEl.value.trim();
+      if(wsEl) state.supabase.workspace = sanitizeWorkspace(wsEl.value || state.supabase.workspace);
+      if(enEl) state.supabase.enabled = enEl.checked;
+      if(asEl) state.supabase.autoSync = asEl.checked;
       saveState();
-      const ok = await loadStateFromSupabase(false);
-      if(ok){
-        showToast('BDFlow', 'Supabase conectado y datos remotos cargados.');
-      }else if(state.supabase.enabled){
-        showToast('BDFlow', 'Supabase configurado. Puedes sincronizar cuando quieras.');
-      }
-      render();
+      loadStateFromSupabase(false).then(function(ok){
+        if(ok) showToast('BDFlow','Supabase conectado y datos cargados.');
+        else if(state.supabase.enabled) showToast('BDFlow','Supabase configurado.');
+        render();
+      });
     }
 
-    async function testSupabaseConnection(){
-      const client = initSupabaseClient();
-      if(!client){
-        alert('Configura primero Supabase URL y anon key.');
-        return;
-      }
-      try{
-        const { error } = await client.from('bdflow_state').select('workspace').limit(1);
-        if(error) throw error;
-        showToast('BDFlow', 'Conexión con Supabase correcta.');
-      }catch(err){
-        console.error(err);
-        alert('No se pudo validar la conexión con Supabase. Comprueba URL, anon key y RLS.');
-      }
+    function testSupabaseConnection(){
+      var client = initSupabaseClient();
+      if(!client){ alert('Configura Supabase primero.'); return; }
+      client.from('bdflow_state').select('workspace').limit(1).then(function(res){
+        if(res.error){ console.error(res.error); alert('Error de conexión con Supabase.'); return; }
+        showToast('BDFlow','Conexión con Supabase correcta.');
+      });
     }
 
-    async function disconnectSupabase(){
+    function disconnectSupabase(){
       state.supabase.enabled = false;
       state.supabase.lastSyncStatus = 'Local';
       saveState();
       render();
-      showToast('BDFlow', 'Supabase desactivado. Sigues trabajando en local.');
+      showToast('BDFlow','Supabase desactivado.');
     }
 
     function exportData(){
@@ -1202,17 +1169,17 @@
 
     function saveAlertsConfig(){
       const cfg = state.alertsConfig;
-      cfg.inAppEnabled = !!document.(document.getElementById('cfgInApp')||{}).checked;
-      cfg.browserEnabled = !!document.(document.getElementById('cfgBrowser')||{}).checked;
-      cfg.includeCritical = !!document.(document.getElementById('cfgCritical')||{}).checked;
-      cfg.includeOverdue = !!document.(document.getElementById('cfgOverdue')||{}).checked;
-      cfg.includePaused = !!document.(document.getElementById('cfgPaused')||{}).checked;
-      cfg.dailyEnabled = !!document.(document.getElementById('cfgDaily')||{}).checked;
-      cfg.dailyTime = document.(document.getElementById('cfgDailyTime')||{}).value || '09:00';
-      cfg.weeklyEnabled = !!document.(document.getElementById('cfgWeekly')||{}).checked;
-      cfg.weeklyDay = document.(document.getElementById('cfgWeeklyDay')||{}).value || 'MO';
-      cfg.weeklyTime = document.(document.getElementById('cfgWeeklyTime')||{}).value || '08:30';
-      cfg.emailTo = document.(document.getElementById('cfgEmailTo')||{}).value.trim() || '';
+      cfg.inAppEnabled = !!(document.getElementById('cfgInApp')||{}).checked;
+      cfg.browserEnabled = !!(document.getElementById('cfgBrowser')||{}).checked;
+      cfg.includeCritical = !!(document.getElementById('cfgCritical')||{}).checked;
+      cfg.includeOverdue = !!(document.getElementById('cfgOverdue')||{}).checked;
+      cfg.includePaused = !!(document.getElementById('cfgPaused')||{}).checked;
+      cfg.dailyEnabled = !!(document.getElementById('cfgDaily')||{}).checked;
+      cfg.dailyTime = (document.getElementById('cfgDailyTime')||{}).value || '09:00';
+      cfg.weeklyEnabled = !!(document.getElementById('cfgWeekly')||{}).checked;
+      cfg.weeklyDay = (document.getElementById('cfgWeeklyDay')||{}).value || 'MO';
+      cfg.weeklyTime = (document.getElementById('cfgWeeklyTime')||{}).value || '08:30';
+      cfg.emailTo = (document.getElementById('cfgEmailTo')||{}).value.trim() || '';
       saveState();
       showToast('BDFlow', 'Configuración de alertas guardada.');
       render();
@@ -3021,7 +2988,7 @@ function renderConfig(){
       render();
     });
 
-    async function bootstrapRemoteState(){
+    function bootstrapRemoteState(){
       if(state.supabase && state.supabase.enabled && state.supabase.url && state.supabase.anonKey){
         loadStateFromSupabase(false);
       }
