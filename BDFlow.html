@@ -596,7 +596,7 @@
           title: t.title || 'Sin título',
           desc: t.desc || '',
           area: t.area || state.areas[0] || 'General',
-          initiativeId: t.initiativeId || state.initiatives[0]?.id || '',
+          initiativeId: t.initiativeId || (state.initiatives[0] && state.initiatives[0].id) || '',
           status: normalizedStatus,
           priority: ['Alta','Media','Baja'].includes(t.priority) ? t.priority : 'Media',
           due: t.due || '',
@@ -677,7 +677,7 @@
     }
 
     function scheduleSupabaseSync(){
-      if(!state.supabase?.enabled || !state.supabase?.autoSync) return;
+      if(!state.supabase && state.supabase.enabled || !state.supabase && state.supabase.autoSync) return;
       clearTimeout(supabaseSyncTimer);
       supabaseSyncTimer = setTimeout(()=>saveStateToSupabase(false), 900);
     }
@@ -746,11 +746,11 @@
     }
 
     async function connectSupabaseFromUI(){
-      state.supabase.url = document.getElementById('sbUrl')?.value.trim() || '';
-      state.supabase.anonKey = document.getElementById('sbAnonKey')?.value.trim() || '';
-      state.supabase.workspace = sanitizeWorkspace(document.getElementById('sbWorkspace')?.value || state.supabase.workspace);
-      state.supabase.enabled = !!document.getElementById('sbEnabled')?.checked;
-      state.supabase.autoSync = !!document.getElementById('sbAutoSync')?.checked;
+      state.supabase.url = document.(document.getElementById('sbUrl')||{}).value.trim() || '';
+      state.supabase.anonKey = document.(document.getElementById('sbAnonKey')||{}).value.trim() || '';
+      state.supabase.workspace = sanitizeWorkspace(document.(document.getElementById('sbWorkspace')||{}).value || state.supabase.workspace);
+      state.supabase.enabled = !!document.(document.getElementById('sbEnabled')||{}).checked;
+      state.supabase.autoSync = !!document.(document.getElementById('sbAutoSync')||{}).checked;
       saveState();
       const ok = await loadStateFromSupabase(false);
       if(ok){
@@ -1202,17 +1202,17 @@
 
     function saveAlertsConfig(){
       const cfg = state.alertsConfig;
-      cfg.inAppEnabled = !!document.getElementById('cfgInApp')?.checked;
-      cfg.browserEnabled = !!document.getElementById('cfgBrowser')?.checked;
-      cfg.includeCritical = !!document.getElementById('cfgCritical')?.checked;
-      cfg.includeOverdue = !!document.getElementById('cfgOverdue')?.checked;
-      cfg.includePaused = !!document.getElementById('cfgPaused')?.checked;
-      cfg.dailyEnabled = !!document.getElementById('cfgDaily')?.checked;
-      cfg.dailyTime = document.getElementById('cfgDailyTime')?.value || '09:00';
-      cfg.weeklyEnabled = !!document.getElementById('cfgWeekly')?.checked;
-      cfg.weeklyDay = document.getElementById('cfgWeeklyDay')?.value || 'MO';
-      cfg.weeklyTime = document.getElementById('cfgWeeklyTime')?.value || '08:30';
-      cfg.emailTo = document.getElementById('cfgEmailTo')?.value.trim() || '';
+      cfg.inAppEnabled = !!document.(document.getElementById('cfgInApp')||{}).checked;
+      cfg.browserEnabled = !!document.(document.getElementById('cfgBrowser')||{}).checked;
+      cfg.includeCritical = !!document.(document.getElementById('cfgCritical')||{}).checked;
+      cfg.includeOverdue = !!document.(document.getElementById('cfgOverdue')||{}).checked;
+      cfg.includePaused = !!document.(document.getElementById('cfgPaused')||{}).checked;
+      cfg.dailyEnabled = !!document.(document.getElementById('cfgDaily')||{}).checked;
+      cfg.dailyTime = document.(document.getElementById('cfgDailyTime')||{}).value || '09:00';
+      cfg.weeklyEnabled = !!document.(document.getElementById('cfgWeekly')||{}).checked;
+      cfg.weeklyDay = document.(document.getElementById('cfgWeeklyDay')||{}).value || 'MO';
+      cfg.weeklyTime = document.(document.getElementById('cfgWeeklyTime')||{}).value || '08:30';
+      cfg.emailTo = document.(document.getElementById('cfgEmailTo')||{}).value.trim() || '';
       saveState();
       showToast('BDFlow', 'Configuración de alertas guardada.');
       render();
@@ -1482,7 +1482,7 @@
       if(data && data.date === today && data.quote){
         return data.quote;
       }
-      let used = Array.isArray(data?.used) ? data.used.filter(q => quotes.includes(q)) : [];
+      let used = Array.isArray(data && data.used) ? data.used.filter(q => quotes.includes(q)) : [];
       let available = quotes.filter(q => !used.includes(q));
       if(!available.length){
         used = [];
@@ -1930,7 +1930,7 @@ function renderConfig(){
     }
 
     function getTaskAgeDays(task){
-      if(!task?.createdAt) return null;
+      if(!task && task.createdAt) return null;
       const today = new Date();
       today.setHours(0,0,0,0);
       const created = parseDate(task.createdAt);
@@ -2098,7 +2098,7 @@ function renderConfig(){
     }
 
     function getReportRange(){
-      const mode = state.reporting?.mode || 'week';
+      const mode = (state.reporting && state.reporting.mode) || 'week';
       const today = new Date();
       let start = new Date(today);
       let end = new Date(today);
@@ -2113,8 +2113,8 @@ function renderConfig(){
         start = getStartOfMonth(today);
         end = getEndOfMonth(today);
       }else{
-        start = state.reporting?.startDate ? new Date(state.reporting.startDate + 'T00:00:00') : new Date(today);
-        end = state.reporting?.endDate ? new Date(state.reporting.endDate + 'T23:59:59') : new Date(today);
+        start = (state.reporting && state.reporting.startDate) ? new Date(state.reporting.startDate + 'T00:00:00') : new Date(today);
+        end = (state.reporting && state.reporting.endDate) ? new Date(state.reporting.endDate + 'T23:59:59') : new Date(today);
         if(Number.isNaN(start.getTime())){ start = new Date(today); start.setHours(0,0,0,0); }
         if(Number.isNaN(end.getTime())){ end = new Date(today); end.setHours(23,59,59,999); }
         if(start > end){ const tmp = start; start = end; end = tmp; }
@@ -2490,7 +2490,7 @@ function renderConfig(){
       document.getElementById('taskModalTitle').textContent = t ? 'Editar tarea' : 'Nueva tarea';
       document.getElementById('deleteTaskBtn').style.display = t ? 'inline-flex' : 'none';
       refreshAreaOptions(t ? t.area : state.areas[0] || '');
-      refreshInitiativeOptions(t ? t.initiativeId : initiativeId || state.initiatives[0]?.id || '');
+      refreshInitiativeOptions(t ? t.initiativeId : initiativeId || (state.initiatives[0] && state.initiatives[0].id) || '');
       document.getElementById('fTitle').value = t ? t.title : '';
       document.getElementById('fDesc').value = t ? t.desc : '';
       document.getElementById('fStatus').value = t ? t.status : 'Pendiente';
@@ -2603,7 +2603,7 @@ function renderConfig(){
       state.editingWorklogTaskId = taskId;
       state.editingWorklogEntryId = entryId;
       const task = state.tasks.find(x=>x.id===taskId);
-      const entry = entryId ? (task?.worklog || []).find(w=>w.id===entryId) : null;
+      const entry = entryId ? (task && task.worklog || []).find(w=>w.id===entryId) : null;
       document.getElementById('worklogModalWrap').classList.add('show');
       document.getElementById('wDate').value = entry ? entry.date : new Date().toISOString().slice(0,10);
       document.getElementById('wHours').value = entry ? entry.hours : 1;
@@ -3021,9 +3021,9 @@ function renderConfig(){
       render();
     });
 
-    async async function bootstrapRemoteState(){
-      if(state.supabase?.enabled && state.supabase?.url && state.supabase?.anonKey){
-        await loadStateFromSupabase(false);
+    async function bootstrapRemoteState(){
+      if(state.supabase && state.supabase.enabled && state.supabase.url && state.supabase.anonKey){
+        loadStateFromSupabase(false);
       }
     }
 
