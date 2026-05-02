@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 4.0-A</title>
+  <title>BDFlow Ver. 4.1</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -310,7 +310,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 4.0-A</div>
+          <div class="version">Ver. 4.1</div>
         </div>
       </div>
 
@@ -522,7 +522,7 @@
         enabled: true,
         autoSync: true,
         url: 'https://jljaejkmbnfnhcbjcjnm.supabase.co',
-        anonKey: 'sb_publishable_lfoDBgK3_QmtkZ8sKG7nww_zmIZVoxP',
+        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsamFlamttYm5mbmhjYmpjam5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTEyMDksImV4cCI6MjA5MTM4NzIwOX0.7Ey8qKDlDcvOQq77rqBeH9goGWI1whrL9WiefHOp3XI',
         workspace: 'miguel_bdflow',
         lastSyncAt: '',
         lastSyncStatus: 'Local'
@@ -2398,15 +2398,60 @@ function renderConfig(){
               <div style="display:flex;flex-direction:column;gap:18px">
                 <div class="panel" style="box-shadow:none">
                   <div class="panel-head"><div><h2>Cierres del periodo</h2><p>Trabajo realmente finalizado en el rango seleccionado.</p></div></div>
-                  <div class="panel-body">${period.closed.length ? period.closed.map(task=>`<div class="row-card completed-row"><div><div class="row-title">${escapeHtml(task.title)}</div><div class="row-sub">${escapeHtml(getInitiativeName(task.initiativeId))} · ${formatDateES(task.completedAt)}</div></div><div class="badge green">Cerrada</div></div>`).join('') : '<div class="empty">Sin tareas cerradas en este periodo.</div>'}</div>
+                  <div class="panel-body">${period.closed.length ? period.closed.map(task=>`<div class="row-card completed-row" onclick="openDetailModal('${task.id}')" style="cursor:pointer"><div><div class="row-title">${escapeHtml(task.title)}</div><div class="row-sub">${escapeHtml(getInitiativeName(task.initiativeId))} · ${formatDateES(task.completedAt)}</div></div><div class="badge green">Cerrada</div></div>`).join('') : '<div class="empty">Sin tareas cerradas en este periodo.</div>'}</div>
+                </div>
+                <div class="panel" style="box-shadow:none">
+                  <div class="panel-head"><div><h2>Por área</h2><p>Distribución de horas por área.</p></div></div>
+                  <div class="panel-body">${(()=>{
+                    const byArea = {};
+                    period.entries.forEach(e=>{
+                      if(!byArea[e.area]) byArea[e.area]={hours:0,sessions:0};
+                      byArea[e.area].hours += Number(e.hours||0);
+                      byArea[e.area].sessions += 1;
+                    });
+                    const sorted = Object.entries(byArea).sort((a,b)=>b[1].hours-a[1].hours);
+                    const maxH = sorted.length ? sorted[0][1].hours : 1;
+                    return sorted.length ? sorted.map(([area,d])=>`
+                      <div style="margin-bottom:12px">
+                        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:5px">
+                          <span>${escapeHtml(area)}</span><span>${Math.round(d.hours*10)/10}h · ${d.sessions} sesiones</span>
+                        </div>
+                        <div style="height:8px;background:#eef1f8;border-radius:4px;overflow:hidden">
+                          <div style="height:100%;border-radius:4px;background:#2563eb;width:${Math.round(d.hours/maxH*100)}%"></div>
+                        </div>
+                      </div>`).join('')
+                    : '<div class="empty">Sin datos de área.</div>';
+                  })()}</div>
                 </div>
                 <div class="panel" style="box-shadow:none">
                   <div class="panel-head"><div><h2>Distribución por iniciativa</h2><p>En qué se ha ido el tiempo.</p></div></div>
                   <div class="panel-body">${period.topInitiatives.length ? period.topInitiatives.map(item=>`<div class="row-card"><div><div class="row-title">${escapeHtml(item.name)}</div><div class="row-sub">${item.sessions} sesiones</div></div><div class="badge blue">${item.hours}h</div></div>`).join('') : '<div class="empty">Sin distribución disponible.</div>'}</div>
                 </div>
                 <div class="panel" style="box-shadow:none">
+                  <div class="panel-head"><div><h2>Detalle de tareas trabajadas</h2><p>Cada tarea con sus horas y sesiones en el periodo.</p></div></div>
+                  <div class="panel-body">${(()=>{
+                    const byTask = {};
+                    period.entries.forEach(e=>{
+                      if(!byTask[e.taskId]) byTask[e.taskId]={title:e.taskTitle,initiative:e.initiative,area:e.area,hours:0,sessions:0,notes:[]};
+                      byTask[e.taskId].hours += Number(e.hours||0);
+                      byTask[e.taskId].sessions += 1;
+                      if(e.note) byTask[e.taskId].notes.push(e.note);
+                    });
+                    const sorted = Object.values(byTask).sort((a,b)=>b.hours-a.hours);
+                    return sorted.length ? sorted.map(t=>`
+                      <div class="row-card" style="flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:10px">
+                        <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+                          <div><div class="row-title">${escapeHtml(t.title)}</div><div class="row-sub">${escapeHtml(t.initiative)} · ${escapeHtml(t.area)}</div></div>
+                          <div style="display:flex;gap:6px;flex-shrink:0"><span class="badge blue">${Math.round(t.hours*10)/10}h</span><span class="badge">${t.sessions} sesiones</span></div>
+                        </div>
+                        ${t.notes.length ? `<div style="font-size:12px;color:var(--muted);line-height:1.5;width:100%">${t.notes.map(n=>`• ${escapeHtml(n)}`).join('<br>')}</div>` : ''}
+                      </div>`).join('')
+                    : '<div class="empty">Sin tareas trabajadas en el periodo.</div>';
+                  })()}</div>
+                </div>
+                <div class="panel" style="box-shadow:none">
                   <div class="panel-head"><div><h2>Informe del periodo</h2><p>Texto listo para copiar y compartir.</p></div></div>
-                  <div class="panel-body"><div class="report-box">${escapeHtml(periodReport)}</div></div>
+                  <div class="panel-body"><div class="report-toolbar"><button class="btn primary" onclick="copyPeriodExecutiveReport()">Copiar informe</button></div><div class="report-box">${escapeHtml(periodReport)}</div></div>
                 </div>
               </div>
             </div>
@@ -2617,43 +2662,74 @@ function renderConfig(){
       const task = baseTasks().find(x=>x.id===taskId);
       if(!task) return;
       const grouped = getGroupedWorklog(task);
+      const isDone = task.status === 'Finalizada';
+      const isPaused = task.status === 'Pausada';
+      const isInProgress = task.status === 'En curso';
+      const remaining = Math.max(0, Number(task.effort||0) - Number(task.spent||0));
+
       document.getElementById('detailModalBody').innerHTML = `
         <div class="task" style="margin-bottom:0">
           <div class="task-top">
-            <div>
+            <div style="min-width:0;flex:1">
               <div class="task-title">${escapeHtml(task.title)}</div>
               <div class="task-sub">${escapeHtml(task.desc)}</div>
             </div>
             <div class="score"><b>${task.score}</b><span>Score</span></div>
           </div>
-          <div class="badges">
+          <div class="badges" style="margin-top:12px">
             ${statusBadge(task.status)}
             ${badgeDue(task)}
             ${Number(task.spent||0)>Number(task.effort||0)?'<span class="badge overrun">Desviada</span>':''}
             <span class="badge">${escapeHtml(task.area)}</span>
             <span class="badge">${escapeHtml(task.initiative)}</span>
+            <span class="badge purple">Prioridad ${escapeHtml(task.priority)}</span>
           </div>
-          <div class="meta">
+          <div class="meta" style="margin-top:14px">
             <div class="m"><div class="mk">Creada</div><div class="mv">${escapeHtml(task.createdAt || '—')}</div></div>
             <div class="m"><div class="mk">Fecha objetivo</div><div class="mv">${task.due ? escapeHtml(task.due) : 'Sin fecha'}</div></div>
-            <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h${Number(task.spent||0)>Number(task.effort||0)?'<div style="margin-top:4px;color:#d97706;font-size:12px;font-weight:800">Desviada</div>':''}</div></div>
-            <div class="m"><div class="mk">Sesiones</div><div class="mv">${getWorkSessionsCount(task)}</div></div>
+            <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h${Number(task.spent||0)>Number(task.effort||0)?'<div style="margin-top:4px;color:#d97706;font-size:12px;font-weight:800">+${Math.round((Number(task.spent)-Number(task.effort))*10)/10}h desviada</div>':''}</div></div>
+            <div class="m"><div class="mk">Restantes</div><div class="mv">${remaining}h</div></div>
           </div>
-          <div class="detail-block">
-            <div class="row-title" style="margin-bottom:10px">Histórico de trabajo</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+
+          <div style="margin-top:6px;padding:10px 12px;background:#f8fbff;border-radius:14px;border:1px solid var(--border)">
+            <div class="mk" style="margin-bottom:8px">Siguiente paso</div>
+            <div style="font-size:14px;font-weight:700">${escapeHtml(task.next || 'Sin definir')}</div>
+          </div>
+
+          <!-- ACCIONES RÁPIDAS -->
+          <div style="margin-top:16px;padding:14px;background:var(--panel-2);border-radius:16px;border:1px solid var(--border)">
+            <div class="mk" style="margin-bottom:12px">Acciones</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn primary small" onclick="openWorklogModal('${task.id}')">+ Registrar trabajo</button>
+              ${!isDone ? `<button class="qbtn done" onclick="closeDetailModal();toggleDone('${task.id}')" style="border-radius:12px;padding:10px 14px">✔ Finalizar</button>` : `<button class="qbtn edit" onclick="closeDetailModal();toggleDone('${task.id}')" style="border-radius:12px;padding:10px 14px">↩ Reabrir</button>`}
+              ${!isDone && !isPaused ? `<button class="qbtn pause" onclick="closeDetailModal();quickPause('${task.id}')" style="border-radius:12px;padding:10px 14px">⏸ Pausar</button>` : ''}
+              ${isPaused ? `<button class="qbtn time" onclick="closeDetailModal();quickPause('${task.id}')" style="border-radius:12px;padding:10px 14px">▶ Reanudar</button>` : ''}
+              ${!isDone && !isInProgress ? `<button class="qbtn time" onclick="setTaskStatus('${task.id}','En curso')" style="border-radius:12px;padding:10px 14px">▶ Iniciar</button>` : ''}
+              <button class="btn ghost small" onclick="closeDetailModal();openTaskModal('${task.id}')">✏ Editar</button>
             </div>
+          </div>
+
+          <!-- CAMBIO RÁPIDO DE ESTADO -->
+          <div style="margin-top:14px;padding:14px;background:var(--panel-2);border-radius:16px;border:1px solid var(--border)">
+            <div class="mk" style="margin-bottom:10px">Cambiar estado</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              ${['Pendiente','En curso','Pausada','Finalizada'].map(s => `<button onclick="setTaskStatusAndRefresh('${task.id}','${s}')" style="border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:700;font-size:12px;background:${task.status===s?'#2563eb':'#eef2f7'};color:${task.status===s?'#fff':'#334155'}">${s}</button>`).join('')}
+            </div>
+          </div>
+
+          <!-- HISTORIAL DE TRABAJO -->
+          <div class="detail-block" style="margin-top:16px">
+            <div class="row-title" style="margin-bottom:12px">Historial de trabajo · ${getWorkSessionsCount(task)} sesiones · ${task.spent}h total</div>
             ${
               Object.keys(grouped).length ? Object.entries(grouped).map(([date,items])=>`
-                <div class="day-group-title">${date} · ${items.reduce((a,b)=>a+Number(b.hours||0),0)}h</div>
+                <div class="day-group-title">${date} · ${Math.round(items.reduce((a,b)=>a+Number(b.hours||0),0)*10)/10}h</div>
                 ${items.map(w=>`
                   <div class="worklog-row">
-                    <div>
+                    <div style="flex:1;min-width:0">
                       <div class="row-title">${w.hours}h</div>
                       <div class="row-sub">${w.note ? escapeHtml(w.note) : 'Sin comentario'}</div>
                     </div>
-                    <div style="display:flex;gap:8px">
+                    <div style="display:flex;gap:8px;flex-shrink:0">
                       <button class="btn ghost small" onclick="openWorklogModal('${task.id}','${w.id}')">Editar</button>
                       <button class="btn secondary small" onclick="deleteWorklogEntry('${task.id}','${w.id}')">Eliminar</button>
                     </div>
@@ -2666,6 +2742,21 @@ function renderConfig(){
         </div>
       `;
       document.getElementById('detailModalWrap').classList.add('show');
+    }
+
+    function setTaskStatus(taskId, newStatus){
+      const t = state.tasks.find(x=>x.id===taskId);
+      if(!t) return;
+      t.status = newStatus;
+      if(newStatus === 'Finalizada') t.completedAt = new Date().toISOString().slice(0,10);
+      else if(newStatus !== 'Finalizada') t.completedAt = '';
+      saveState();
+      render();
+    }
+
+    function setTaskStatusAndRefresh(taskId, newStatus){
+      setTaskStatus(taskId, newStatus);
+      openDetailModal(taskId);
     }
 
     function closeDetailModal(){
@@ -2930,7 +3021,7 @@ function renderConfig(){
       render();
     });
 
-    async function bootstrapRemoteState(){
+    async async function bootstrapRemoteState(){
       if(state.supabase?.enabled && state.supabase?.url && state.supabase?.anonKey){
         await loadStateFromSupabase(false);
       }
