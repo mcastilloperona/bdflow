@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 4.1</title>
+  <title>BDFlow Ver. 4.2</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -310,7 +310,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 4.1</div>
+          <div class="version">Ver. 4.2</div>
         </div>
       </div>
 
@@ -596,7 +596,7 @@
           title: t.title || 'Sin título',
           desc: t.desc || '',
           area: t.area || state.areas[0] || 'General',
-          initiativeId: t.initiativeId || (state.initiatives[0] && state.initiatives[0].id) || '',
+          initiativeId: t.initiativeId || (state.initiatives[0] ? state.initiatives[0].id : '') || '',
           status: normalizedStatus,
           priority: ['Alta','Media','Baja'].includes(t.priority) ? t.priority : 'Media',
           due: t.due || '',
@@ -677,39 +677,39 @@
     }
 
     function scheduleSupabaseSync(){
-      if(!state.supabase || !state.supabase.enabled || !state.supabase.autoSync) return;
+      if(!state.(supabase && supabase.enabled) || !state.(supabase && supabase.autoSync)) return;
       clearTimeout(supabaseSyncTimer);
       supabaseSyncTimer = setTimeout(()=>saveStateToSupabase(false), 900);
     }
 
     function saveStateToSupabase(showFeedback){
-      if(showFeedback === undefined) showFeedback = true;
+      if(showFeedback===undefined) showFeedback=true;
       var client = initSupabaseClient();
       if(!client){ if(showFeedback) alert('Configura Supabase primero.'); return; }
       var workspace = sanitizeWorkspace(state.supabase.workspace);
       state.supabase.workspace = workspace;
       var snapshot = getSerializableState();
       client.from('bdflow_state').upsert({workspace:workspace,app_state:snapshot,updated_at:new Date().toISOString()},{onConflict:'workspace'}).then(function(res){
-        if(res.error){ console.error(res.error); state.supabase.lastSyncStatus='Error'; if(showFeedback) alert('Error al guardar en Supabase.'); render(); return; }
-        state.supabase.lastSyncAt = new Date().toISOString();
-        state.supabase.lastSyncStatus = 'Sincronizado';
+        if(res.error){ console.error(res.error); state.supabase.lastSyncStatus='Error'; if(showFeedback) alert('Error al guardar.'); render(); return; }
+        state.supabase.lastSyncAt=new Date().toISOString();
+        state.supabase.lastSyncStatus='Sincronizado';
         if(showFeedback) showToast('BDFlow','Sincronizado con Supabase.');
         render();
       });
     }
 
     function loadStateFromSupabase(showFeedback){
-      if(showFeedback === undefined) showFeedback = true;
+      if(showFeedback===undefined) showFeedback=true;
       var client = initSupabaseClient();
       if(!client){ if(showFeedback) alert('Configura Supabase primero.'); return Promise.resolve(false); }
       var workspace = sanitizeWorkspace(state.supabase.workspace);
       state.supabase.workspace = workspace;
       return client.from('bdflow_state').select('app_state,updated_at').eq('workspace',workspace).maybeSingle().then(function(res){
         if(res.error){ console.error(res.error); state.supabase.lastSyncStatus='Error'; if(showFeedback) alert('Error al cargar desde Supabase.'); render(); return false; }
-        if(!res.data || !res.data.app_state){ if(showFeedback) showToast('BDFlow','Sin datos remotos para este workspace.'); return false; }
+        if(!res.data||!res.data.app_state){ if(showFeedback) showToast('BDFlow','Sin datos remotos.'); return false; }
         applyRemoteState(res.data.app_state);
-        state.supabase.lastSyncAt = res.data.updated_at || new Date().toISOString();
-        state.supabase.lastSyncStatus = 'Sincronizado';
+        state.supabase.lastSyncAt=res.data.updated_at||new Date().toISOString();
+        state.supabase.lastSyncStatus='Sincronizado';
         render();
         if(showFeedback) showToast('BDFlow','Datos cargados desde Supabase.');
         return true;
@@ -717,16 +717,13 @@
     }
 
     function connectSupabaseFromUI(){
-      var urlEl = document.getElementById('sbUrl');
-      var keyEl = document.getElementById('sbAnonKey');
-      var wsEl = document.getElementById('sbWorkspace');
-      var enEl = document.getElementById('sbEnabled');
-      var asEl = document.getElementById('sbAutoSync');
-      if(urlEl) state.supabase.url = urlEl.value.trim();
-      if(keyEl) state.supabase.anonKey = keyEl.value.trim();
-      if(wsEl) state.supabase.workspace = sanitizeWorkspace(wsEl.value || state.supabase.workspace);
-      if(enEl) state.supabase.enabled = enEl.checked;
-      if(asEl) state.supabase.autoSync = asEl.checked;
+      var urlEl=document.getElementById('sbUrl'),keyEl=document.getElementById('sbAnonKey');
+      var wsEl=document.getElementById('sbWorkspace'),enEl=document.getElementById('sbEnabled'),asEl=document.getElementById('sbAutoSync');
+      if(urlEl) state.supabase.url=urlEl.value.trim();
+      if(keyEl) state.supabase.anonKey=keyEl.value.trim();
+      if(wsEl) state.supabase.workspace=sanitizeWorkspace(wsEl.value||state.supabase.workspace);
+      if(enEl) state.supabase.enabled=enEl.checked;
+      if(asEl) state.supabase.autoSync=asEl.checked;
       saveState();
       loadStateFromSupabase(false).then(function(ok){
         if(ok) showToast('BDFlow','Supabase conectado y datos cargados.');
@@ -749,7 +746,7 @@
       state.supabase.lastSyncStatus = 'Local';
       saveState();
       render();
-      showToast('BDFlow','Supabase desactivado.');
+      showToast('BDFlow', 'Supabase desactivado. Sigues trabajando en local.');
     }
 
     function exportData(){
@@ -1449,7 +1446,7 @@
       if(data && data.date === today && data.quote){
         return data.quote;
       }
-      let used = Array.isArray(data && data.used) ? data.used.filter(q => quotes.includes(q)) : [];
+      let used = Array.isArray((data && data.used)) ? data.used.filter(q => quotes.includes(q)) : [];
       let available = quotes.filter(q => !used.includes(q));
       if(!available.length){
         used = [];
@@ -1587,23 +1584,106 @@
     }
 
     function renderToday(tasks){
+      const today = new Date().toISOString().slice(0,10);
+      const dayName = new Date().toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long'});
       const active = sortTasks(tasks.filter(t=>t.status!=='Finalizada'));
-      const criticalPool = active.filter(t=>isCriticalTask(t));
-      const critical = criticalPool.slice(0,5);
-      const nonCritical = active.filter(t=>!isCriticalTask(t));
-      const importantPool = nonCritical.filter(t=>t.status==='En curso' || t.priority==='Alta' || t.score>=55);
-      const important = importantPool.slice(0,4);
-      const used = new Set([...critical, ...important].map(t=>t.id));
-      const optionalPool = nonCritical.filter(t=>!used.has(t.id));
-      const optional = optionalPool.slice(0,4);
-      const criticalOverflow = Math.max(0, criticalPool.length - critical.length);
-      const importantOverflow = Math.max(0, importantPool.length - important.length);
-      const optionalOverflow = Math.max(0, optionalPool.length - optional.length);
-      return `<div class="today-grid">
-        <div class="lane"><div class="lane-head"><h3>Crítico</h3><p>Sí o sí hoy.</p></div><div class="lane-body">${critical.length?critical.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Nada crítico ahora mismo.</div>'}${criticalOverflow?`<div class="mini-task">+ ${criticalOverflow} crítica(s) más</div>`:''}</div></div>
-        <div class="lane"><div class="lane-head"><h3>Importante</h3><p>Trabajo que debería avanzar hoy.</p></div><div class="lane-body">${important.length?important.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin importantes ahora mismo.</div>'}${importantOverflow?`<div class="mini-task">+ ${importantOverflow} importante(s) más</div>`:''}</div></div>
-        <div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Reserva o trabajo delegable a mañana.</p></div><div class="lane-body">${optional.length?optional.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin opcionales.</div>'}${optionalOverflow?`<div class="mini-task">+ ${optionalOverflow} opcional(es) más</div>`:''}</div></div>
-      </div>`;
+      const dailyCap = state.dailyCapacity || 6;
+
+      const overdue = active.filter(t=>t.due && t.due < today);
+      const dueToday = active.filter(t=>t.due === today);
+      const usedIds = new Set([...overdue,...dueToday].map(t=>t.id));
+      const critical = active.filter(t=>isCriticalTask(t) && !usedIds.has(t.id)).slice(0,4);
+      critical.forEach(t=>usedIds.add(t.id));
+      const inProgress = active.filter(t=>t.status==='En curso' && !usedIds.has(t.id)).slice(0,3);
+      const blocked = active.filter(t=>t.status==='Bloqueada').slice(0,3);
+
+      const todayLogs = tasks.flatMap(t=>(t.worklog||[]).filter(w=>w.date===today));
+      const hoursToday = Math.round(todayLogs.reduce((a,b)=>a+Number(b.hours||0),0)*10)/10;
+      const pct = Math.min(100, Math.round(hoursToday/dailyCap*100));
+      const pctColor = pct>=100?'#dc2626':pct>=75?'#d97706':'#16a34a';
+
+      const todayWorkDetail = tasks.filter(t=>(t.worklog||[]).some(w=>w.date===today)).map(t=>{
+        const logs = (t.worklog||[]).filter(w=>w.date===today);
+        return {t, hours:Math.round(logs.reduce((a,b)=>a+Number(b.hours||0),0)*10)/10, notes:logs.map(l=>l.note).filter(Boolean)};
+      }).sort((a,b)=>b.hours-a.hours);
+
+      const taskCardCompact = (t) => {
+        const d = t.due ? Math.ceil((new Date(t.due)-new Date(today))/86400000) : null;
+        const dLabel = d===null?'':d<0?`<span style="color:#dc2626;font-size:11px;font-weight:700">${Math.abs(d)}d vencida</span>`:d===0?'<span style="color:#ea580c;font-size:11px;font-weight:700">Vence hoy</span>':d<=2?`<span style="color:#d97706;font-size:11px;font-weight:700">En ${d}d</span>`:'';
+        return `<div onclick="openDetailModal('${t.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer" onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="min-width:0;flex:1">
+              <div style="font-size:13px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">${escapeHtml(t.title)}</div>
+              <div style="font-size:11px;color:#64748b;margin-bottom:4px">${escapeHtml(t.area)}</div>
+              ${t.next?`<div style="font-size:11px;color:#475569;background:#f8fafc;border-radius:6px;padding:3px 7px">→ ${escapeHtml(t.next)}</div>`:''}
+              ${dLabel?`<div style="margin-top:5px">${dLabel}</div>`:''}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+              <span style="background:#1e293b;color:#fff;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:800">${t.score||0}</span>
+              ${statusBadge(t.status)}
+            </div>
+          </div>
+          <div style="display:flex;gap:7px;margin-top:9px">
+            <button onclick="event.stopPropagation();openWorklogModal('${t.id}')" style="background:#eff6ff;color:#2563eb;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">+ Registrar</button>
+            ${t.status!=='Finalizada'?`<button onclick="event.stopPropagation();closeDetailModal();toggleDone('${t.id}')" style="background:#f0fdf4;color:#16a34a;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">✔ Finalizar</button>`:''}
+            ${t.status==='Pendiente'||t.status==='Pausada'?`<button onclick="event.stopPropagation();setTaskStatus('${t.id}','En curso');renderCurrentView()" style="background:#f0f9ff;color:#0369a1;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">▶ Iniciar</button>`:''}
+          </div>
+        </div>`;
+      };
+
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:22px;font-weight:900;color:#1e293b;text-transform:capitalize">${dayName}</div>
+            <div style="font-size:13px;color:#64748b;margin-top:2px">${active.length} activas · ${overdue.length} vencidas · ${dueToday.length} vencen hoy</div>
+          </div>
+          <button onclick="openWorklogModal()" style="background:#2563eb;color:#fff;border:none;border-radius:12px;padding:11px 18px;font-weight:700;font-size:13px;cursor:pointer">+ Registrar trabajo</button>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 20px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:13px;font-weight:700;color:#1e293b">Progreso del día</div>
+            <div style="font-size:14px;font-weight:800;color:${pctColor}">${hoursToday}h / ${dailyCap}h</div>
+          </div>
+          <div style="height:10px;background:#f1f5f9;border-radius:10px;overflow:hidden;margin-bottom:12px">
+            <div style="height:100%;border-radius:10px;background:${pctColor};width:${pct}%"></div>
+          </div>
+          ${todayWorkDetail.length?`
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Registrado hoy</div>
+            ${todayWorkDetail.map(({t,hours:h,notes})=>`
+              <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 10px;background:#f8fafc;border-radius:8px;margin-bottom:5px">
+                <div style="background:#2563eb;color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800;flex-shrink:0">${h}h</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:12px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.title)}</div>
+                  ${notes.map(n=>`<div style="font-size:11px;color:#64748b">· ${escapeHtml(n)}</div>`).join('')}
+                </div>
+              </div>`).join('')}
+          `:`<div style="font-size:13px;color:#94a3b8;text-align:center;padding:4px 0">Todavía no has registrado trabajo hoy.</div>`}
+        </div>
+
+        ${overdue.length||dueToday.length?`
+        <div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:14px;padding:14px 16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:#be123c;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">⚠ Requiere atención inmediata</div>
+          ${[...overdue.slice(0,3),...dueToday.slice(0,2)].map(taskCardCompact).join('')}
+        </div>`:''}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Crítico · ${critical.length}</div>
+            ${critical.length?critical.map(taskCardCompact).join(''):'<div style="color:#94a3b8;font-size:13px;padding:10px 0">Nada crítico. ✓</div>'}
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">En curso · ${inProgress.length}</div>
+            ${inProgress.length?inProgress.map(taskCardCompact).join(''):'<div style="color:#94a3b8;font-size:13px;padding:10px 0">Sin tareas en curso.</div>'}
+          </div>
+        </div>
+
+        ${blocked.length?`
+        <div style="margin-top:16px">
+          <div style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">⛔ Bloqueadas · ${blocked.length}</div>
+          ${blocked.map(taskCardCompact).join('')}
+        </div>`:''}
+      `;
     }
 
     function renderWeek(tasks){
@@ -1897,7 +1977,7 @@ function renderConfig(){
     }
 
     function getTaskAgeDays(task){
-      if(!task && task.createdAt) return null;
+      if(!(task && task.createdAt)) return null;
       const today = new Date();
       today.setHours(0,0,0,0);
       const created = parseDate(task.createdAt);
@@ -2065,7 +2145,7 @@ function renderConfig(){
     }
 
     function getReportRange(){
-      const mode = (state.reporting && state.reporting.mode) || 'week';
+      const mode = state.(reporting && reporting.mode) || 'week';
       const today = new Date();
       let start = new Date(today);
       let end = new Date(today);
@@ -2080,8 +2160,8 @@ function renderConfig(){
         start = getStartOfMonth(today);
         end = getEndOfMonth(today);
       }else{
-        start = (state.reporting && state.reporting.startDate) ? new Date(state.reporting.startDate + 'T00:00:00') : new Date(today);
-        end = (state.reporting && state.reporting.endDate) ? new Date(state.reporting.endDate + 'T23:59:59') : new Date(today);
+        start = state.(reporting && reporting.startDate) ? new Date(state.reporting.startDate + 'T00:00:00') : new Date(today);
+        end = state.(reporting && reporting.endDate) ? new Date(state.reporting.endDate + 'T23:59:59') : new Date(today);
         if(Number.isNaN(start.getTime())){ start = new Date(today); start.setHours(0,0,0,0); }
         if(Number.isNaN(end.getTime())){ end = new Date(today); end.setHours(23,59,59,999); }
         if(start > end){ const tmp = start; start = end; end = tmp; }
@@ -2365,60 +2445,15 @@ function renderConfig(){
               <div style="display:flex;flex-direction:column;gap:18px">
                 <div class="panel" style="box-shadow:none">
                   <div class="panel-head"><div><h2>Cierres del periodo</h2><p>Trabajo realmente finalizado en el rango seleccionado.</p></div></div>
-                  <div class="panel-body">${period.closed.length ? period.closed.map(task=>`<div class="row-card completed-row" onclick="openDetailModal('${task.id}')" style="cursor:pointer"><div><div class="row-title">${escapeHtml(task.title)}</div><div class="row-sub">${escapeHtml(getInitiativeName(task.initiativeId))} · ${formatDateES(task.completedAt)}</div></div><div class="badge green">Cerrada</div></div>`).join('') : '<div class="empty">Sin tareas cerradas en este periodo.</div>'}</div>
-                </div>
-                <div class="panel" style="box-shadow:none">
-                  <div class="panel-head"><div><h2>Por área</h2><p>Distribución de horas por área.</p></div></div>
-                  <div class="panel-body">${(()=>{
-                    const byArea = {};
-                    period.entries.forEach(e=>{
-                      if(!byArea[e.area]) byArea[e.area]={hours:0,sessions:0};
-                      byArea[e.area].hours += Number(e.hours||0);
-                      byArea[e.area].sessions += 1;
-                    });
-                    const sorted = Object.entries(byArea).sort((a,b)=>b[1].hours-a[1].hours);
-                    const maxH = sorted.length ? sorted[0][1].hours : 1;
-                    return sorted.length ? sorted.map(([area,d])=>`
-                      <div style="margin-bottom:12px">
-                        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:5px">
-                          <span>${escapeHtml(area)}</span><span>${Math.round(d.hours*10)/10}h · ${d.sessions} sesiones</span>
-                        </div>
-                        <div style="height:8px;background:#eef1f8;border-radius:4px;overflow:hidden">
-                          <div style="height:100%;border-radius:4px;background:#2563eb;width:${Math.round(d.hours/maxH*100)}%"></div>
-                        </div>
-                      </div>`).join('')
-                    : '<div class="empty">Sin datos de área.</div>';
-                  })()}</div>
+                  <div class="panel-body">${period.closed.length ? period.closed.map(task=>`<div class="row-card completed-row"><div><div class="row-title">${escapeHtml(task.title)}</div><div class="row-sub">${escapeHtml(getInitiativeName(task.initiativeId))} · ${formatDateES(task.completedAt)}</div></div><div class="badge green">Cerrada</div></div>`).join('') : '<div class="empty">Sin tareas cerradas en este periodo.</div>'}</div>
                 </div>
                 <div class="panel" style="box-shadow:none">
                   <div class="panel-head"><div><h2>Distribución por iniciativa</h2><p>En qué se ha ido el tiempo.</p></div></div>
                   <div class="panel-body">${period.topInitiatives.length ? period.topInitiatives.map(item=>`<div class="row-card"><div><div class="row-title">${escapeHtml(item.name)}</div><div class="row-sub">${item.sessions} sesiones</div></div><div class="badge blue">${item.hours}h</div></div>`).join('') : '<div class="empty">Sin distribución disponible.</div>'}</div>
                 </div>
                 <div class="panel" style="box-shadow:none">
-                  <div class="panel-head"><div><h2>Detalle de tareas trabajadas</h2><p>Cada tarea con sus horas y sesiones en el periodo.</p></div></div>
-                  <div class="panel-body">${(()=>{
-                    const byTask = {};
-                    period.entries.forEach(e=>{
-                      if(!byTask[e.taskId]) byTask[e.taskId]={title:e.taskTitle,initiative:e.initiative,area:e.area,hours:0,sessions:0,notes:[]};
-                      byTask[e.taskId].hours += Number(e.hours||0);
-                      byTask[e.taskId].sessions += 1;
-                      if(e.note) byTask[e.taskId].notes.push(e.note);
-                    });
-                    const sorted = Object.values(byTask).sort((a,b)=>b.hours-a.hours);
-                    return sorted.length ? sorted.map(t=>`
-                      <div class="row-card" style="flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:10px">
-                        <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
-                          <div><div class="row-title">${escapeHtml(t.title)}</div><div class="row-sub">${escapeHtml(t.initiative)} · ${escapeHtml(t.area)}</div></div>
-                          <div style="display:flex;gap:6px;flex-shrink:0"><span class="badge blue">${Math.round(t.hours*10)/10}h</span><span class="badge">${t.sessions} sesiones</span></div>
-                        </div>
-                        ${t.notes.length ? `<div style="font-size:12px;color:var(--muted);line-height:1.5;width:100%">${t.notes.map(n=>`• ${escapeHtml(n)}`).join('<br>')}</div>` : ''}
-                      </div>`).join('')
-                    : '<div class="empty">Sin tareas trabajadas en el periodo.</div>';
-                  })()}</div>
-                </div>
-                <div class="panel" style="box-shadow:none">
                   <div class="panel-head"><div><h2>Informe del periodo</h2><p>Texto listo para copiar y compartir.</p></div></div>
-                  <div class="panel-body"><div class="report-toolbar"><button class="btn primary" onclick="copyPeriodExecutiveReport()">Copiar informe</button></div><div class="report-box">${escapeHtml(periodReport)}</div></div>
+                  <div class="panel-body"><div class="report-box">${escapeHtml(periodReport)}</div></div>
                 </div>
               </div>
             </div>
@@ -2457,7 +2492,7 @@ function renderConfig(){
       document.getElementById('taskModalTitle').textContent = t ? 'Editar tarea' : 'Nueva tarea';
       document.getElementById('deleteTaskBtn').style.display = t ? 'inline-flex' : 'none';
       refreshAreaOptions(t ? t.area : state.areas[0] || '');
-      refreshInitiativeOptions(t ? t.initiativeId : initiativeId || (state.initiatives[0] && state.initiatives[0].id) || '');
+      refreshInitiativeOptions(t ? t.initiativeId : initiativeId || (state.initiatives[0] ? state.initiatives[0].id : '') || '');
       document.getElementById('fTitle').value = t ? t.title : '';
       document.getElementById('fDesc').value = t ? t.desc : '';
       document.getElementById('fStatus').value = t ? t.status : 'Pendiente';
@@ -2570,7 +2605,7 @@ function renderConfig(){
       state.editingWorklogTaskId = taskId;
       state.editingWorklogEntryId = entryId;
       const task = state.tasks.find(x=>x.id===taskId);
-      const entry = entryId ? (task && task.worklog || []).find(w=>w.id===entryId) : null;
+      const entry = entryId ? ((task && task.worklog) || []).find(w=>w.id===entryId) : null;
       document.getElementById('worklogModalWrap').classList.add('show');
       document.getElementById('wDate').value = entry ? entry.date : new Date().toISOString().slice(0,10);
       document.getElementById('wHours').value = entry ? entry.hours : 1;
@@ -2632,79 +2667,103 @@ function renderConfig(){
       const isDone = task.status === 'Finalizada';
       const isPaused = task.status === 'Pausada';
       const isInProgress = task.status === 'En curso';
-      const remaining = Math.max(0, Number(task.effort||0) - Number(task.spent||0));
+      const isPending = task.status === 'Pendiente';
+      const totalHours = (task.worklog||[]).reduce((a,b)=>a+Number(b.hours||0),0);
+      const remaining = Math.max(0, Number(task.effort||0) - totalHours);
+      const overrun = totalHours > Number(task.effort||0);
+      const daysLeft = task.due ? Math.ceil((new Date(task.due) - new Date(new Date().toISOString().slice(0,10))) / 86400000) : null;
 
       document.getElementById('detailModalBody').innerHTML = `
-        <div class="task" style="margin-bottom:0">
-          <div class="task-top">
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <!-- CABECERA -->
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
             <div style="min-width:0;flex:1">
-              <div class="task-title">${escapeHtml(task.title)}</div>
-              <div class="task-sub">${escapeHtml(task.desc)}</div>
+              <div style="font-size:18px;font-weight:800;color:#1e293b;line-height:1.3;margin-bottom:4px">${escapeHtml(task.title)}</div>
+              ${task.desc ? `<div style="font-size:13px;color:#64748b;margin-bottom:6px">${escapeHtml(task.desc)}</div>` : ''}
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+                ${statusBadge(task.status)}
+                ${badgeDue(task)}
+                ${overrun ? '<span class="badge overrun">+'+Math.round((totalHours-Number(task.effort||0))*10)/10+'h desviada</span>' : ''}
+                <span class="badge">${escapeHtml(task.area)}</span>
+                <span class="badge purple">Prioridad ${escapeHtml(task.priority||'—')}</span>
+              </div>
             </div>
-            <div class="score"><b>${task.score}</b><span>Score</span></div>
-          </div>
-          <div class="badges" style="margin-top:12px">
-            ${statusBadge(task.status)}
-            ${badgeDue(task)}
-            ${Number(task.spent||0)>Number(task.effort||0)?'<span class="badge overrun">Desviada</span>':''}
-            <span class="badge">${escapeHtml(task.area)}</span>
-            <span class="badge">${escapeHtml(task.initiative)}</span>
-            <span class="badge purple">Prioridad ${escapeHtml(task.priority)}</span>
-          </div>
-          <div class="meta" style="margin-top:14px">
-            <div class="m"><div class="mk">Creada</div><div class="mv">${escapeHtml(task.createdAt || '—')}</div></div>
-            <div class="m"><div class="mk">Fecha objetivo</div><div class="mv">${task.due ? escapeHtml(task.due) : 'Sin fecha'}</div></div>
-            <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h${Number(task.spent||0)>Number(task.effort||0)?'<div style="margin-top:4px;color:#d97706;font-size:12px;font-weight:800">+${Math.round((Number(task.spent)-Number(task.effort))*10)/10}h desviada</div>':''}</div></div>
-            <div class="m"><div class="mk">Restantes</div><div class="mv">${remaining}h</div></div>
+            <div style="text-align:center;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:14px;padding:10px 14px;flex-shrink:0">
+              <div style="font-size:22px;font-weight:900;line-height:1">${task.score||0}</div>
+              <div style="font-size:10px;font-weight:700;opacity:.8;margin-top:2px">SCORE</div>
+            </div>
           </div>
 
-          <div style="margin-top:6px;padding:10px 12px;background:#f8fbff;border-radius:14px;border:1px solid var(--border)">
-            <div class="mk" style="margin-bottom:8px">Siguiente paso</div>
-            <div style="font-size:14px;font-weight:700">${escapeHtml(task.next || 'Sin definir')}</div>
+          <!-- MÉTRICAS -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <div style="background:#f0f9ff;border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:800;color:#0369a1">${totalHours}h</div>
+              <div style="font-size:10px;color:#64748b;font-weight:600;margin-top:2px">INVERTIDAS</div>
+            </div>
+            <div style="background:${overrun?'#fff7ed':'#f0fdf4'};border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:800;color:${overrun?'#ea580c':'#16a34a'}">${Number(task.effort||0)}h</div>
+              <div style="font-size:10px;color:#64748b;font-weight:600;margin-top:2px">ESTIMADAS</div>
+            </div>
+            <div style="background:#faf5ff;border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:800;color:#7c3aed">${remaining}h</div>
+              <div style="font-size:10px;color:#64748b;font-weight:600;margin-top:2px">RESTANTES</div>
+            </div>
+            <div style="background:${daysLeft!==null&&daysLeft<0?'#fff1f2':daysLeft===0?'#fff7ed':'#f8fafc'};border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:800;color:${daysLeft!==null&&daysLeft<0?'#e11d48':daysLeft===0?'#ea580c':'#334155'}">${daysLeft===null?'—':daysLeft===0?'HOY':daysLeft<0?Math.abs(daysLeft)+'d':daysLeft+'d'}</div>
+              <div style="font-size:10px;color:#64748b;font-weight:600;margin-top:2px">${daysLeft!==null&&daysLeft<0?'VENCIDA':daysLeft===0?'VENCE HOY':'PARA VENCER'}</div>
+            </div>
           </div>
 
-          <!-- ACCIONES RÁPIDAS -->
-          <div style="margin-top:16px;padding:14px;background:var(--panel-2);border-radius:16px;border:1px solid var(--border)">
-            <div class="mk" style="margin-bottom:12px">Acciones</div>
+          <!-- PRÓXIMO PASO -->
+          ${task.next ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px">
+            <div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">→ Próxima acción</div>
+            <div style="font-size:14px;font-weight:700;color:#78350f">${escapeHtml(task.next)}</div>
+          </div>` : ''}
+
+          <!-- ACCIONES PRINCIPALES -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px">
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Acciones</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn primary small" onclick="openWorklogModal('${task.id}')">+ Registrar trabajo</button>
-              ${!isDone ? `<button class="qbtn done" onclick="closeDetailModal();toggleDone('${task.id}')" style="border-radius:12px;padding:10px 14px">✔ Finalizar</button>` : `<button class="qbtn edit" onclick="closeDetailModal();toggleDone('${task.id}')" style="border-radius:12px;padding:10px 14px">↩ Reabrir</button>`}
-              ${!isDone && !isPaused ? `<button class="qbtn pause" onclick="closeDetailModal();quickPause('${task.id}')" style="border-radius:12px;padding:10px 14px">⏸ Pausar</button>` : ''}
-              ${isPaused ? `<button class="qbtn time" onclick="closeDetailModal();quickPause('${task.id}')" style="border-radius:12px;padding:10px 14px">▶ Reanudar</button>` : ''}
-              ${!isDone && !isInProgress ? `<button class="qbtn time" onclick="setTaskStatus('${task.id}','En curso')" style="border-radius:12px;padding:10px 14px">▶ Iniciar</button>` : ''}
-              <button class="btn ghost small" onclick="closeDetailModal();openTaskModal('${task.id}')">✏ Editar</button>
+              <button onclick="openWorklogModal('${task.id}')" style="background:#2563eb;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">+ Registrar trabajo</button>
+              ${!isDone ? `<button onclick="closeDetailModal();toggleDone('${task.id}')" style="background:#16a34a;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">✔ Finalizar</button>` : `<button onclick="setTaskStatusAndRefresh('${task.id}','En curso')" style="background:#64748b;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">↩ Reabrir</button>`}
+              ${isInProgress ? `<button onclick="setTaskStatusAndRefresh('${task.id}','Pausada')" style="background:#d97706;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">⏸ Pausar</button>` : ''}
+              ${isPaused ? `<button onclick="setTaskStatusAndRefresh('${task.id}','En curso')" style="background:#0891b2;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">▶ Reanudar</button>` : ''}
+              ${isPending ? `<button onclick="setTaskStatusAndRefresh('${task.id}','En curso')" style="background:#0891b2;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">▶ Iniciar</button>` : ''}
+              <button onclick="closeDetailModal();openTaskModal('${task.id}')" style="background:#fff;color:#334155;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">✏ Editar</button>
             </div>
           </div>
 
           <!-- CAMBIO RÁPIDO DE ESTADO -->
-          <div style="margin-top:14px;padding:14px;background:var(--panel-2);border-radius:16px;border:1px solid var(--border)">
-            <div class="mk" style="margin-bottom:10px">Cambiar estado</div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px">
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Estado</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              ${['Pendiente','En curso','Pausada','Finalizada'].map(s => `<button onclick="setTaskStatusAndRefresh('${task.id}','${s}')" style="border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:700;font-size:12px;background:${task.status===s?'#2563eb':'#eef2f7'};color:${task.status===s?'#fff':'#334155'}">${s}</button>`).join('')}
+              ${['Pendiente','En curso','Pausada','Bloqueada','Finalizada'].map(s => `
+                <button onclick="setTaskStatusAndRefresh('${task.id}','${s}')" style="border:2px solid ${task.status===s?'#2563eb':'#e2e8f0'};border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;font-size:12px;background:${task.status===s?'#2563eb':'#fff'};color:${task.status===s?'#fff':'#64748b'};transition:all .15s">${s}</button>
+              `).join('')}
             </div>
           </div>
 
           <!-- HISTORIAL DE TRABAJO -->
-          <div class="detail-block" style="margin-top:16px">
-            <div class="row-title" style="margin-bottom:12px">Historial de trabajo · ${getWorkSessionsCount(task)} sesiones · ${task.spent}h total</div>
-            ${
-              Object.keys(grouped).length ? Object.entries(grouped).map(([date,items])=>`
-                <div class="day-group-title">${date} · ${Math.round(items.reduce((a,b)=>a+Number(b.hours||0),0)*10)/10}h</div>
-                ${items.map(w=>`
-                  <div class="worklog-row">
-                    <div style="flex:1;min-width:0">
-                      <div class="row-title">${w.hours}h</div>
-                      <div class="row-sub">${w.note ? escapeHtml(w.note) : 'Sin comentario'}</div>
-                    </div>
-                    <div style="display:flex;gap:8px;flex-shrink:0">
-                      <button class="btn ghost small" onclick="openWorklogModal('${task.id}','${w.id}')">Editar</button>
-                      <button class="btn secondary small" onclick="deleteWorklogEntry('${task.id}','${w.id}')">Eliminar</button>
-                    </div>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px">
+              Historial · ${(task.worklog||[]).length} sesiones · ${totalHours}h total
+            </div>
+            ${Object.keys(grouped).length ? Object.entries(grouped).sort((a,b)=>b[0].localeCompare(a[0])).map(([date,items])=>`
+              <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px">${date} · ${Math.round(items.reduce((a,b)=>a+Number(b.hours||0),0)*10)/10}h</div>
+              ${items.map(w=>`
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;margin-bottom:6px;border:1px solid #e2e8f0">
+                  <div style="background:#2563eb;color:#fff;border-radius:7px;padding:4px 9px;font-size:12px;font-weight:800;flex-shrink:0">${w.hours}h</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;color:#334155;font-weight:500">${w.note ? escapeHtml(w.note) : 'Sin comentario'}</div>
                   </div>
-                `).join('')}
-              `).join('')
-              : '<div class="empty">Todavía no hay trabajo registrado.</div>'
-            }
+                  <div style="display:flex;gap:6px;flex-shrink:0">
+                    <button onclick="openWorklogModal('${task.id}','${w.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;color:#64748b">Editar</button>
+                    <button onclick="deleteWorklogEntry('${task.id}','${w.id}')" style="background:none;border:1px solid #fecaca;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;color:#dc2626">✕</button>
+                  </div>
+                </div>
+              `).join('')}
+            `).join('') : '<div style="color:#94a3b8;text-align:center;padding:20px;font-size:13px">Sin trabajo registrado todavía.</div>'}
           </div>
         </div>
       `;
@@ -2715,9 +2774,10 @@ function renderConfig(){
       const t = state.tasks.find(x=>x.id===taskId);
       if(!t) return;
       t.status = newStatus;
-      if(newStatus === 'Finalizada') t.completedAt = new Date().toISOString().slice(0,10);
-      else if(newStatus !== 'Finalizada') t.completedAt = '';
+      if(newStatus==='Finalizada') t.completedAt = new Date().toISOString().slice(0,10);
+      else t.completedAt = '';
       saveState();
+      scheduleSupabaseSync();
       render();
     }
 
@@ -2726,7 +2786,7 @@ function renderConfig(){
       openDetailModal(taskId);
     }
 
-    function closeDetailModal(){
+        function closeDetailModal(){
       document.getElementById('detailModalWrap').classList.remove('show');
       state.detailTaskId = null;
     }
