@@ -300,50 +300,19 @@
     }
 
     /* ── ANIMACIONES V4.3 ── */
-    @keyframes fadeInUp {
-      from { opacity:0; transform:translateY(16px); }
-      to   { opacity:1; transform:translateY(0); }
-    }
-    @keyframes confettiFall {
-      0%   { transform:translateY(-10px) rotate(0deg); opacity:1; }
-      100% { transform:translateY(60px) rotate(720deg); opacity:0; }
-    }
-    @keyframes barGrow {
-      from { width:0%; }
-    }
-    @keyframes alertSlideIn {
-      from { opacity:0; transform:translateX(40px); }
-      to   { opacity:1; transform:translateX(0); }
-    }
-    @keyframes pulse {
-      0%,100% { transform:scale(1); }
-      50%      { transform:scale(1.06); }
-    }
-    @keyframes shimmer {
-      0%   { background-position:-400px 0; }
-      100% { background-position:400px 0; }
-    }
-    .smart-alert-panel {
-      position:fixed; top:16px; right:16px; width:340px; max-width:94vw;
-      z-index:1000; display:flex; flex-direction:column; gap:8px;
-      pointer-events:none;
-    }
-    .smart-alert-item {
-      background:#fff; border-radius:14px; padding:13px 15px;
-      box-shadow:0 8px 32px rgba(15,23,42,.14); border:1px solid;
-      display:flex; align-items:flex-start; gap:10px;
-      pointer-events:all; cursor:pointer;
-      animation: alertSlideIn .4s cubic-bezier(.22,1,.36,1) both;
-    }
-    .smart-alert-item.red   { border-color:#fecdd3; background:#fff1f2; }
-    .smart-alert-item.amber { border-color:#fed7aa; background:#fff7ed; }
-    .smart-alert-item.blue  { border-color:#bfdbfe; background:#eff6ff; }
-    .smart-alert-item .al-icon  { font-size:18px; flex-shrink:0; margin-top:1px; }
-    .smart-alert-item .al-body  { flex:1; min-width:0; }
-    .smart-alert-item .al-title { font-size:12px; font-weight:800; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:2px; }
-    .smart-alert-item .al-sub   { font-size:11px; color:#64748b; }
-    .smart-alert-item .al-close { background:none; border:none; cursor:pointer; color:#94a3b8; font-size:16px; padding:0; flex-shrink:0; line-height:1; }
-    .smart-alert-item .al-close:hover { color:#334155; }
+    @keyframes fadeInUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes confettiFall { 0%{transform:translateY(-10px) rotate(0deg);opacity:1} 100%{transform:translateY(60px) rotate(720deg);opacity:0} }
+    @keyframes barGrow { from{width:0%} }
+    @keyframes alertSlide { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+    .smart-alert-panel{position:fixed;top:16px;right:16px;width:320px;max-width:94vw;z-index:1000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+    .sal{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(15,23,42,.14);border:1px solid;display:flex;align-items:flex-start;gap:9px;pointer-events:all;cursor:pointer;animation:alertSlide .35s cubic-bezier(.22,1,.36,1) both}
+    .sal.red{border-color:#fecdd3;background:#fff1f2} .sal.amber{border-color:#fed7aa;background:#fff7ed} .sal.blue{border-color:#bfdbfe;background:#eff6ff}
+    .sal-icon{font-size:16px;flex-shrink:0;margin-top:1px} .sal-body{flex:1;min-width:0}
+    .sal-title{font-size:12px;font-weight:800;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px}
+    .sal-sub{font-size:11px;color:#64748b}
+    .sal-x{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:15px;padding:0;flex-shrink:0;line-height:1}
+    .sal-x:hover{color:#334155}
+    .animated-bar{animation:barGrow .7s cubic-bezier(.22,1,.36,1) both}
 
   </style>
 </head>
@@ -599,163 +568,85 @@
 
     // ── SMART ALERTS V4.3 ──
     var alertDismissed = {};
-
     function getSmartAlerts(){
       var today = new Date().toISOString().slice(0,10);
       var alerts = [];
-      var tasks = baseTasks ? baseTasks() : state.tasks;
-      tasks.forEach(function(t){
+      var allTasks = baseTasks ? baseTasks() : state.tasks;
+      allTasks.forEach(function(t){
         if(t.status === 'Finalizada') return;
-        // Vencidas
         if(t.due && t.due < today){
-          var days = Math.ceil((new Date(today) - new Date(t.due)) / 86400000);
-          alerts.push({id:'ov-'+t.id, type:'red', icon:'🔴', title:t.title, sub:'Vencida hace '+days+'d · '+t.area, taskId:t.id, priority:0});
+          var days = Math.ceil((new Date(today)-new Date(t.due))/86400000);
+          alerts.push({id:'ov-'+t.id,type:'red',icon:'🔴',title:t.title,sub:'Vencida hace '+days+'d · '+t.area,taskId:t.id,pri:0});
+        } else if(t.due === today){
+          alerts.push({id:'td-'+t.id,type:'red',icon:'⚠️',title:t.title,sub:'Vence HOY · '+t.area,taskId:t.id,pri:1});
+        } else if(t.due){
+          var dl = Math.ceil((new Date(t.due)-new Date(today))/86400000);
+          if(dl<=2) alerts.push({id:'s2-'+t.id,type:'amber',icon:'⏰',title:t.title,sub:'Vence en '+dl+'d · '+t.area,taskId:t.id,pri:2});
         }
-        // Vencen hoy
-        else if(t.due === today){
-          alerts.push({id:'td-'+t.id, type:'red', icon:'⚠️', title:t.title, sub:'Vence HOY · '+t.area, taskId:t.id, priority:1});
+        if(t.status==='Bloqueada'){
+          var bd = t.createdAt ? Math.ceil((new Date(today)-new Date(t.createdAt))/86400000) : 0;
+          if(bd>=3) alerts.push({id:'bl-'+t.id,type:'amber',icon:'⛔',title:t.title,sub:'Bloqueada '+bd+'d',taskId:t.id,pri:2});
         }
-        // Vencen en 48h
-        else if(t.due){
-          var dl = Math.ceil((new Date(t.due) - new Date(today)) / 86400000);
-          if(dl <= 2) alerts.push({id:'s2-'+t.id, type:'amber', icon:'⏰', title:t.title, sub:'Vence en '+dl+'d · '+t.area, taskId:t.id, priority:2});
-        }
-        // Bloqueadas >3 días
-        if(t.status === 'Bloqueada'){
-          var created = t.createdAt || today;
-          var bd = Math.ceil((new Date(today) - new Date(created)) / 86400000);
-          if(bd >= 3) alerts.push({id:'bl-'+t.id, type:'amber', icon:'⛔', title:t.title, sub:'Bloqueada '+bd+'d · requiere acción', taskId:t.id, priority:2});
-        }
-        // Sin actividad >5 días (en curso)
-        if(t.status === 'En curso'){
-          var wl = t.worklog || [];
-          var lastDate = wl.length ? wl.slice().sort(function(a,b){return b.date.localeCompare(a.date);})[0].date : t.createdAt;
-          if(lastDate){
-            var idle = Math.ceil((new Date(today) - new Date(lastDate)) / 86400000);
-            if(idle >= 5) alerts.push({id:'id-'+t.id, type:'blue', icon:'💤', title:t.title, sub:'Sin actividad '+idle+'d · ¿qué pasó?', taskId:t.id, priority:3});
-          }
+        if(t.status==='En curso'){
+          var wl = t.worklog||[];
+          var lastD = wl.length ? wl.slice().sort(function(a,b){return b.date.localeCompare(a.date);})[0].date : t.createdAt;
+          if(lastD){ var idle=Math.ceil((new Date(today)-new Date(lastD))/86400000); if(idle>=5) alerts.push({id:'id-'+t.id,type:'blue',icon:'💤',title:t.title,sub:'Sin actividad '+idle+'d',taskId:t.id,pri:3}); }
         }
       });
-      // Sort by priority then filter dismissed
-      alerts.sort(function(a,b){ return a.priority - b.priority; });
-      return alerts.filter(function(a){ return !alertDismissed[a.id]; });
+      alerts.sort(function(a,b){return a.pri-b.pri;});
+      return alerts.filter(function(a){return !alertDismissed[a.id];});
     }
-
     function renderSmartAlerts(){
-      var existing = document.getElementById('smartAlertPanel');
-      if(existing) existing.remove();
-
+      var old = document.getElementById('smartAlertPanel');
+      if(old) old.remove();
       var alerts = getSmartAlerts().slice(0,5);
       if(!alerts.length) return;
-
       var panel = document.createElement('div');
       panel.id = 'smartAlertPanel';
       panel.className = 'smart-alert-panel';
-
       alerts.forEach(function(al, idx){
         var item = document.createElement('div');
-        item.className = 'smart-alert-item ' + al.type;
-        item.style.animationDelay = (idx * 0.08) + 's';
-        item.innerHTML =
-          '<span class="al-icon">'+al.icon+'</span>'+
-          '<div class="al-body">'+
-            '<div class="al-title">'+escapeHtml(al.title)+'</div>'+
-            '<div class="al-sub">'+escapeHtml(al.sub)+'</div>'+
-          '</div>'+
-          '<button class="al-close" onclick="dismissAlert(''+al.id+'',event)">✕</button>';
-        item.addEventListener('click', function(){
-          if(al.taskId){ openDetailModal(al.taskId); }
-        });
+        item.className = 'sal '+al.type;
+        item.style.animationDelay = (idx*0.07)+'s';
+        var body = document.createElement('div');
+        body.innerHTML = '<span class="sal-icon">'+al.icon+'</span><div class="sal-body"><div class="sal-title">'+escapeHtml(al.title)+'</div><div class="sal-sub">'+escapeHtml(al.sub)+'</div></div>';
+        var xBtn = document.createElement('button');
+        xBtn.className = 'sal-x';
+        xBtn.textContent = '✕';
+        xBtn.onclick = function(e){
+          e.stopPropagation();
+          alertDismissed[al.id] = true;
+          var p = document.getElementById('smartAlertPanel');
+          if(p) p.remove();
+          renderSmartAlerts();
+        };
+        item.appendChild(body);
+        item.appendChild(xBtn);
+        item.addEventListener('click', function(){ openDetailModal(al.taskId); });
         panel.appendChild(item);
       });
-
-      // "Ver todas" if more than 5
-      var total = getSmartAlerts().length;
-      if(total > 5){
-        var more = document.createElement('div');
-        more.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#64748b;padding:6px;cursor:pointer;background:#fff;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.08);pointer-events:all;animation:alertSlideIn .4s ease both;animation-delay:0.4s';
-        more.textContent = '+ '+(total-5)+' alertas más';
-        more.onclick = function(){ showAllAlertsModal(); };
-        panel.appendChild(more);
-      }
-
       document.body.appendChild(panel);
-
-      // Auto-hide after 8s
       setTimeout(function(){
-        if(panel.parentNode){
-          panel.style.transition = 'opacity .5s, transform .5s';
-          panel.style.opacity = '0';
-          panel.style.transform = 'translateX(20px)';
-          setTimeout(function(){ if(panel.parentNode) panel.remove(); }, 500);
-        }
+        if(!panel.parentNode) return;
+        panel.style.transition='opacity .5s,transform .5s';
+        panel.style.opacity='0';
+        panel.style.transform='translateX(20px)';
+        setTimeout(function(){if(panel.parentNode)panel.remove();},500);
       }, 8000);
     }
-
-    function dismissAlert(id, e){
-      if(e) e.stopPropagation();
-      alertDismissed[id] = true;
-      var panel = document.getElementById('smartAlertPanel');
-      if(panel) panel.remove();
-      renderSmartAlerts();
-    }
-
-    function showAllAlertsModal(){
-      var alerts = getSmartAlerts();
-      var html = '<div class="mhdr"><div><div class="mtitle">Alertas activas</div><div class="msubt">'+alerts.length+' situaciones que requieren atención</div></div><button class="btn icon" onclick="closeModal()">✕</button></div>';
-      if(!alerts.length){
-        html += '<div style="text-align:center;padding:30px;color:#64748b;font-size:14px">✅ Sin alertas activas. Todo bajo control.</div>';
-      } else {
-        html += '<div style="display:flex;flex-direction:column;gap:8px">';
-        alerts.forEach(function(al){
-          html += '<div onclick="closeModal();openDetailModal(''+al.taskId+'')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:'+(al.type==='red'?'#fff1f2':al.type==='amber'?'#fff7ed':'#eff6ff')+';border-radius:12px;cursor:pointer;border:1px solid '+(al.type==='red'?'#fecdd3':al.type==='amber'?'#fed7aa':'#bfdbfe')+'">'+
-            '<span style="font-size:20px">'+al.icon+'</span>'+
-            '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(al.title)+'</div>'+
-            '<div style="font-size:12px;color:#64748b;margin-top:2px">'+escapeHtml(al.sub)+'</div></div>'+
-            '<span style="font-size:12px;color:#94a3b8">→</span></div>';
-        });
-        html += '</div>';
+    function showCompletionCelebration(title){
+      var colors=['#2563eb','#16a34a','#d97706','#7c3aed','#ea580c'];
+      var wrap=document.createElement('div');
+      wrap.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9999;overflow:hidden';
+      for(var i=0;i<24;i++){
+        var d=document.createElement('div');
+        var sz=6+Math.random()*8;
+        d.style.cssText='position:absolute;width:'+sz+'px;height:'+sz+'px;border-radius:'+(Math.random()>.5?'50%':'3px')+';background:'+colors[Math.floor(Math.random()*colors.length)]+';left:'+Math.random()*100+'vw;top:-10px;animation:confettiFall '+(0.7+Math.random()*0.8)+'s ease '+(Math.random()*0.4)+'s both';
+        wrap.appendChild(d);
       }
-      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">'+
-        '<button onclick="dismissAllAlerts()" style="background:none;border:none;cursor:pointer;font-size:12px;color:#94a3b8;font-weight:600">Descartar todas</button>'+
-        '<button class="btn primary" onclick="closeModal()">Cerrar</button></div>';
-      showModal(html);
-    }
-
-    function dismissAllAlerts(){
-      getSmartAlerts().forEach(function(al){ alertDismissed[al.id] = true; });
-      closeModal();
-    }
-
-    // ── CONFETTI on task complete ──
-    function showCompletionCelebration(taskTitle){
-      var colors = ['#2563eb','#16a34a','#d97706','#7c3aed','#ea580c','#0891b2'];
-      var container = document.createElement('div');
-      container.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9999;overflow:hidden';
-      for(var i=0;i<28;i++){
-        var dot = document.createElement('div');
-        var size = 6 + Math.random()*8;
-        dot.style.cssText = 'position:absolute;width:'+size+'px;height:'+size+'px;border-radius:'+(Math.random()>.5?'50%':'3px')+';background:'+colors[Math.floor(Math.random()*colors.length)]+';left:'+Math.random()*100+'vw;top:-10px;animation:confettiFall '+(0.8+Math.random()*0.8)+'s ease '+(Math.random()*0.5)+'s both';
-        container.appendChild(dot);
-      }
-      document.body.appendChild(container);
-      // Success toast
-      showToast('¡Tarea completada!', '✅ '+taskTitle);
-      setTimeout(function(){ if(container.parentNode) container.remove(); }, 2000);
-    }
-
-    // ── VIEW TRANSITION ──
-    function animateViewTransition(fn){
-      var main = document.getElementById('mainContent') || document.querySelector('.main-content') || document.querySelector('main');
-      if(!main){ fn(); return; }
-      main.style.transition = 'opacity .15s, transform .15s';
-      main.style.opacity = '0';
-      main.style.transform = 'translateY(6px)';
-      setTimeout(function(){
-        fn();
-        main.style.opacity = '1';
-        main.style.transform = 'translateY(0)';
-      }, 150);
+      document.body.appendChild(wrap);
+      showToast('¡Completada!','✅ '+title);
+      setTimeout(function(){if(wrap.parentNode)wrap.remove();},2000);
     }
 
     function loadState(){
@@ -765,13 +656,13 @@
         state.areas = Array.isArray(parsed.areas) && parsed.areas.length ? parsed.areas : [...seed.areas];
         state.initiatives = Array.isArray(parsed.initiatives) ? parsed.initiatives : [];
         state.tasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
-        state.alertsConfig = Object.assign({}, state.alertsConfig, parsed.alertsConfig || {});
+        state.alertsConfig = Object.assign({}, state.alertsConfig, (parsed.alertsConfig || {}));
         state.dailyCapacity = Number(parsed.dailyCapacity || state.dailyCapacity || 6);
         state.rankingLimit = Number(parsed.rankingLimit || state.rankingLimit || 20);
         state.rankingSort = parsed.rankingSort || state.rankingSort || 'score';
         state.rankingGroup = parsed.rankingGroup || state.rankingGroup || 'flat';
-        state.supabase = Object.assign({}, state.supabase, parsed.supabase || {});
-        state.reporting = Object.assign({}, state.reporting, parsed.reporting || {});
+        state.supabase = Object.assign({}, state.supabase, (parsed.supabase || {}));
+        state.reporting = Object.assign({}, state.reporting, (parsed.reporting || {}));
       }catch(e){
         state.areas = [...seed.areas];
         state.initiatives = [...seed.initiatives];
@@ -855,13 +746,13 @@
       state.areas = Array.isArray(payload.areas) && payload.areas.length ? payload.areas : [...seed.areas];
       state.initiatives = Array.isArray(payload.initiatives) ? payload.initiatives : [];
       state.tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
-      state.alertsConfig = Object.assign({}, state.alertsConfig, payload.alertsConfig || {});
+      state.alertsConfig = Object.assign({}, state.alertsConfig, (payload.alertsConfig || {}));
       state.dailyCapacity = Number(payload.dailyCapacity || state.dailyCapacity || 6);
       state.rankingLimit = Number(payload.rankingLimit || state.rankingLimit || 20);
       state.rankingSort = payload.rankingSort || state.rankingSort || 'score';
       state.rankingGroup = payload.rankingGroup || state.rankingGroup || 'flat';
-      state.supabase = Object.assign({}, state.supabase, payload.supabase || {});
-      state.reporting = Object.assign({}, state.reporting, payload.reporting || {});
+      state.supabase = Object.assign({}, state.supabase, (payload.supabase || {}));
+      state.reporting = Object.assign({}, state.reporting, (payload.reporting || {}));
       migrateState();
       return true;
     }
@@ -893,50 +784,56 @@
 
     function saveStateToSupabase(showFeedback){
       if(showFeedback===undefined) showFeedback=true;
+      if(showFeedback === undefined) showFeedback = true;
       var client = initSupabaseClient();
       if(!client){ if(showFeedback) alert('Configura Supabase primero.'); return; }
       var workspace = sanitizeWorkspace(state.supabase.workspace);
       state.supabase.workspace = workspace;
       var snapshot = getSerializableState();
-      client.from('bdflow_state').upsert({workspace:workspace,app_state:snapshot,updated_at:new Date().toISOString()},{onConflict:'workspace'}).then(function(res){
-        if(res.error){ console.error(res.error); state.supabase.lastSyncStatus='Error'; if(showFeedback) alert('Error al guardar.'); render(); return; }
-        state.supabase.lastSyncAt=new Date().toISOString();
-        state.supabase.lastSyncStatus='Sincronizado';
-        if(showFeedback) showToast('BDFlow','Sincronizado con Supabase.');
+      client.from('bdflow_state').upsert({
+        workspace: workspace,
+        app_state: snapshot,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'workspace' }).then(function(res) {
+        if(res.error){ console.error(res.error); state.supabase.lastSyncStatus='Error'; if(showFeedback) alert('Error al guardar en Supabase.'); render(); return; }
+        state.supabase.lastSyncAt = new Date().toISOString();
+        state.supabase.lastSyncStatus = 'Sincronizado';
+        if(showFeedback) showToast('BDFlow', 'Sincronizado con Supabase.');
         render();
       });
     }
 
     function loadStateFromSupabase(showFeedback){
       if(showFeedback===undefined) showFeedback=true;
+      if(showFeedback === undefined) showFeedback = true;
       var client = initSupabaseClient();
       if(!client){ if(showFeedback) alert('Configura Supabase primero.'); return Promise.resolve(false); }
       var workspace = sanitizeWorkspace(state.supabase.workspace);
       state.supabase.workspace = workspace;
-      return client.from('bdflow_state').select('app_state,updated_at').eq('workspace',workspace).maybeSingle().then(function(res){
+      return client.from('bdflow_state').select('app_state, updated_at').eq('workspace', workspace).maybeSingle().then(function(res) {
         if(res.error){ console.error(res.error); state.supabase.lastSyncStatus='Error'; if(showFeedback) alert('Error al cargar desde Supabase.'); render(); return false; }
-        if(!res.data||!res.data.app_state){ if(showFeedback) showToast('BDFlow','Sin datos remotos.'); return false; }
+        if(!res.data || !res.data.app_state){ if(showFeedback) showToast('BDFlow','Sin datos remotos para este workspace.'); return false; }
         applyRemoteState(res.data.app_state);
-        state.supabase.lastSyncAt=res.data.updated_at||new Date().toISOString();
-        state.supabase.lastSyncStatus='Sincronizado';
+        state.supabase.lastSyncAt = res.data.updated_at || new Date().toISOString();
+        state.supabase.lastSyncStatus = 'Sincronizado';
         render();
-        if(showFeedback) showToast('BDFlow','Datos cargados desde Supabase.');
+        if(showFeedback) showToast('BDFlow', 'Datos cargados desde Supabase.');
         return true;
       });
     }
 
     function connectSupabaseFromUI(){
-      var urlEl=document.getElementById('sbUrl'),keyEl=document.getElementById('sbAnonKey');
-      var wsEl=document.getElementById('sbWorkspace'),enEl=document.getElementById('sbEnabled'),asEl=document.getElementById('sbAutoSync');
-      if(urlEl) state.supabase.url=urlEl.value.trim();
-      if(keyEl) state.supabase.anonKey=keyEl.value.trim();
-      if(wsEl) state.supabase.workspace=sanitizeWorkspace(wsEl.value||state.supabase.workspace);
-      if(enEl) state.supabase.enabled=enEl.checked;
-      if(asEl) state.supabase.autoSync=asEl.checked;
+      var urlEl=document.getElementById('sbUrl'), keyEl=document.getElementById('sbAnonKey');
+      var wsEl=document.getElementById('sbWorkspace'), enEl=document.getElementById('sbEnabled'), asEl=document.getElementById('sbAutoSync');
+      if(urlEl) state.supabase.url = urlEl.value.trim();
+      if(keyEl) state.supabase.anonKey = keyEl.value.trim();
+      if(wsEl) state.supabase.workspace = sanitizeWorkspace(wsEl.value || state.supabase.workspace);
+      if(enEl) state.supabase.enabled = enEl.checked;
+      if(asEl) state.supabase.autoSync = asEl.checked;
       saveState();
-      loadStateFromSupabase(false).then(function(ok){
-        if(ok) showToast('BDFlow','Supabase conectado y datos cargados.');
-        else if(state.supabase.enabled) showToast('BDFlow','Supabase configurado.');
+      loadStateFromSupabase(false).then(function(ok) {
+        if(ok) showToast('BDFlow', 'Supabase conectado y datos cargados.');
+        else if(state.supabase.enabled) showToast('BDFlow', 'Supabase configurado.');
         render();
       });
     }
@@ -944,9 +841,9 @@
     function testSupabaseConnection(){
       var client = initSupabaseClient();
       if(!client){ alert('Configura Supabase primero.'); return; }
-      client.from('bdflow_state').select('workspace').limit(1).then(function(res){
+      client.from('bdflow_state').select('workspace').limit(1).then(function(res) {
         if(res.error){ console.error(res.error); alert('Error de conexión con Supabase.'); return; }
-        showToast('BDFlow','Conexión con Supabase correcta.');
+        showToast('BDFlow', 'Conexión con Supabase correcta.');
       });
     }
 
@@ -1022,7 +919,8 @@
       return ['week','month','ranking','kanban','activity'].includes(view);
     }
 
-    function getViewScopedTasks(tasks, view=state.currentView){
+    function getViewScopedTasks(tasks, view){
+      if(view===undefined) view=state.currentView;
       if(isExecutionView(view)) return tasks.filter(t=>t.status!=='Finalizada');
       return tasks;
     }
@@ -1038,7 +936,8 @@
       }));
     }
 
-    function sortTasks(tasks, key=state.rankingSort){
+    function sortTasks(tasks, key){
+      if(key===undefined) key=state.rankingSort;
       const cloned = [...tasks];
       if(key === 'last_activity'){
         cloned.sort((a,b)=>String(getLastWorkDate(b)).localeCompare(String(getLastWorkDate(a))));
@@ -1140,7 +1039,8 @@
       return grouped;
     }
 
-    function renderGroupedWorklog(task, maxDays=3){
+    function renderGroupedWorklog(task, maxDays){
+      if(maxDays===undefined) maxDays=3;
       const grouped = getGroupedWorklog(task);
       const entries = Object.entries(grouped).slice(0, maxDays);
       if(!entries.length) return '';
@@ -1167,12 +1067,13 @@
       return day - 1;
     }
 
-    function getRecentCompletedTasks(limit=5){
+    function getRecentCompletedTasks(limit){
+      if(limit===undefined) limit=5;
       return [...state.tasks]
         .filter(t => t.status === 'Finalizada' && t.completedAt)
         .sort((a,b)=>String(b.completedAt).localeCompare(String(a.completedAt)))
         .slice(0, limit)
-        .map(t => Object.assign({}, t, {initiative:getInitiativeName(t.initiativeId), score:scoreTask(t), daysLeft:daysToDue(t)}));
+        .map(t => (Object.assign({}, t, {initiative:getInitiativeName(t.initiativeId), score:scoreTask(t), daysLeft:daysToDue(t)}));
     }
 
     function getAlerts(tasks){
@@ -1237,7 +1138,8 @@
       new Notification(title, { body });
     }
 
-    function alertKey(prefix, taskId=''){
+    function alertKey(prefix, taskId){
+      if(taskId===undefined) taskId='';
       const d = new Date();
       return `${prefix}_${taskId}_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     }
@@ -1480,7 +1382,8 @@
       };
     }
 
-    function taskCard(task, options = {}){
+    function taskCard(task, options){
+      if(options===undefined) options={};
       const compact = !!options.compact;
       const showLogs = options.showLogs !== false && !compact;
       const isCompleted = task.status === 'Finalizada';
@@ -1737,7 +1640,8 @@
       </div>`;
     }
 
-    function renderDashboardListItem(task, variant='default'){
+    function renderDashboardListItem(task, variant){
+      if(variant===undefined) variant='default';
       const accent = variant === 'critical'
         ? '<span class="badge red">Foco inmediato</span>'
         : variant === 'completed'
@@ -1793,106 +1697,23 @@
     }
 
     function renderToday(tasks){
-      const today = new Date().toISOString().slice(0,10);
-      const dayName = new Date().toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long'});
       const active = sortTasks(tasks.filter(t=>t.status!=='Finalizada'));
-      const dailyCap = state.dailyCapacity || 6;
-
-      const overdue = active.filter(t=>t.due && t.due < today);
-      const dueToday = active.filter(t=>t.due === today);
-      const usedIds = new Set([...overdue,...dueToday].map(t=>t.id));
-      const critical = active.filter(t=>isCriticalTask(t) && !usedIds.has(t.id)).slice(0,4);
-      critical.forEach(t=>usedIds.add(t.id));
-      const inProgress = active.filter(t=>t.status==='En curso' && !usedIds.has(t.id)).slice(0,3);
-      const blocked = active.filter(t=>t.status==='Bloqueada').slice(0,3);
-
-      const todayLogs = tasks.flatMap(t=>(t.worklog||[]).filter(w=>w.date===today));
-      const hoursToday = Math.round(todayLogs.reduce((a,b)=>a+Number(b.hours||0),0)*10)/10;
-      const pct = Math.min(100, Math.round(hoursToday/dailyCap*100));
-      const pctColor = pct>=100?'#dc2626':pct>=75?'#d97706':'#16a34a';
-
-      const todayWorkDetail = tasks.filter(t=>(t.worklog||[]).some(w=>w.date===today)).map(t=>{
-        const logs = (t.worklog||[]).filter(w=>w.date===today);
-        return {t, hours:Math.round(logs.reduce((a,b)=>a+Number(b.hours||0),0)*10)/10, notes:logs.map(l=>l.note).filter(Boolean)};
-      }).sort((a,b)=>b.hours-a.hours);
-
-      const taskCardCompact = (t) => {
-        const d = t.due ? Math.ceil((new Date(t.due)-new Date(today))/86400000) : null;
-        const dLabel = d===null?'':d<0?`<span style="color:#dc2626;font-size:11px;font-weight:700">${Math.abs(d)}d vencida</span>`:d===0?'<span style="color:#ea580c;font-size:11px;font-weight:700">Vence hoy</span>':d<=2?`<span style="color:#d97706;font-size:11px;font-weight:700">En ${d}d</span>`:'';
-        return `<div onclick="openDetailModal('${t.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer" onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#e2e8f0'">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-            <div style="min-width:0;flex:1">
-              <div style="font-size:13px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">${escapeHtml(t.title)}</div>
-              <div style="font-size:11px;color:#64748b;margin-bottom:4px">${escapeHtml(t.area)}</div>
-              ${t.next?`<div style="font-size:11px;color:#475569;background:#f8fafc;border-radius:6px;padding:3px 7px">→ ${escapeHtml(t.next)}</div>`:''}
-              ${dLabel?`<div style="margin-top:5px">${dLabel}</div>`:''}
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-              <span style="background:#1e293b;color:#fff;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:800">${t.score||0}</span>
-              ${statusBadge(t.status)}
-            </div>
-          </div>
-          <div style="display:flex;gap:7px;margin-top:9px">
-            <button onclick="event.stopPropagation();openWorklogModal('${t.id}')" style="background:#eff6ff;color:#2563eb;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">+ Registrar</button>
-            ${t.status!=='Finalizada'?`<button onclick="event.stopPropagation();closeDetailModal();toggleDone('${t.id}')" style="background:#f0fdf4;color:#16a34a;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">✔ Finalizar</button>`:''}
-            ${t.status==='Pendiente'||t.status==='Pausada'?`<button onclick="event.stopPropagation();setTaskStatus('${t.id}','En curso');renderCurrentView()" style="background:#f0f9ff;color:#0369a1;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">▶ Iniciar</button>`:''}
-          </div>
-        </div>`;
-      };
-
-      return `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-          <div>
-            <div style="font-size:22px;font-weight:900;color:#1e293b;text-transform:capitalize">${dayName}</div>
-            <div style="font-size:13px;color:#64748b;margin-top:2px">${active.length} activas · ${overdue.length} vencidas · ${dueToday.length} vencen hoy</div>
-          </div>
-          <button onclick="openWorklogModal()" style="background:#2563eb;color:#fff;border:none;border-radius:12px;padding:11px 18px;font-weight:700;font-size:13px;cursor:pointer">+ Registrar trabajo</button>
-        </div>
-
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 20px;margin-bottom:16px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:13px;font-weight:700;color:#1e293b">Progreso del día</div>
-            <div style="font-size:14px;font-weight:800;color:${pctColor}">${hoursToday}h / ${dailyCap}h</div>
-          </div>
-          <div style="height:10px;background:#f1f5f9;border-radius:10px;overflow:hidden;margin-bottom:12px">
-            <div style="height:100%;border-radius:10px;background:${pctColor};width:${pct}%;animation:barGrow .8s cubic-bezier(.22,1,.36,1) both"></div>
-          </div>
-          ${todayWorkDetail.length?`
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Registrado hoy</div>
-            ${todayWorkDetail.map(({t,hours:h,notes})=>`
-              <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 10px;background:#f8fafc;border-radius:8px;margin-bottom:5px">
-                <div style="background:#2563eb;color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800;flex-shrink:0">${h}h</div>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:12px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.title)}</div>
-                  ${notes.map(n=>`<div style="font-size:11px;color:#64748b">· ${escapeHtml(n)}</div>`).join('')}
-                </div>
-              </div>`).join('')}
-          `:`<div style="font-size:13px;color:#94a3b8;text-align:center;padding:4px 0">Todavía no has registrado trabajo hoy.</div>`}
-        </div>
-
-        ${overdue.length||dueToday.length?`
-        <div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:14px;padding:14px 16px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:700;color:#be123c;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">⚠ Requiere atención inmediata</div>
-          ${[...overdue.slice(0,3),...dueToday.slice(0,2)].map(taskCardCompact).join('')}
-        </div>`:''}
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Crítico · ${critical.length}</div>
-            ${critical.length?critical.map(function(t,i){ const c=taskCardCompact(t); return c.replace('background:#fff;border:1px','style="animation-delay:'+i*0.06+'s" style="background:#fff;border:1px'); }).join(''):'<div style="color:#94a3b8;font-size:13px;padding:10px 0">Nada crítico. ✓</div>'}
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">En curso · ${inProgress.length}</div>
-            ${inProgress.length?inProgress.map(taskCardCompact).join(''):'<div style="color:#94a3b8;font-size:13px;padding:10px 0">Sin tareas en curso.</div>'}
-          </div>
-        </div>
-
-        ${blocked.length?`
-        <div style="margin-top:16px">
-          <div style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">⛔ Bloqueadas · ${blocked.length}</div>
-          ${blocked.map(taskCardCompact).join('')}
-        </div>`:''}
-      `;
+      const criticalPool = active.filter(t=>isCriticalTask(t));
+      const critical = criticalPool.slice(0,5);
+      const nonCritical = active.filter(t=>!isCriticalTask(t));
+      const importantPool = nonCritical.filter(t=>t.status==='En curso' || t.priority==='Alta' || t.score>=55);
+      const important = importantPool.slice(0,4);
+      const used = new Set([...critical, ...important].map(t=>t.id));
+      const optionalPool = nonCritical.filter(t=>!used.has(t.id));
+      const optional = optionalPool.slice(0,4);
+      const criticalOverflow = Math.max(0, criticalPool.length - critical.length);
+      const importantOverflow = Math.max(0, importantPool.length - important.length);
+      const optionalOverflow = Math.max(0, optionalPool.length - optional.length);
+      return `<div class="today-grid">
+        <div class="lane"><div class="lane-head"><h3>Crítico</h3><p>Sí o sí hoy.</p></div><div class="lane-body">${critical.length?critical.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Nada crítico ahora mismo.</div>'}${criticalOverflow?`<div class="mini-task">+ ${criticalOverflow} crítica(s) más</div>`:''}</div></div>
+        <div class="lane"><div class="lane-head"><h3>Importante</h3><p>Trabajo que debería avanzar hoy.</p></div><div class="lane-body">${important.length?important.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin importantes ahora mismo.</div>'}${importantOverflow?`<div class="mini-task">+ ${importantOverflow} importante(s) más</div>`:''}</div></div>
+        <div class="lane"><div class="lane-head"><h3>Opcional</h3><p>Reserva o trabajo delegable a mañana.</p></div><div class="lane-body">${optional.length?optional.map(t=>taskCard(t,{compact:true,showLogs:false})).join(''):'<div class="empty">Sin opcionales.</div>'}${optionalOverflow?`<div class="mini-task">+ ${optionalOverflow} opcional(es) más</div>`:''}</div></div>
+      </div>`;
     }
 
     function renderWeek(tasks){
@@ -2694,7 +2515,9 @@ function renderConfig(){
       </div>`;
     }
 
-    function openTaskModal(taskId=null, initiativeId=''){
+    function openTaskModal(taskId, initiativeId){
+      if(taskId===undefined) taskId=null;
+      if(initiativeId===undefined) initiativeId='';
       state.editingTaskId = taskId;
       const t = taskId ? state.tasks.find(x=>x.id===taskId) : null;
       document.getElementById('taskModalWrap').classList.add('show');
@@ -2754,19 +2577,22 @@ function renderConfig(){
       render();
     }
 
-    function refreshAreaOptions(selected=''){
+    function refreshAreaOptions(selected){
+      if(selected===undefined) selected='';
       const f = document.getElementById('fArea');
       if(f) f.innerHTML = state.areas.map(a=>`<option value="${escapeHtml(a)}" ${a===selected?'selected':''}>${escapeHtml(a)}</option>`).join('');
       const i = document.getElementById('iOwner');
       if(i) i.innerHTML = state.areas.map(a=>`<option value="${escapeHtml(a)}" ${a===selected?'selected':''}>${escapeHtml(a)}</option>`).join('');
     }
 
-    function refreshInitiativeOptions(selected=''){
+    function refreshInitiativeOptions(selected){
+      if(selected===undefined) selected='';
       const f = document.getElementById('fInitiative');
       if(f) f.innerHTML = state.initiatives.map(i=>`<option value="${i.id}" ${i.id===selected?'selected':''}>${escapeHtml(i.name)}</option>`).join('');
     }
 
-    function openInitiativeModal(id=null){
+    function openInitiativeModal(id){
+      if(id===undefined) id=null;
       state.editingInitiativeId = id;
       const i = id ? state.initiatives.find(x=>x.id===id) : null;
       document.getElementById('initiativeModalWrap').classList.add('show');
@@ -2810,7 +2636,8 @@ function renderConfig(){
       render();
     }
 
-    function openWorklogModal(taskId, entryId=null){
+    function openWorklogModal(taskId, entryId){
+      if(entryId===undefined) entryId=null;
       state.editingWorklogTaskId = taskId;
       state.editingWorklogEntryId = entryId;
       const task = state.tasks.find(x=>x.id===taskId);
@@ -2873,129 +2700,58 @@ function renderConfig(){
       const task = baseTasks().find(x=>x.id===taskId);
       if(!task) return;
       const grouped = getGroupedWorklog(task);
-      const isDone = task.status === 'Finalizada';
-      const isPaused = task.status === 'Pausada';
-      const isInProgress = task.status === 'En curso';
-      const isPending = task.status === 'Pendiente';
-      const totalHours = (task.worklog||[]).reduce((a,b)=>a+Number(b.hours||0),0);
-      const remaining = Math.max(0, Number(task.effort||0) - totalHours);
-      const overrun = totalHours > Number(task.effort||0);
-      const daysLeft = task.due ? Math.ceil((new Date(task.due) - new Date(new Date().toISOString().slice(0,10))) / 86400000) : null;
-
       document.getElementById('detailModalBody').innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:14px">
-
-          <!-- CABECERA -->
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-            <div style="min-width:0;flex:1">
-              <div style="font-size:18px;font-weight:800;color:#1e293b;line-height:1.3;margin-bottom:4px">${escapeHtml(task.title)}</div>
-              ${task.desc ? `<div style="font-size:13px;color:#64748b;margin-bottom:6px">${escapeHtml(task.desc)}</div>` : ''}
-              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
-                ${statusBadge(task.status)}
-                ${badgeDue(task)}
-                ${overrun ? '<span class="badge overrun">+'+Math.round((totalHours-Number(task.effort||0))*10)/10+'h desviada</span>' : ''}
-                <span class="badge">${escapeHtml(task.area)}</span>
-                <span class="badge purple">Prioridad ${escapeHtml(task.priority||'—')}</span>
-              </div>
+        <div class="task" style="margin-bottom:0">
+          <div class="task-top">
+            <div>
+              <div class="task-title">${escapeHtml(task.title)}</div>
+              <div class="task-sub">${escapeHtml(task.desc)}</div>
             </div>
-            <div style="text-align:center;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:14px;padding:10px 14px;flex-shrink:0">
-              <div style="font-size:22px;font-weight:900;line-height:1">${task.score||0}</div>
-              <div style="font-size:10px;font-weight:700;opacity:.8;margin-top:2px">SCORE</div>
-            </div>
+            <div class="score"><b>${task.score}</b><span>Score</span></div>
           </div>
-
-          <!-- MÉTRICAS -->
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-            <div style="background:#f0f9ff;border-radius:10px;padding:10px;text-align:center">
-              <div style="font-size:18px;font-weight:800;color:#0369a1">${totalHours}h</div>
-              <div style="font-size:10px;color:#64748b;font-weight:600;margin-top:2px">INVERTIDAS</div>
-            </div>
-            <div style="background:${overrun?'#fff7ed':'#f0fdf4'};border-radius:10px;padding:10px;text-align:center">
-              <div style="font-size:18px;font-weight:800;color:${overrun?'#ea580c':'#16a34a'}">${Number(task.effort||0)}h</div>
-              <div style="font-size:10px;color:#64748b;font-weight:600;margin-top:2px">ESTIMADAS</div>
-            </div>
-            <div style="background:#faf5ff;border-radius:10px;padding:10px;text-align:center">
-              <div style="font-size:18px;font-weight:800;color:#7c3aed">${remaining}h</div>
-              <div style="font-size:10px;color:#64748b;font-weight:600;margin-top:2px">RESTANTES</div>
-            </div>
-            <div style="background:${daysLeft!==null&&daysLeft<0?'#fff1f2':daysLeft===0?'#fff7ed':'#f8fafc'};border-radius:10px;padding:10px;text-align:center">
-              <div style="font-size:18px;font-weight:800;color:${daysLeft!==null&&daysLeft<0?'#e11d48':daysLeft===0?'#ea580c':'#334155'}">${daysLeft===null?'—':daysLeft===0?'HOY':daysLeft<0?Math.abs(daysLeft)+'d':daysLeft+'d'}</div>
-              <div style="font-size:10px;color:#64748b;font-weight:600;margin-top:2px">${daysLeft!==null&&daysLeft<0?'VENCIDA':daysLeft===0?'VENCE HOY':'PARA VENCER'}</div>
-            </div>
+          <div class="badges">
+            ${statusBadge(task.status)}
+            ${badgeDue(task)}
+            ${Number(task.spent||0)>Number(task.effort||0)?'<span class="badge overrun">Desviada</span>':''}
+            <span class="badge">${escapeHtml(task.area)}</span>
+            <span class="badge">${escapeHtml(task.initiative)}</span>
           </div>
-
-          <!-- PRÓXIMO PASO -->
-          ${task.next ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px">
-            <div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">→ Próxima acción</div>
-            <div style="font-size:14px;font-weight:700;color:#78350f">${escapeHtml(task.next)}</div>
-          </div>` : ''}
-
-          <!-- ACCIONES PRINCIPALES -->
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px">
-            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Acciones</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button onclick="openWorklogModal('${task.id}')" style="background:#2563eb;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">+ Registrar trabajo</button>
-              ${!isDone ? `<button onclick="closeDetailModal();toggleDone('${task.id}')" style="background:#16a34a;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">✔ Finalizar</button>` : `<button onclick="setTaskStatusAndRefresh('${task.id}','En curso')" style="background:#64748b;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">↩ Reabrir</button>`}
-              ${isInProgress ? `<button onclick="setTaskStatusAndRefresh('${task.id}','Pausada')" style="background:#d97706;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">⏸ Pausar</button>` : ''}
-              ${isPaused ? `<button onclick="setTaskStatusAndRefresh('${task.id}','En curso')" style="background:#0891b2;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">▶ Reanudar</button>` : ''}
-              ${isPending ? `<button onclick="setTaskStatusAndRefresh('${task.id}','En curso')" style="background:#0891b2;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">▶ Iniciar</button>` : ''}
-              <button onclick="closeDetailModal();openTaskModal('${task.id}')" style="background:#fff;color:#334155;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">✏ Editar</button>
-            </div>
+          <div class="meta">
+            <div class="m"><div class="mk">Creada</div><div class="mv">${escapeHtml(task.createdAt || '—')}</div></div>
+            <div class="m"><div class="mk">Fecha objetivo</div><div class="mv">${task.due ? escapeHtml(task.due) : 'Sin fecha'}</div></div>
+            <div class="m"><div class="mk">Horas</div><div class="mv">${task.spent}h / ${task.effort}h${Number(task.spent||0)>Number(task.effort||0)?'<div style="margin-top:4px;color:#d97706;font-size:12px;font-weight:800">Desviada</div>':''}</div></div>
+            <div class="m"><div class="mk">Sesiones</div><div class="mv">${getWorkSessionsCount(task)}</div></div>
           </div>
-
-          <!-- CAMBIO RÁPIDO DE ESTADO -->
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px">
-            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Estado</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              ${['Pendiente','En curso','Pausada','Bloqueada','Finalizada'].map(s => `
-                <button onclick="setTaskStatusAndRefresh('${task.id}','${s}')" style="border:2px solid ${task.status===s?'#2563eb':'#e2e8f0'};border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;font-size:12px;background:${task.status===s?'#2563eb':'#fff'};color:${task.status===s?'#fff':'#64748b'};transition:all .15s">${s}</button>
-              `).join('')}
+          <div class="detail-block">
+            <div class="row-title" style="margin-bottom:10px">Histórico de trabajo</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+              <button class="btn primary small" onclick="openWorklogModal('${task.id}')">+ Registrar trabajo</button>
             </div>
-          </div>
-
-          <!-- HISTORIAL DE TRABAJO -->
-          <div>
-            <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px">
-              Historial · ${(task.worklog||[]).length} sesiones · ${totalHours}h total
-            </div>
-            ${Object.keys(grouped).length ? Object.entries(grouped).sort((a,b)=>b[0].localeCompare(a[0])).map(([date,items])=>`
-              <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px">${date} · ${Math.round(items.reduce((a,b)=>a+Number(b.hours||0),0)*10)/10}h</div>
-              ${items.map(w=>`
-                <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;margin-bottom:6px;border:1px solid #e2e8f0">
-                  <div style="background:#2563eb;color:#fff;border-radius:7px;padding:4px 9px;font-size:12px;font-weight:800;flex-shrink:0">${w.hours}h</div>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:13px;color:#334155;font-weight:500">${w.note ? escapeHtml(w.note) : 'Sin comentario'}</div>
+            ${
+              Object.keys(grouped).length ? Object.entries(grouped).map(([date,items])=>`
+                <div class="day-group-title">${date} · ${items.reduce((a,b)=>a+Number(b.hours||0),0)}h</div>
+                ${items.map(w=>`
+                  <div class="worklog-row">
+                    <div>
+                      <div class="row-title">${w.hours}h</div>
+                      <div class="row-sub">${w.note ? escapeHtml(w.note) : 'Sin comentario'}</div>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                      <button class="btn ghost small" onclick="openWorklogModal('${task.id}','${w.id}')">Editar</button>
+                      <button class="btn secondary small" onclick="deleteWorklogEntry('${task.id}','${w.id}')">Eliminar</button>
+                    </div>
                   </div>
-                  <div style="display:flex;gap:6px;flex-shrink:0">
-                    <button onclick="openWorklogModal('${task.id}','${w.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;color:#64748b">Editar</button>
-                    <button onclick="deleteWorklogEntry('${task.id}','${w.id}')" style="background:none;border:1px solid #fecaca;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;color:#dc2626">✕</button>
-                  </div>
-                </div>
-              `).join('')}
-            `).join('') : '<div style="color:#94a3b8;text-align:center;padding:20px;font-size:13px">Sin trabajo registrado todavía.</div>'}
+                `).join('')}
+              `).join('')
+              : '<div class="empty">Todavía no hay trabajo registrado.</div>'
+            }
           </div>
         </div>
       `;
       document.getElementById('detailModalWrap').classList.add('show');
     }
 
-    function setTaskStatus(taskId, newStatus){
-      const t = state.tasks.find(x=>x.id===taskId);
-      if(!t) return;
-      t.status = newStatus;
-      if(newStatus==='Finalizada') t.completedAt = new Date().toISOString().slice(0,10);
-      else t.completedAt = '';
-      saveState();
-      scheduleSupabaseSync();
-      render();
-    }
-
-    function setTaskStatusAndRefresh(taskId, newStatus){
-      setTaskStatus(taskId, newStatus);
-      openDetailModal(taskId);
-    }
-
-        function closeDetailModal(){
+    function closeDetailModal(){
       document.getElementById('detailModalWrap').classList.remove('show');
       state.detailTaskId = null;
     }
@@ -3003,8 +2759,7 @@ function renderConfig(){
     function toggleDone(id){
       const t = state.tasks.find(x=>x.id===id);
       if(!t) return;
-      const wasDone = t.status === 'Finalizada';
-      if(wasDone){
+      if(t.status === 'Finalizada'){
         t.status = (Array.isArray(t.worklog) && t.worklog.length) || Number(t.spent||0) > 0 ? 'En curso' : 'Pendiente';
         t.completedAt = '';
       }else{
@@ -3135,6 +2890,7 @@ function renderConfig(){
       renderFilterBanner();
       populateGlobalFilters();
       updateAlertsBadge(tasks);
+      renderSmartAlerts();
       runActiveScreenAlerts();
 
       const titles = {
@@ -3153,8 +2909,7 @@ function renderConfig(){
       document.getElementById('pageTitle').textContent = titles[state.currentView][0];
       document.getElementById('pageSubtitle').textContent = titles[state.currentView][1];
 
-      const vc = document.getElementById('viewContainer');
-      const newHTML =
+      var _vc=document.getElementById('viewContainer'); _vc.style.cssText='opacity:0;transform:translateY(6px);transition:none'; var _vhtml=
         state.currentView === 'dashboard' ? renderDashboard(tasks) :
         state.currentView === 'today' ? renderToday(tasks) :
         state.currentView === 'week' ? renderWeek(tasks) :
@@ -3165,15 +2920,7 @@ function renderConfig(){
         state.currentView === 'initiatives' ? renderInitiatives() :
         state.currentView === 'config' ? renderConfig() :
         renderReport();
-      vc.style.opacity = '0';
-      vc.style.transform = 'translateY(8px)';
-      vc.style.transition = 'none';
-      vc.innerHTML = newHTML;
-      requestAnimationFrame(function(){
-        vc.style.transition = 'opacity .25s ease, transform .25s cubic-bezier(.22,1,.36,1)';
-        vc.style.opacity = '1';
-        vc.style.transform = 'translateY(0)';
-      });
+      _vc.innerHTML=_vhtml; requestAnimationFrame(function(){_vc.style.transition='opacity .2s ease,transform .2s cubic-bezier(.22,1,.36,1)';_vc.style.opacity='1';_vc.style.transform='translateY(0)';});
 
       document.querySelectorAll('.nav-btn').forEach(btn=>{
         btn.classList.toggle('active', btn.dataset.view === state.currentView);
@@ -3271,7 +3018,7 @@ function renderConfig(){
     });
 
     function bootstrapRemoteState(){
-      if(state.supabase && state.supabase.enabled && state.supabase.url && state.supabase.anonKey){
+      if(state.supabase && state.supabase.enabled && state.supabase && state.supabase.url && state.supabase && state.supabase.anonKey){
         loadStateFromSupabase(false);
       }
     }
