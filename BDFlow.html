@@ -557,7 +557,7 @@
     let supabaseSyncTimer = null;
 
     function escapeHtml(v){
-      return String(v ?? '')
+      return String(v !== null && v !== undefined ? v : '')
         .replaceAll('&','&amp;')
         .replaceAll('<','&lt;')
         .replaceAll('>','&gt;')
@@ -686,9 +686,8 @@
           note: w.note || ''
         })) : [];
         const spent = Number(
-          t.spent ??
-          worklog.reduce((a,b)=>a+Number(b.hours||0),0) ??
-          0
+          t.spent !== null && t.spent !== undefined ? t.spent :
+          worklog.reduce((a,b)=>a+Number(b.hours||0),0) || 0
         );
         const normalizedStatus = ['Pendiente','En curso','Pausada','Finalizada'].includes(t.status) ? t.status : 'Pendiente';
         return {
@@ -1073,7 +1072,7 @@
         .filter(t => t.status === 'Finalizada' && t.completedAt)
         .sort((a,b)=>String(b.completedAt).localeCompare(String(a.completedAt)))
         .slice(0, limit)
-        .map(t => (Object.assign({}, t, {initiative:getInitiativeName(t.initiativeId), score:scoreTask(t), daysLeft:daysToDue(t)}));
+        .map(function(t){ return Object.assign({}, t, {initiative:getInitiativeName(t.initiativeId), score:scoreTask(t), daysLeft:daysToDue(t)}); });
     }
 
     function getAlerts(tasks){
