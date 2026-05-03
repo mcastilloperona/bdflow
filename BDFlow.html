@@ -610,7 +610,15 @@
 
     function uploadDocument(file, entityType, entityId, onProgress, onDone, onError){
       var client = initSupabaseClient();
-      if(!client){ if(onError) onError('Supabase no configurado'); return; }
+      if(!client){
+        // Fallback: use hardcoded credentials directly
+        if(window.supabase && window.supabase.createClient){
+          client = window.supabase.createClient(SB_URL, SB_KEY);
+        } else {
+          if(onError) onError('SDK de Supabase no disponible');
+          return;
+        }
+      }
       var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
       var path = entityType+'/'+entityId+'/'+Date.now()+'_'+safeName;
       if(onProgress) onProgress(30);
@@ -631,7 +639,8 @@
 
     function downloadDocument(path, name){
       var client = initSupabaseClient();
-      if(!client){ showToast('Error','Supabase no configurado'); return; }
+      if(!client && window.supabase && window.supabase.createClient) client = window.supabase.createClient(SB_URL, SB_KEY);
+      if(!client){ showToast('Error','SDK de Supabase no disponible'); return; }
       client.storage.from(BUCKET).download(path).then(function(res){
         if(res.error){ showToast('Error','No se pudo descargar: '+res.error.message); return; }
         var url = URL.createObjectURL(res.data);
@@ -644,7 +653,8 @@
     function deleteDocument(path, entityType, entityId, docId){
       if(!confirm('¿Eliminar este documento? Esta acción no se puede deshacer.')) return;
       var client = initSupabaseClient();
-      if(!client){ showToast('Error','Supabase no configurado'); return; }
+      if(!client && window.supabase && window.supabase.createClient) client = window.supabase.createClient(SB_URL, SB_KEY);
+      if(!client){ showToast('Error','SDK de Supabase no disponible'); return; }
       client.storage.from(BUCKET).remove([path]).then(function(res){
         if(res.error){ showToast('Error','No se pudo eliminar: '+res.error.message); return; }
         if(entityType==='task'){
