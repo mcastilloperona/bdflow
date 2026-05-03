@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 4.5</title>
+  <title>BDFlow Ver. 4.6</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -163,7 +163,7 @@
     .overlay{position:fixed;inset:0;background:rgba(15,23,42,.36);z-index:30;display:none}
     .overlay.show{display:block}
     .mobile-toggle{display:none}
-    .modal-wrap{position:fixed;inset:0;background:rgba(15,23,42,.48);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+    .modal-wrap{position:fixed;inset:0;background:rgba(15,23,42,.48);display:none;align-items:center;justify-content:center;z-index:60;padding:20px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
     .modal-wrap.show{display:flex}
     .modal{width:min(860px,100%);background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:0 18px 50px rgba(15,23,42,.22)}
     .modal-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
@@ -452,6 +452,216 @@
     .upload-progress{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;margin-top:8px}
     .upload-progress-bar{height:100%;background:#2563eb;border-radius:3px;transition:width .3s;width:0%}
 
+
+    /* ── ANIMACIONES V4.6 ── */
+
+    /* Ripple effect on buttons */
+    @keyframes ripple {
+      to { transform: scale(4); opacity: 0; }
+    }
+    @keyframes btnPress {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(.94); }
+      100% { transform: scale(1); }
+    }
+    @keyframes modalIn {
+      from { opacity:0; transform: scale(.94) translateY(10px); }
+      to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+    @keyframes modalOut {
+      from { opacity:1; transform: scale(1); }
+      to   { opacity:0; transform: scale(.94) translateY(8px); }
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform: translateY(20px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      0%   { transform: scale(0.7); opacity:0; }
+      70%  { transform: scale(1.08); opacity:1; }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-6px); }
+      40%      { transform: translateX(6px); }
+      60%      { transform: translateX(-4px); }
+      80%      { transform: translateX(4px); }
+    }
+    @keyframes glow {
+      0%,100% { box-shadow: 0 0 0 0 rgba(37,99,235,.4); }
+      50%      { box-shadow: 0 0 0 8px rgba(37,99,235,0); }
+    }
+    @keyframes checkmark {
+      0%   { stroke-dashoffset: 50; opacity:0; }
+      50%  { opacity:1; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes sidebarSlideIn {
+      from { opacity:0; transform: translateX(-12px); }
+      to   { opacity:1; transform: translateX(0); }
+    }
+    @keyframes tagPop {
+      0%   { transform:scale(1); }
+      50%  { transform:scale(1.12); }
+      100% { transform:scale(1); }
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-4px); }
+    }
+    @keyframes statusChange {
+      0%   { transform:scale(1);   filter:brightness(1); }
+      30%  { transform:scale(1.06);filter:brightness(1.2); }
+      100% { transform:scale(1);   filter:brightness(1); }
+    }
+
+    /* Global button styles */
+    .btn, button:not(.xbtn):not(.al-close):not(.sal-x):not(.mobile-bottom-nav button):not(.doc-btn) {
+      position: relative;
+      overflow: hidden;
+      transition: transform .15s cubic-bezier(.22,1,.36,1),
+                  box-shadow .15s ease,
+                  background .15s ease,
+                  border-color .15s ease !important;
+    }
+    .btn:active, button:not(.xbtn):active {
+      animation: btnPress .2s cubic-bezier(.22,1,.36,1);
+    }
+
+    /* Nav buttons hover lift */
+    .nav-btn {
+      transition: transform .15s cubic-bezier(.22,1,.36,1),
+                  background .15s ease,
+                  color .15s ease !important;
+    }
+    .nav-btn:hover { transform: translateX(3px); }
+    .nav-btn.active { animation: sidebarSlideIn .25s ease; }
+
+    /* Task cards */
+    .task, .row-card, .kpi-card {
+      transition: transform .18s cubic-bezier(.22,1,.36,1),
+                  box-shadow .18s ease,
+                  border-color .15s ease !important;
+    }
+    .task:hover, .row-card:hover {
+      transform: translateY(-3px) !important;
+      box-shadow: 0 12px 32px rgba(15,23,42,.1) !important;
+    }
+    .task:active { transform: translateY(-1px) scale(.99) !important; }
+
+    /* Badges animate on status change */
+    .badge { transition: all .2s ease; }
+
+    /* Modal animation */
+    .modal-wrap.show .modal {
+      animation: modalIn .28s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    /* Bottom mobile nav buttons */
+    .mobile-bottom-nav button {
+      transition: transform .15s cubic-bezier(.22,1,.36,1), color .15s ease;
+    }
+    .mobile-bottom-nav button:active { transform: scale(.88); }
+    .mobile-bottom-nav button.active { 
+      color: #2563eb;
+      animation: popIn .25s cubic-bezier(.22,1,.36,1);
+    }
+
+    /* Sidebar nav items */
+    .nav-btn {
+      transition: all .15s cubic-bezier(.22,1,.36,1) !important;
+    }
+
+    /* Input focus animation */
+    input:focus, select:focus, textarea:focus {
+      transition: border-color .15s, box-shadow .15s, transform .15s;
+      transform: scale(1.005);
+    }
+
+    /* Search input */
+    .search:focus { 
+      transform: scale(1.01);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15) !important;
+    }
+
+    /* Metric cards hover */
+    .metric {
+      transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s ease !important;
+      cursor: default;
+    }
+    .metric:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(15,23,42,.1) !important;
+    }
+
+    /* Kanban cards */
+    .kanban-card {
+      transition: transform .18s cubic-bezier(.22,1,.36,1), 
+                  box-shadow .18s ease,
+                  border-color .15s !important;
+    }
+    .kanban-card:hover {
+      transform: translateY(-4px) rotate(.5deg) !important;
+      box-shadow: 0 16px 40px rgba(15,23,42,.12) !important;
+    }
+    .kanban-card:active { transform: scale(.97) !important; }
+
+    /* Primary buttons glow on hover */
+    .btn.primary:hover {
+      box-shadow: 0 4px 20px rgba(37,99,235,.35) !important;
+      transform: translateY(-1px);
+    }
+    .btn.primary:active { transform: scale(.96); }
+
+    /* Secondary buttons */
+    .btn.secondary:hover { transform: translateY(-1px); }
+
+    /* Toggle/checkbox animation */
+    input[type="checkbox"] {
+      transition: transform .15s ease;
+    }
+    input[type="checkbox"]:checked { animation: popIn .2s ease; }
+
+    /* Select dropdowns */
+    select.select { transition: border-color .15s, box-shadow .15s, transform .12s; }
+    select.select:focus { transform: scale(1.01); }
+
+    /* View container stagger children */
+    #viewContainer > * {
+      animation: slideUp .3s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    /* Done button success flash */
+    .done-success {
+      animation: statusChange .4s ease, glow .6s ease;
+    }
+
+    /* Alert items */
+    .sal { transition: transform .15s ease, box-shadow .15s ease; }
+    .sal:hover { transform: translateX(-3px); box-shadow: 0 8px 24px rgba(15,23,42,.15) !important; }
+
+    /* Doc items */
+    .doc-item { transition: all .15s cubic-bezier(.22,1,.36,1); }
+    .doc-item:hover { transform: translateX(3px); }
+
+    /* Score badge pulse on high score */
+    .score { transition: transform .2s ease; }
+    .score:hover { animation: float 1.5s ease infinite; }
+
+    /* Ripple container */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,.35);
+      transform: scale(0);
+      animation: ripple .5s linear;
+      pointer-events: none;
+    }
+    .ripple-dark {
+      background: rgba(37,99,235,.15);
+    }
+
   </style>
 </head>
 <body>
@@ -464,7 +674,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 4.5</div>
+          <div class="version">Ver. 4.6</div>
         </div>
       </div>
 
@@ -1717,6 +1927,7 @@
       }
       document.getElementById('alertsModalBody').innerHTML = body.join('');
       document.getElementById('alertsModalWrap').classList.add('show');
+      (function(){ var m=document.querySelector('#alertsModalWrap .modal'); if(m){ m.style.animation='none'; requestAnimationFrame(function(){ m.style.animation=''; }); } })();
     }
 
     function closeAlertsModal(){
@@ -2913,6 +3124,7 @@ function renderConfig(){
       state.editingTaskId = taskId;
       const t = taskId ? state.tasks.find(x=>x.id===taskId) : null;
       document.getElementById('taskModalWrap').classList.add('show');
+      (function(){ var m=document.querySelector('#taskModalWrap .modal'); if(m){ m.style.animation='none'; requestAnimationFrame(function(){ m.style.animation=''; }); } })();
       document.getElementById('taskModalTitle').textContent = t ? 'Editar tarea' : 'Nueva tarea';
       document.getElementById('deleteTaskBtn').style.display = t ? 'inline-flex' : 'none';
       refreshAreaOptions(t ? t.area : state.areas[0] || '');
@@ -2988,6 +3200,7 @@ function renderConfig(){
       state.editingInitiativeId = id;
       const i = id ? state.initiatives.find(x=>x.id===id) : null;
       document.getElementById('initiativeModalWrap').classList.add('show');
+      (function(){ var m=document.querySelector('#initiativeModalWrap .modal'); if(m){ m.style.animation='none'; requestAnimationFrame(function(){ m.style.animation=''; }); } })();
       document.getElementById('initiativeModalTitle').textContent = i ? 'Editar iniciativa' : 'Nueva iniciativa';
       document.getElementById('deleteInitiativeBtn').style.display = i ? 'inline-flex' : 'none';
       refreshAreaOptions(i ? i.owner : state.areas[0] || '');
@@ -3035,6 +3248,7 @@ function renderConfig(){
       const task = state.tasks.find(x=>x.id===taskId);
       const entry = entryId ? ((task && task.worklog) || []).find(w=>w.id===entryId) : null;
       document.getElementById('worklogModalWrap').classList.add('show');
+      (function(){ var m=document.querySelector('#worklogModalWrap .modal'); if(m){ m.style.animation='none'; requestAnimationFrame(function(){ m.style.animation=''; }); } })();
       document.getElementById('wDate').value = entry ? entry.date : new Date().toISOString().slice(0,10);
       document.getElementById('wHours').value = entry ? entry.hours : 1;
       document.getElementById('wNote').value = entry ? (entry.note || '') : '';
@@ -3143,6 +3357,7 @@ function renderConfig(){
             document.getElementById('detailModalBody').innerHTML += renderDocumentSection('task', task.id, task.docs||[]);
       wireUploadZones();
       document.getElementById('detailModalWrap').classList.add('show');
+      (function(){ var m=document.querySelector('#detailModalWrap .modal'); if(m){ m.style.animation='none'; requestAnimationFrame(function(){ m.style.animation=''; }); } })();
     }
 
     function closeDetailModal(){
@@ -3448,6 +3663,128 @@ function renderConfig(){
       document.getElementById('dailyCapHint').textContent = state.dailyCapacity <= 4 ? 'Muy exigente' : state.dailyCapacity <= 6 ? 'Foco realista' : 'Riesgo de sobrecarga';
       render();
     });
+
+
+    // ── MICRO-INTERACTIONS V4.6 ──
+
+    // Ripple effect on buttons
+    function addRipple(e){
+      var btn = e.currentTarget;
+      var rect = btn.getBoundingClientRect();
+      var r = document.createElement('span');
+      var size = Math.max(rect.width, rect.height);
+      r.className = 'ripple' + (btn.classList.contains('primary') ? '' : ' ripple-dark');
+      r.style.cssText = 'width:'+size+'px;height:'+size+'px;left:'+(e.clientX-rect.left-size/2)+'px;top:'+(e.clientY-rect.top-size/2)+'px';
+      btn.appendChild(r);
+      setTimeout(function(){ if(r.parentNode) r.remove(); }, 600);
+    }
+
+    function initRipples(){
+      document.querySelectorAll('.btn, .nav-btn').forEach(function(btn){
+        if(btn._ripple) return;
+        btn._ripple = true;
+        btn.addEventListener('click', addRipple);
+      });
+    }
+
+    // Animate modal open
+    function showModal(html){
+      var mo = document.getElementById('modal');
+      var mw = document.getElementById('modal-wrap') || document.querySelector('.modal-wrap:not(#detailModalWrap):not(#taskModalWrap):not(#initiativeModalWrap):not(#worklogModalWrap):not(#alertsModalWrap)');
+      if(mo){ mo.innerHTML = html; }
+      // Find the active modal wrap and animate
+      document.querySelectorAll('.modal-wrap.show .modal').forEach(function(m){
+        m.style.animation = 'none';
+        requestAnimationFrame(function(){
+          m.style.animation = '';
+        });
+      });
+    }
+
+    // Animate task card on status change
+    function animateTaskCard(taskId){
+      var cards = document.querySelectorAll('[data-task-id="'+taskId+'"]');
+      cards.forEach(function(c){
+        c.style.animation = 'none';
+        requestAnimationFrame(function(){
+          c.style.animation = 'statusChange .4s ease';
+        });
+      });
+    }
+
+    // Toast animation improvement
+    var _origShowToast = showToast;
+    function showToast(title, msg){
+      var el = document.createElement('div');
+      el.style.cssText = 'position:fixed;bottom:28px;right:28px;background:#1e293b;color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.25);max-width:300px;word-break:break-word;font-family:inherit;animation:slideUp .3s cubic-bezier(.22,1,.36,1)';
+      el.innerHTML = '<div style="font-weight:800;margin-bottom:'+(msg?'3':'0')+'px">'+escapeHtml(title)+'</div>'+(msg?'<div style="opacity:.8;font-size:12px">'+escapeHtml(msg)+'</div>':'');
+      // Remove existing toasts
+      document.querySelectorAll('.bdflow-toast').forEach(function(t){ t.remove(); });
+      el.className = 'bdflow-toast';
+      document.body.appendChild(el);
+      setTimeout(function(){
+        el.style.transition = 'opacity .4s, transform .4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(8px)';
+        setTimeout(function(){ if(el.parentNode) el.remove(); }, 400);
+      }, 2800);
+    }
+
+    // Animate numbers counting up on metrics
+    function animateNumber(el, target, duration){
+      var start = 0;
+      var step = Math.ceil(target / (duration / 16));
+      var timer = setInterval(function(){
+        start = Math.min(start + step, target);
+        el.textContent = start;
+        if(start >= target) clearInterval(timer);
+      }, 16);
+    }
+
+    // Hook ripples and number animations into render
+    var _origRender = render;
+    function render(){
+      _origRender();
+      setTimeout(function(){
+        initRipples();
+        // Animate metric numbers
+        document.querySelectorAll('.metric-value[data-target]').forEach(function(el){
+          var target = parseInt(el.getAttribute('data-target'));
+          if(!isNaN(target)) animateNumber(el, target, 600);
+        });
+      }, 50);
+    }
+
+    // Smooth scroll within view
+    function smoothScrollTo(el){
+      if(el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+
+    // Button press feedback
+    document.addEventListener('mousedown', function(e){
+      var btn = e.target.closest('.btn, .nav-btn');
+      if(!btn) return;
+      btn.style.transition = 'transform .08s ease';
+      btn.style.transform = 'scale(.96)';
+      var up = function(){
+        btn.style.transform = '';
+        document.removeEventListener('mouseup', up);
+      };
+      document.addEventListener('mouseup', up);
+    });
+
+    // Touch feedback for mobile
+    document.addEventListener('touchstart', function(e){
+      var btn = e.target.closest('.btn, .nav-btn, .task, .row-card');
+      if(!btn) return;
+      btn.style.transition = 'transform .08s ease, opacity .08s ease';
+      btn.style.opacity = '.85';
+      var end = function(){
+        btn.style.opacity = '';
+        document.removeEventListener('touchend', end);
+      };
+      document.addEventListener('touchend', end);
+    }, {passive: true});
 
     window.addEventListener('resize', function(){
       showMobileNav();
