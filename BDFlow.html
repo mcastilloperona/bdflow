@@ -3538,6 +3538,7 @@ function renderConfig(){
       updateAlertsBadge(tasks);
       renderSmartAlerts();
       showMobileNav();
+      setTimeout(initRipples, 100);
       runActiveScreenAlerts();
 
       const titles = {
@@ -3713,7 +3714,7 @@ function renderConfig(){
     }
 
     // Toast animation improvement
-    var _origShowToast = showToast;
+
     function showToast(title, msg){
       var el = document.createElement('div');
       el.style.cssText = 'position:fixed;bottom:28px;right:28px;background:#1e293b;color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.25);max-width:300px;word-break:break-word;font-family:inherit;animation:slideUp .3s cubic-bezier(.22,1,.36,1)';
@@ -3741,19 +3742,8 @@ function renderConfig(){
       }, 16);
     }
 
-    // Hook ripples and number animations into render
-    var _origRender = render;
-    function render(){
-      _origRender();
-      setTimeout(function(){
-        initRipples();
-        // Animate metric numbers
-        document.querySelectorAll('.metric-value[data-target]').forEach(function(el){
-          var target = parseInt(el.getAttribute('data-target'));
-          if(!isNaN(target)) animateNumber(el, target, 600);
-        });
-      }, 50);
-    }
+    // Hook ripples into existing render via renderSmartAlerts timing
+    // (render override removed - caused infinite recursion)
 
     // Smooth scroll within view
     function smoothScrollTo(el){
