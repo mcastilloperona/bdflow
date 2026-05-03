@@ -609,87 +609,55 @@
     }
 
     function uploadDocument(file, entityType, entityId, onProgress, onDone, onError){
-      var path = entityType+'/'+entityId+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', SB_URL+'/storage/v1/object/'+BUCKET+'/'+path);
-      xhr.setRequestHeader('apikey', SB_KEY);
-      xhr.setRequestHeader('Authorization', 'Bearer '+SB_KEY);
-      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-      xhr.setRequestHeader('x-upsert', 'true');
-      xhr.upload.onprogress = function(e){
-        if(e.lengthComputable && onProgress) onProgress(Math.round(e.loaded/e.total*100));
-      };
-      xhr.onload = function(){
-        if(xhr.status>=200 && xhr.status<300){
-          var doc = {
-            id: 'd'+Date.now(),
-            name: file.name,
-            path: path,
-            size: file.size,
-            type: file.type,
-            uploadedAt: new Date().toISOString().slice(0,10)
-          };
-          if(onDone) onDone(doc);
-        } else {
-          if(onError) onError('Error '+xhr.status+': '+xhr.responseText);
-        }
-      };
-      xhr.onerror = function(){ if(onError) onError('Error de red al subir'); };
-      xhr.send(file);
-    }
-
-    function getDocumentUrl(path){
-      return SB_URL+'/storage/v1/object/authenticated/'+BUCKET+'/'+path;
+      var client = initSupabaseClient();
+      if(!client){ if(onError) onError('Supabase no configurado'); return; }
+      var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      var path = entityType+'/'+entityId+'/'+Date.now()+'_'+safeName;
+      if(onProgress) onProgress(30);
+      client.storage.from(BUCKET).upload(path, file, {upsert: true}).then(function(res){
+        if(res.error){ if(onError) onError(res.error.message); return; }
+        if(onProgress) onProgress(100);
+        var doc = {
+          id: 'd'+Date.now(),
+          name: file.name,
+          path: path,
+          size: file.size,
+          type: file.type,
+          uploadedAt: new Date().toISOString().slice(0,10)
+        };
+        if(onDone) onDone(doc);
+      });
     }
 
     function downloadDocument(path, name){
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', SB_URL+'/storage/v1/object/authenticated/'+BUCKET+'/'+encodeURIComponent(path));
-      xhr.setRequestHeader('apikey', SB_KEY);
-      xhr.setRequestHeader('Authorization', 'Bearer '+SB_KEY);
-      xhr.responseType = 'blob';
-      xhr.onload = function(){
-        if(xhr.status===200){
-          var url = URL.createObjectURL(xhr.response);
-          var a = document.createElement('a');
-          a.href=url; a.download=name; a.click();
-          setTimeout(function(){URL.revokeObjectURL(url);},1000);
-        } else {
-          showToast('Error','No se pudo descargar el documento');
-        }
-      };
-      xhr.send();
+      var client = initSupabaseClient();
+      if(!client){ showToast('Error','Supabase no configurado'); return; }
+      client.storage.from(BUCKET).download(path).then(function(res){
+        if(res.error){ showToast('Error','No se pudo descargar: '+res.error.message); return; }
+        var url = URL.createObjectURL(res.data);
+        var a = document.createElement('a');
+        a.href=url; a.download=name; a.click();
+        setTimeout(function(){URL.revokeObjectURL(url);},1000);
+      });
     }
 
     function deleteDocument(path, entityType, entityId, docId){
       if(!confirm('¿Eliminar este documento? Esta acción no se puede deshacer.')) return;
-      var xhr = new XMLHttpRequest();
-      xhr.open('DELETE', SB_URL+'/storage/v1/object/'+BUCKET+'/'+encodeURIComponent(path));
-      xhr.setRequestHeader('apikey', SB_KEY);
-      xhr.setRequestHeader('Authorization', 'Bearer '+SB_KEY);
-      xhr.onload = function(){
-        // Remove from task/initiative docs array
+      var client = initSupabaseClient();
+      if(!client){ showToast('Error','Supabase no configurado'); return; }
+      client.storage.from(BUCKET).remove([path]).then(function(res){
+        if(res.error){ showToast('Error','No se pudo eliminar: '+res.error.message); return; }
         if(entityType==='task'){
           var t = state.tasks.find(function(x){return x.id===entityId;});
-          if(t){
-            t.docs = (t.docs||[]).filter(function(d){return d.id!==docId;});
-            saveState();
-            scheduleSupabaseSync();
-          }
+          if(t){ t.docs=(t.docs||[]).filter(function(d){return d.id!==docId;}); saveState(); scheduleSupabaseSync(); }
         } else {
           var ini = state.initiatives.find(function(x){return x.id===entityId;});
-          if(ini){
-            ini.docs = (ini.docs||[]).filter(function(d){return d.id!==docId;});
-            saveState();
-            scheduleSupabaseSync();
-          }
+          if(ini){ ini.docs=(ini.docs||[]).filter(function(d){return d.id!==docId;}); saveState(); scheduleSupabaseSync(); }
         }
-        showToast('Documento eliminado','');
-        // Refresh the open modal
+        showToast('Documento eliminado','✓');
         if(state.detailTaskId && entityType==='task') openDetailModal(state.detailTaskId);
         else render();
-      };
-      xhr.send();
+      });
     }
 
 
