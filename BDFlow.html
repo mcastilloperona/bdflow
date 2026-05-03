@@ -692,44 +692,99 @@
       xhr.send();
     }
 
+
+    var _uploadZones = {};
+
+    function wireUploadZones(){
+      Object.keys(_uploadZones).forEach(function(zid){
+        var zone = document.getElementById(zid);
+        if(!zone || zone._wired) return;
+        zone._wired = true;
+        var info = _uploadZones[zid];
+        // Create file input
+        var wrap = document.getElementById('fileWrap_'+info.entityId);
+        if(wrap){
+          var inp = document.createElement('input');
+          inp.type='file'; inp.style.display='none';
+          inp.accept='.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.csv,.txt';
+          inp.onchange = function(){ if(this.files&&this.files[0]){ startUpload(this.files[0],info.entityType,info.entityId); this.value=''; } };
+          wrap.appendChild(inp);
+          zone.onclick = function(){ inp.click(); };
+        }
+        zone.ondragover = function(e){ e.preventDefault(); zone.classList.add('dragging'); };
+        zone.ondragleave = function(){ zone.classList.remove('dragging'); };
+        zone.ondrop = function(e){ e.preventDefault(); zone.classList.remove('dragging'); if(e.dataTransfer.files[0]) startUpload(e.dataTransfer.files[0],info.entityType,info.entityId); };
+      });
+    }
+
+    var _docRegistry = {};
+
+    function _docAction(action, rid){
+      var r = _docRegistry[rid];
+      if(!r) return;
+      if(action==='dl') downloadDocument(r.path, r.name);
+      if(action==='rm') deleteDocument(r.path, r.type, r.eid, r.did);
+    }
+
+
     function renderDocumentSection(entityType, entityId, docs){
       docs = docs || [];
       var html = '<div style="margin-top:16px;border-top:1px solid #e2e8f0;padding-top:16px">';
       html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
-      html += '<div style="font-size:13px;font-weight:800;color:#1e293b">📎 Documentos ('+docs.length+')</div>';
+      html += '<div style="font-size:13px;font-weight:800;color:#1e293b">📎 Documentos (' + docs.length + ')</div>';
       html += '</div>';
 
       if(docs.length){
         docs.forEach(function(doc){
           var di = getDocIcon(doc.name);
+          var rid = 'doc_' + doc.id;
+          _docRegistry[rid] = {path:doc.path, name:doc.name, type:entityType, eid:entityId, did:doc.id};
           html += '<div class="doc-item">';
-          html += '<div class="doc-icon '+di.cls+'">'+di.icon+'</div>';
+          html += '<div class="doc-icon ' + di.cls + '">' + di.icon + '</div>';
           html += '<div class="doc-info">';
-          html += '<div class="doc-name">'+escapeHtml(doc.name)+'</div>';
-          html += '<div class="doc-meta">'+formatFileSize(doc.size)+' · '+escapeHtml(doc.uploadedAt)+'</div>';
+          html += '<div class="doc-name">' + escapeHtml(doc.name) + '</div>';
+          html += '<div class="doc-meta">' + formatFileSize(doc.size) + ' · ' + escapeHtml(doc.uploadedAt) + '</div>';
           html += '</div>';
-          html += '<div class="doc-actions">';
-          html += '<button class="doc-btn" onclick="downloadDocument(''+doc.path+'',''+escapeHtml(doc.name)+'')">⬇ Descargar</button>';
-          html += '<button class="doc-btn del" onclick="deleteDocument(''+doc.path+'',''+entityType+'',''+entityId+'',''+doc.id+'')">✕</button>';
-          html += '</div></div>';
+          html += '<div class="doc-actions" id="da_' + rid + '"></div>';
+          html += '</div>';
         });
       } else {
         html += '<div style="color:#94a3b8;font-size:13px;text-align:center;padding:8px 0">Sin documentos adjuntos.</div>';
       }
 
-      // Upload zone
-      html += '<div class="upload-zone" id="uploadZone_'+entityId+'" ';
-      html += 'onclick="document.getElementById('fileInput_'+entityId+'').click()" ';
-      html += 'ondragover="event.preventDefault();this.classList.add('dragging')" ';
-      html += 'ondragleave="this.classList.remove('dragging')" ';
-      html += 'ondrop="event.preventDefault();this.classList.remove('dragging');handleFileDrop(event,''+entityType+'',''+entityId+'')">';
+      var zid = 'uz_' + entityId;
+      _uploadZones[zid] = {entityType: entityType, entityId: entityId};
+      html += '<div id="' + zid + '" class="upload-zone">';
       html += '<div style="font-size:24px;margin-bottom:6px">📁</div>';
       html += '<div style="font-size:13px;font-weight:600;color:#475569">Haz clic o arrastra un archivo</div>';
       html += '<div style="font-size:11px;color:#94a3b8;margin-top:3px">PDF, Word, Excel, PPT, imágenes · Máx. 10MB</div>';
-      html += '<div class="upload-progress" id="uploadProgress_'+entityId+'" style="display:none"><div class="upload-progress-bar" id="uploadBar_'+entityId+'"></div></div>';
+      html += '<div class="upload-progress" id="uploadProgress_' + entityId + '" style="display:none">';
+      html += '<div class="upload-progress-bar" id="uploadBar_' + entityId + '"></div></div>';
       html += '</div>';
-      html += '<input type="file" id="fileInput_'+entityId+'" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.csv,.txt" onchange="handleFileSelect(this,''+entityType+'',''+entityId+'')">';
+      html += '<div id="fileWrap_' + entityId + '"></div>';
       html += '</div>';
+
+      // Wire up after a tick
+      setTimeout(function(){
+        // Wire doc action buttons
+        docs.forEach(function(doc){
+          var rid = 'doc_' + doc.id;
+          var da = document.getElementById('da_' + rid);
+          if(!da) return;
+          var dlBtn = document.createElement('button');
+          dlBtn.className = 'doc-btn';
+          dlBtn.textContent = '⬇ Descargar';
+          dlBtn.onclick = function(){ _docAction('dl', rid); };
+          var rmBtn = document.createElement('button');
+          rmBtn.className = 'doc-btn del';
+          rmBtn.textContent = '✕';
+          rmBtn.onclick = function(){ _docAction('rm', rid); };
+          da.appendChild(dlBtn);
+          da.appendChild(rmBtn);
+        });
+        wireUploadZones();
+      }, 0);
+
       return html;
     }
 
@@ -782,6 +837,7 @@
       html += renderDocumentSection('initiative', iniId, ini.docs||[]);
       html += '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn primary" onclick="closeModal()">Cerrar</button></div>';
       showModal(html);
+      setTimeout(wireUploadZones, 50);
     }
 
     // ── SMART ALERTS V4.3 ──
@@ -2966,6 +3022,7 @@ function renderConfig(){
         </div>
       `;
             document.getElementById('detailModalBody').innerHTML += renderDocumentSection('task', task.id, task.docs||[]);
+      wireUploadZones();
       document.getElementById('detailModalWrap').classList.add('show');
     }
 
