@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 4.3</title>
+  <title>BDFlow Ver. 4.4</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -314,6 +314,26 @@
     .sal-x:hover{color:#334155}
     .animated-bar{animation:barGrow .7s cubic-bezier(.22,1,.36,1) both}
 
+
+    /* ── GESTOR DOCUMENTAL V4.4 ── */
+    .doc-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;transition:all .15s}
+    .doc-item:hover{border-color:#2563eb;background:#eff6ff}
+    .doc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .doc-icon.pdf{background:#fff1f2;} .doc-icon.ppt{background:#fff7ed;} .doc-icon.doc{background:#eff6ff;}
+    .doc-icon.xls{background:#f0fdf4;} .doc-icon.img{background:#faf5ff;} .doc-icon.other{background:#f8fafc;}
+    .doc-info{flex:1;min-width:0}
+    .doc-name{font-size:13px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .doc-meta{font-size:11px;color:#64748b;margin-top:2px}
+    .doc-actions{display:flex;gap:6px;flex-shrink:0}
+    .doc-btn{background:none;border:1px solid #e2e8f0;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;color:#64748b;transition:all .12s}
+    .doc-btn:hover{background:#2563eb;color:#fff;border-color:#2563eb}
+    .doc-btn.del:hover{background:#dc2626;border-color:#dc2626}
+    .upload-zone{border:2px dashed #c8d0e8;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .15s;background:#f8fafc}
+    .upload-zone:hover{border-color:#2563eb;background:#eff6ff}
+    .upload-zone.dragging{border-color:#2563eb;background:#eff6ff;transform:scale(1.01)}
+    .upload-progress{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;margin-top:8px}
+    .upload-progress-bar{height:100%;background:#2563eb;border-radius:3px;transition:width .3s;width:0%}
+
   </style>
 </head>
 <body>
@@ -326,7 +346,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 4.3</div>
+          <div class="version">Ver. 4.4</div>
         </div>
       </div>
 
@@ -565,6 +585,204 @@
         .replaceAll("'",'&#39;');
     }
 
+
+
+    // ── GESTOR DOCUMENTAL V4.4 ──
+    var SB_URL = 'https://jljaejkmbnfnhcbjcjnm.supabase.co';
+    var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsamFlamttYm5mbmhjYmpjam5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTEyMDksImV4cCI6MjA5MTM4NzIwOX0.7Ey8qKDlDcvOQq77rqBeH9goGWI1whrL9WiefHOp3XI';
+    var BUCKET = 'bdflow-docs';
+
+    function getDocIcon(name){
+      var ext = name.split('.').pop().toLowerCase();
+      if(ext==='pdf') return {cls:'pdf',icon:'📄'};
+      if(['ppt','pptx'].indexOf(ext)>=0) return {cls:'ppt',icon:'📊'};
+      if(['doc','docx'].indexOf(ext)>=0) return {cls:'doc',icon:'📝'};
+      if(['xls','xlsx','csv'].indexOf(ext)>=0) return {cls:'xls',icon:'📈'};
+      if(['jpg','jpeg','png','gif','webp'].indexOf(ext)>=0) return {cls:'img',icon:'🖼️'};
+      return {cls:'other',icon:'📎'};
+    }
+
+    function formatFileSize(bytes){
+      if(bytes<1024) return bytes+'B';
+      if(bytes<1024*1024) return Math.round(bytes/1024)+'KB';
+      return Math.round(bytes/1024/1024*10)/10+'MB';
+    }
+
+    function uploadDocument(file, entityType, entityId, onProgress, onDone, onError){
+      var path = entityType+'/'+entityId+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', SB_URL+'/storage/v1/object/'+BUCKET+'/'+path);
+      xhr.setRequestHeader('apikey', SB_KEY);
+      xhr.setRequestHeader('Authorization', 'Bearer '+SB_KEY);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.setRequestHeader('x-upsert', 'true');
+      xhr.upload.onprogress = function(e){
+        if(e.lengthComputable && onProgress) onProgress(Math.round(e.loaded/e.total*100));
+      };
+      xhr.onload = function(){
+        if(xhr.status>=200 && xhr.status<300){
+          var doc = {
+            id: 'd'+Date.now(),
+            name: file.name,
+            path: path,
+            size: file.size,
+            type: file.type,
+            uploadedAt: new Date().toISOString().slice(0,10)
+          };
+          if(onDone) onDone(doc);
+        } else {
+          if(onError) onError('Error '+xhr.status+': '+xhr.responseText);
+        }
+      };
+      xhr.onerror = function(){ if(onError) onError('Error de red al subir'); };
+      xhr.send(file);
+    }
+
+    function getDocumentUrl(path){
+      return SB_URL+'/storage/v1/object/authenticated/'+BUCKET+'/'+path;
+    }
+
+    function downloadDocument(path, name){
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', SB_URL+'/storage/v1/object/authenticated/'+BUCKET+'/'+encodeURIComponent(path));
+      xhr.setRequestHeader('apikey', SB_KEY);
+      xhr.setRequestHeader('Authorization', 'Bearer '+SB_KEY);
+      xhr.responseType = 'blob';
+      xhr.onload = function(){
+        if(xhr.status===200){
+          var url = URL.createObjectURL(xhr.response);
+          var a = document.createElement('a');
+          a.href=url; a.download=name; a.click();
+          setTimeout(function(){URL.revokeObjectURL(url);},1000);
+        } else {
+          showToast('Error','No se pudo descargar el documento');
+        }
+      };
+      xhr.send();
+    }
+
+    function deleteDocument(path, entityType, entityId, docId){
+      if(!confirm('¿Eliminar este documento? Esta acción no se puede deshacer.')) return;
+      var xhr = new XMLHttpRequest();
+      xhr.open('DELETE', SB_URL+'/storage/v1/object/'+BUCKET+'/'+encodeURIComponent(path));
+      xhr.setRequestHeader('apikey', SB_KEY);
+      xhr.setRequestHeader('Authorization', 'Bearer '+SB_KEY);
+      xhr.onload = function(){
+        // Remove from task/initiative docs array
+        if(entityType==='task'){
+          var t = state.tasks.find(function(x){return x.id===entityId;});
+          if(t){
+            t.docs = (t.docs||[]).filter(function(d){return d.id!==docId;});
+            saveState();
+            scheduleSupabaseSync();
+          }
+        } else {
+          var ini = state.initiatives.find(function(x){return x.id===entityId;});
+          if(ini){
+            ini.docs = (ini.docs||[]).filter(function(d){return d.id!==docId;});
+            saveState();
+            scheduleSupabaseSync();
+          }
+        }
+        showToast('Documento eliminado','');
+        // Refresh the open modal
+        if(state.detailTaskId && entityType==='task') openDetailModal(state.detailTaskId);
+        else render();
+      };
+      xhr.send();
+    }
+
+    function renderDocumentSection(entityType, entityId, docs){
+      docs = docs || [];
+      var html = '<div style="margin-top:16px;border-top:1px solid #e2e8f0;padding-top:16px">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
+      html += '<div style="font-size:13px;font-weight:800;color:#1e293b">📎 Documentos ('+docs.length+')</div>';
+      html += '</div>';
+
+      if(docs.length){
+        docs.forEach(function(doc){
+          var di = getDocIcon(doc.name);
+          html += '<div class="doc-item">';
+          html += '<div class="doc-icon '+di.cls+'">'+di.icon+'</div>';
+          html += '<div class="doc-info">';
+          html += '<div class="doc-name">'+escapeHtml(doc.name)+'</div>';
+          html += '<div class="doc-meta">'+formatFileSize(doc.size)+' · '+escapeHtml(doc.uploadedAt)+'</div>';
+          html += '</div>';
+          html += '<div class="doc-actions">';
+          html += '<button class="doc-btn" onclick="downloadDocument(''+doc.path+'',''+escapeHtml(doc.name)+'')">⬇ Descargar</button>';
+          html += '<button class="doc-btn del" onclick="deleteDocument(''+doc.path+'',''+entityType+'',''+entityId+'',''+doc.id+'')">✕</button>';
+          html += '</div></div>';
+        });
+      } else {
+        html += '<div style="color:#94a3b8;font-size:13px;text-align:center;padding:8px 0">Sin documentos adjuntos.</div>';
+      }
+
+      // Upload zone
+      html += '<div class="upload-zone" id="uploadZone_'+entityId+'" ';
+      html += 'onclick="document.getElementById('fileInput_'+entityId+'').click()" ';
+      html += 'ondragover="event.preventDefault();this.classList.add('dragging')" ';
+      html += 'ondragleave="this.classList.remove('dragging')" ';
+      html += 'ondrop="event.preventDefault();this.classList.remove('dragging');handleFileDrop(event,''+entityType+'',''+entityId+'')">';
+      html += '<div style="font-size:24px;margin-bottom:6px">📁</div>';
+      html += '<div style="font-size:13px;font-weight:600;color:#475569">Haz clic o arrastra un archivo</div>';
+      html += '<div style="font-size:11px;color:#94a3b8;margin-top:3px">PDF, Word, Excel, PPT, imágenes · Máx. 10MB</div>';
+      html += '<div class="upload-progress" id="uploadProgress_'+entityId+'" style="display:none"><div class="upload-progress-bar" id="uploadBar_'+entityId+'"></div></div>';
+      html += '</div>';
+      html += '<input type="file" id="fileInput_'+entityId+'" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.csv,.txt" onchange="handleFileSelect(this,''+entityType+'',''+entityId+'')">';
+      html += '</div>';
+      return html;
+    }
+
+    function handleFileSelect(input, entityType, entityId){
+      if(!input.files||!input.files[0]) return;
+      startUpload(input.files[0], entityType, entityId);
+      input.value='';
+    }
+
+    function handleFileDrop(event, entityType, entityId){
+      var file = event.dataTransfer.files[0];
+      if(!file) return;
+      startUpload(file, entityType, entityId);
+    }
+
+    function startUpload(file, entityType, entityId){
+      if(file.size > 10*1024*1024){ showToast('Error','El archivo supera 10MB'); return; }
+      var prog = document.getElementById('uploadProgress_'+entityId);
+      var bar = document.getElementById('uploadBar_'+entityId);
+      if(prog) prog.style.display='block';
+
+      uploadDocument(file, entityType, entityId,
+        function(pct){ if(bar) bar.style.width=pct+'%'; },
+        function(doc){
+          if(prog) prog.style.display='none';
+          // Save doc reference to state
+          if(entityType==='task'){
+            var t = state.tasks.find(function(x){return x.id===entityId;});
+            if(t){ t.docs = t.docs||[]; t.docs.push(doc); saveState(); scheduleSupabaseSync(); }
+          } else {
+            var ini = state.initiatives.find(function(x){return x.id===entityId;});
+            if(ini){ ini.docs = ini.docs||[]; ini.docs.push(doc); saveState(); scheduleSupabaseSync(); }
+          }
+          showToast('Documento subido','✅ '+doc.name);
+          if(state.detailTaskId && entityType==='task') openDetailModal(state.detailTaskId);
+          else render();
+        },
+        function(err){
+          if(prog) prog.style.display='none';
+          showToast('Error al subir',err);
+        }
+      );
+    }
+
+
+    function openInitiativeDocsModal(iniId){
+      var ini = state.initiatives.find(function(x){ return x.id===iniId; });
+      if(!ini) return;
+      var html = '<div class="mhdr"><div><div class="mtitle">📎 Documentos · '+escapeHtml(ini.name)+'</div></div><button class="btn icon" onclick="closeModal()">✕</button></div>';
+      html += renderDocumentSection('initiative', iniId, ini.docs||[]);
+      html += '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn primary" onclick="closeModal()">Cerrar</button></div>';
+      showModal(html);
+    }
 
     // ── SMART ALERTS V4.3 ──
     var alertDismissed = {};
@@ -2747,6 +2965,7 @@ function renderConfig(){
           </div>
         </div>
       `;
+            document.getElementById('detailModalBody').innerHTML += renderDocumentSection('task', task.id, task.docs||[]);
       document.getElementById('detailModalWrap').classList.add('show');
     }
 
