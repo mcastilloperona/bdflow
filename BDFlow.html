@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BDFlow Ver. 4.6</title>
+  <title>BDFlow Ver. 4.7</title>
   <style>
     :root{
       --bg:#f3f6fb;
@@ -674,7 +674,7 @@
             <div class="logo">BD<b>Flow</b></div>
             <div class="sub">by Miguel Castillo</div>
           </div>
-          <div class="version">Ver. 4.6</div>
+          <div class="version">Ver. 4.7</div>
         </div>
       </div>
 
@@ -688,6 +688,7 @@
         <button class="nav-btn" data-view="kanban"><span class="nav-dot"></span>Kanban</button>
         <button class="nav-btn" data-view="activity"><span class="nav-dot"></span>Actividad</button>
         <button class="nav-btn" data-view="initiatives"><span class="nav-dot"></span>Iniciativas</button>
+        <button class="nav-btn" data-view="latam"><span class="nav-dot"></span>Seguimiento LATAM</button>
         <button class="nav-btn" data-view="config"><span class="nav-dot"></span>Configuración</button>
         <button class="nav-btn" data-view="report"><span class="nav-dot"></span>Informe</button>
       </div>
@@ -848,6 +849,28 @@
     </div>
   </div>
 
+  <div class="modal-wrap" id="latamModalWrap">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="latamModalTitle">Registrar colaboración LATAM</h3>
+        <button class="btn secondary" onclick="closeLatamModal()">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field full"><label for="lTask">Tarea realizada</label><input id="lTask" type="text" placeholder="Ej. Revisar oportunidades sin seguimiento" /></div>
+          <div class="field"><label for="lHours">Tiempo dedicado</label><select id="lHours"><option value="0.25">15 minutos</option><option value="0.5">30 minutos</option><option value="1">1 hora</option><option value="1.5">1 hora y 30 minutos</option><option value="2">2 horas</option><option value="3">3 horas</option><option value="4">4 horas</option></select></div>
+          <div class="field"><label for="lTime">Hora</label><input id="lTime" type="time" /></div>
+          <div class="field full"><label for="lCollaboration">Colaboración</label><input id="lCollaboration" type="text" list="latamCollaborations" placeholder="Persona, equipo o área" /><datalist id="latamCollaborations"><option>Ventas LATAM</option><option>Marketing LATAM</option><option>Owner LATAM</option><option>Dirección</option><option>Producto</option></datalist></div>
+          <div class="field full"><details><summary style="cursor:pointer;font-weight:800;color:var(--blue)">Añadir contexto opcional</summary><div class="form-grid" style="margin-top:14px"><div class="field"><label for="lDate">Fecha</label><input id="lDate" type="date" /></div><div class="field"><label for="lLinkedTask">Tarea BDFlow vinculada</label><select id="lLinkedTask"><option value="">Sin vincular</option></select></div><div class="field full"><label for="lContext">Comentario o resultado</label><textarea id="lContext" placeholder="Solo si aporta contexto"></textarea></div></div></details></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <div><button class="btn secondary" id="deleteLatamBtn" onclick="deleteLatamAction()" style="display:none">Eliminar</button></div>
+        <div style="display:flex;gap:10px"><button class="btn secondary" onclick="closeLatamModal()">Cancelar</button><button class="btn primary" onclick="saveLatamAction()">Guardar</button></div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-wrap" id="detailModalWrap">
     <div class="modal">
       <div class="modal-head">
@@ -888,6 +911,8 @@
       editingInitiativeId: null,
       editingWorklogTaskId: null,
       editingWorklogEntryId: null,
+      editingLatamId: null,
+      latamMode: 'summary',
       detailTaskId: null,
       alertEmailTo: '',
       alertsConfig: {
@@ -921,7 +946,8 @@
       },
       areas: [],
       initiatives: [],
-      tasks: []
+      tasks: [],
+      latamActions: []
     };
 
     let supabaseClient = null;
@@ -1259,6 +1285,7 @@
         state.areas = Array.isArray(parsed.areas) && parsed.areas.length ? parsed.areas : [...seed.areas];
         state.initiatives = Array.isArray(parsed.initiatives) ? parsed.initiatives : [];
         state.tasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
+        state.latamActions = Array.isArray(parsed.latamActions) ? parsed.latamActions : [];
         state.alertsConfig = Object.assign({}, state.alertsConfig, (parsed.alertsConfig || {}));
         state.dailyCapacity = Number(parsed.dailyCapacity || state.dailyCapacity || 6);
         state.rankingLimit = Number(parsed.rankingLimit || state.rankingLimit || 20);
@@ -1270,6 +1297,7 @@
         state.areas = [...seed.areas];
         state.initiatives = [...seed.initiatives];
         state.tasks = [];
+        state.latamActions = [];
       }
       migrateState();
     }
@@ -1310,6 +1338,18 @@
           worklog
         };
       });
+      state.latamActions = (Array.isArray(state.latamActions) ? state.latamActions : []).map(a => ({
+        id: a.id || ('la' + Date.now() + Math.random()),
+        task: a.task || 'Sin descripción',
+        hours: Number(a.hours || 0),
+        time: a.time || '09:00',
+        collaboration: a.collaboration || 'Sin especificar',
+        date: a.date || new Date().toISOString().slice(0,10),
+        linkedTaskId: a.linkedTaskId || '',
+        worklogEntryId: a.worklogEntryId || '',
+        context: a.context || '',
+        createdAt: a.createdAt || new Date().toISOString()
+      }));
     }
 
     function saveState(){
@@ -1317,6 +1357,7 @@
         areas: state.areas,
         initiatives: state.initiatives,
         tasks: state.tasks,
+        latamActions: state.latamActions,
         alertsConfig: state.alertsConfig,
         dailyCapacity: state.dailyCapacity,
         rankingLimit: state.rankingLimit,
@@ -1333,6 +1374,7 @@
         areas: state.areas,
         initiatives: state.initiatives,
         tasks: state.tasks,
+        latamActions: state.latamActions,
         alertsConfig: state.alertsConfig,
         dailyCapacity: state.dailyCapacity,
         rankingLimit: state.rankingLimit,
@@ -1348,6 +1390,7 @@
       state.areas = Array.isArray(payload.areas) && payload.areas.length ? payload.areas : [...seed.areas];
       state.initiatives = Array.isArray(payload.initiatives) ? payload.initiatives : [];
       state.tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
+      state.latamActions = Array.isArray(payload.latamActions) ? payload.latamActions : [];
       state.alertsConfig = Object.assign({}, state.alertsConfig, (payload.alertsConfig || {}));
       state.dailyCapacity = Number(payload.dailyCapacity || state.dailyCapacity || 6);
       state.rankingLimit = Number(payload.rankingLimit || state.rankingLimit || 20);
@@ -2483,6 +2526,101 @@
       }</div></div>`;
     }
 
+    function getLatamActions(){
+      return (state.latamActions || []).slice().sort((a,b)=>String(b.date+' '+b.time).localeCompare(String(a.date+' '+a.time)));
+    }
+
+    function setLatamMode(mode){
+      if(mode === 'register'){ openLatamModal(); return; }
+      state.latamMode = mode;
+      render();
+    }
+
+    function renderLatamTabs(){
+      const modes = [['summary','Resumen'],['register','Registrar actividad'],['history','Histórico'],['report','Informe']];
+      return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">${modes.map(x=>`<button class="btn ${state.latamMode===x[0]?'primary':'secondary'}" onclick="setLatamMode('${x[0]}')">${x[1]}</button>`).join('')}</div>`;
+    }
+
+    function renderLatam(){
+      const actions = getLatamActions();
+      const totalHours = Math.round(actions.reduce((sum,a)=>sum+Number(a.hours||0),0)*100)/100;
+      const collaborations = [...new Set(actions.map(a=>a.collaboration).filter(Boolean))];
+      const afterHours = Math.round(actions.filter(a=>a.time && (a.time>='18:00' || a.time<'08:00')).reduce((sum,a)=>sum+Number(a.hours||0),0)*100)/100;
+      const tabs = renderLatamTabs();
+      if(state.latamMode === 'history'){
+        return tabs+`<div class="panel"><div class="panel-head"><div><h2>Histórico LATAM</h2><p>Tarea, dedicación, hora y colaboración en orden cronológico.</p></div><button class="btn primary" onclick="openLatamModal()">+ Registrar</button></div><div class="panel-body">${actions.length?actions.map(a=>`<div class="activity-entry" style="margin-bottom:10px"><div class="activity-top"><div><div class="row-title">${escapeHtml(a.task)}</div><div class="row-sub">${escapeHtml(a.date)} · ${escapeHtml(a.time)} · ${escapeHtml(a.collaboration)}</div></div><div style="display:flex;gap:8px;align-items:center"><span class="badge blue">${a.hours}h</span><button class="btn secondary small" onclick="openLatamModal('${a.id}')">Editar</button></div></div>${a.context?`<div style="margin-top:8px;color:var(--muted);font-size:13px">${escapeHtml(a.context)}</div>`:''}</div>`).join(''):'<div class="empty">Todavía no hay colaboraciones registradas.</div>'}</div></div>`;
+      }
+      if(state.latamMode === 'report'){
+        return tabs+`<div class="panel"><div class="panel-head"><div><h2>Informe de colaboración LATAM</h2><p>Resumen listo para compartir con Dirección.</p></div><button class="btn primary" onclick="copyLatamReport()">Copiar informe</button></div><div class="panel-body"><div class="task"><div class="task-title">Resumen</div><div class="task-sub">Se han registrado ${actions.length} tareas con una dedicación total de ${totalHours} horas, colaborando con ${collaborations.length} personas, equipos o áreas. ${afterHours?hFmt(afterHours)+' horas se realizaron fuera del horario habitual por la diferencia horaria con LATAM.':''}</div></div><div style="height:12px"></div>${collaborations.map(c=>{const rows=actions.filter(a=>a.collaboration===c);const h=Math.round(rows.reduce((s,a)=>s+Number(a.hours||0),0)*100)/100;return `<div class="activity-entry" style="margin-bottom:10px"><div class="row-title">${escapeHtml(c)} · ${h}h</div><div class="row-sub">${rows.map(a=>escapeHtml(a.task)).join(' · ')}</div></div>`}).join('')||'<div class="empty">Sin datos para generar el informe.</div>'}</div></div>`;
+      }
+      const byCollaboration = {};
+      actions.forEach(a=>{byCollaboration[a.collaboration]=(byCollaboration[a.collaboration]||0)+Number(a.hours||0)});
+      return tabs+`<div class="metrics"><div class="metric"><div class="k">TIEMPO DEDICADO</div><div class="v">${totalHours}h</div><div class="s">Colaboración LATAM registrada</div></div><div class="metric"><div class="k">TAREAS REALIZADAS</div><div class="v">${actions.length}</div><div class="s">Actividad documentada</div></div><div class="metric"><div class="k">COLABORACIONES</div><div class="v">${collaborations.length}</div><div class="s">Personas, equipos o áreas</div></div><div class="metric"><div class="k">FUERA DE HORARIO</div><div class="v">${afterHours}h</div><div class="s">Antes de las 08:00 o desde las 18:00</div></div></div><div style="height:18px"></div><div class="panel"><div class="panel-head"><div><h2>Colaboración</h2><p>Dónde se concentra el tiempo de apoyo.</p></div><button class="btn primary" onclick="openLatamModal()">+ Registrar colaboración</button></div><div class="panel-body">${Object.keys(byCollaboration).length?Object.entries(byCollaboration).sort((a,b)=>b[1]-a[1]).map(x=>`<div class="activity-entry" style="margin-bottom:10px"><div class="activity-top"><div class="row-title">${escapeHtml(x[0])}</div><span class="badge blue">${Math.round(x[1]*100)/100}h</span></div></div>`).join(''):'<div class="empty">Registra la primera colaboración LATAM.</div>'}</div></div>`;
+    }
+
+    function hFmt(value){ return String(Math.round(Number(value||0)*100)/100).replace('.',','); }
+
+    function buildLatamReport(){
+      const actions=getLatamActions(), total=Math.round(actions.reduce((s,a)=>s+Number(a.hours||0),0)*100)/100;
+      const groups={}; actions.forEach(a=>{if(!groups[a.collaboration])groups[a.collaboration]=[];groups[a.collaboration].push(a)});
+      let out=`SEGUIMIENTO LATAM\n\n${actions.length} tareas · ${hFmt(total)} horas · ${Object.keys(groups).length} colaboraciones\n`;
+      Object.entries(groups).forEach(([name,rows])=>{const hours=rows.reduce((s,a)=>s+Number(a.hours||0),0);out+=`\n${name} · ${hFmt(hours)}h\n`;rows.forEach(a=>{out+=`- ${a.date} ${a.time} · ${a.task} · ${hFmt(a.hours)}h${a.context?' · '+a.context:''}\n`})});
+      return out;
+    }
+
+    function copyLatamReport(){
+      navigator.clipboard.writeText(buildLatamReport()).then(()=>showToast('Informe copiado','Listo para compartir con Dirección.'));
+    }
+
+    function openLatamModal(id){
+      const action = id ? (state.latamActions||[]).find(a=>a.id===id) : null;
+      state.editingLatamId = action ? action.id : null;
+      document.getElementById('latamModalTitle').textContent = action ? 'Editar colaboración LATAM' : 'Registrar colaboración LATAM';
+      document.getElementById('lTask').value = action ? action.task : '';
+      document.getElementById('lHours').value = action ? String(action.hours) : '1';
+      document.getElementById('lTime').value = action ? action.time : new Date().toTimeString().slice(0,5);
+      document.getElementById('lCollaboration').value = action ? action.collaboration : '';
+      document.getElementById('lDate').value = action ? action.date : new Date().toISOString().slice(0,10);
+      document.getElementById('lContext').value = action ? action.context : '';
+      const taskSelect=document.getElementById('lLinkedTask');
+      taskSelect.innerHTML='<option value="">Sin vincular</option>'+state.tasks.filter(t=>t.status!=='Finalizada').map(t=>`<option value="${escapeHtml(t.id)}">${escapeHtml(t.title)}</option>`).join('');
+      taskSelect.value=action?action.linkedTaskId:'';
+      document.getElementById('deleteLatamBtn').style.display=action?'inline-flex':'none';
+      document.getElementById('latamModalWrap').classList.add('show');
+      setTimeout(()=>document.getElementById('lTask').focus(),50);
+    }
+
+    function closeLatamModal(){
+      document.getElementById('latamModalWrap').classList.remove('show');
+      state.editingLatamId=null;
+    }
+
+    function removeLinkedLatamWorklog(action){
+      if(!action || !action.linkedTaskId || !action.worklogEntryId) return;
+      const task=state.tasks.find(t=>t.id===action.linkedTaskId); if(!task)return;
+      task.worklog=(task.worklog||[]).filter(w=>w.id!==action.worklogEntryId);
+      task.spent=Math.round(task.worklog.reduce((s,w)=>s+Number(w.hours||0),0)*10)/10;
+    }
+
+    function saveLatamAction(){
+      const taskText=document.getElementById('lTask').value.trim(), hours=Number(document.getElementById('lHours').value||0), time=document.getElementById('lTime').value, collaboration=document.getElementById('lCollaboration').value.trim();
+      if(!taskText || !hours || !time || !collaboration){alert('Completa tarea, tiempo, hora y colaboración.');return;}
+      const previous=state.editingLatamId?(state.latamActions||[]).find(a=>a.id===state.editingLatamId):null;
+      const action={id:previous?previous.id:'la'+Date.now(),task:taskText,hours,time,collaboration,date:document.getElementById('lDate').value||new Date().toISOString().slice(0,10),linkedTaskId:document.getElementById('lLinkedTask').value,worklogEntryId:previous?previous.worklogEntryId:'',context:document.getElementById('lContext').value.trim(),createdAt:previous?previous.createdAt:new Date().toISOString()};
+      if(previous && (previous.linkedTaskId!==action.linkedTaskId)){removeLinkedLatamWorklog(previous);action.worklogEntryId='';}
+      if(action.linkedTaskId){
+        const linked=state.tasks.find(t=>t.id===action.linkedTaskId); if(linked){if(!Array.isArray(linked.worklog))linked.worklog=[];let entry=action.worklogEntryId?linked.worklog.find(w=>w.id===action.worklogEntryId):null;if(!entry){entry={id:'wlatam'+Date.now(),date:action.date,hours:action.hours,note:'LATAM · '+action.collaboration+' · '+action.task,latamActionId:action.id};linked.worklog.push(entry);action.worklogEntryId=entry.id}else{entry.date=action.date;entry.hours=action.hours;entry.note='LATAM · '+action.collaboration+' · '+action.task;entry.latamActionId=action.id}linked.spent=Math.round(linked.worklog.reduce((s,w)=>s+Number(w.hours||0),0)*10)/10;}
+      }
+      const idx=(state.latamActions||[]).findIndex(a=>a.id===action.id);if(idx>=0)state.latamActions[idx]=action;else state.latamActions.unshift(action);
+      saveState();closeLatamModal();state.latamMode='summary';render();showToast('Colaboración guardada',action.linkedTaskId?'Worklog actualizado sin duplicar horas.':'Registro LATAM añadido.');
+    }
+
+    function deleteLatamAction(){
+      const action=(state.latamActions||[]).find(a=>a.id===state.editingLatamId);if(!action)return;
+      if(!confirm('¿Eliminar esta colaboración LATAM?'))return;
+      removeLinkedLatamWorklog(action);state.latamActions=state.latamActions.filter(a=>a.id!==action.id);saveState();closeLatamModal();render();showToast('Colaboración eliminada','El worklog vinculado también se ha actualizado.');
+    }
+
     function recalcInitiativeProgress(id){
       const its = state.tasks.filter(t=>t.initiativeId===id);
       if(!its.length) return 0;
@@ -3469,6 +3607,7 @@ function renderConfig(){
         'kanban': 'kanban',
         'initiatives': 'initiatives',
         'activity': 'activity',
+        'latam': 'latam',
         'report': 'report'
       };
       var v = viewMap[view] || view;
@@ -3550,6 +3689,7 @@ function renderConfig(){
         kanban:['Kanban','Seguimiento operativo por estado.'],
         activity:['Actividad','Vista cronológica del trabajo realizado.'],
         initiatives:['Iniciativas','Contenedores de trabajo que agrupan tareas.'],
+        latam:['Seguimiento LATAM','Tareas, tiempo, hora y colaboración.'],
         config:['Configuración','Áreas e iniciativas gestionadas de forma rápida.'],
         report:['Informe','Versión comité y resumen ejecutivo listo para compartir.']
       };
@@ -3566,6 +3706,7 @@ function renderConfig(){
         state.currentView === 'kanban' ? renderKanban(tasks) :
         state.currentView === 'activity' ? renderActivity() :
         state.currentView === 'initiatives' ? renderInitiatives() :
+        state.currentView === 'latam' ? renderLatam() :
         state.currentView === 'config' ? renderConfig() :
         renderReport();
       _vc.innerHTML=_vhtml; requestAnimationFrame(function(){_vc.style.transition='opacity .2s ease,transform .2s cubic-bezier(.22,1,.36,1)';_vc.style.opacity='1';_vc.style.transform='translateY(0)';});
@@ -3588,6 +3729,12 @@ function renderConfig(){
     window.closeWorklogModal = closeWorklogModal;
     window.saveWorklogEntry = saveWorklogEntry;
     window.deleteWorklogEntry = deleteWorklogEntry;
+    window.setLatamMode = setLatamMode;
+    window.openLatamModal = openLatamModal;
+    window.closeLatamModal = closeLatamModal;
+    window.saveLatamAction = saveLatamAction;
+    window.deleteLatamAction = deleteLatamAction;
+    window.copyLatamReport = copyLatamReport;
     window.openDetailModal = openDetailModal;
     window.closeDetailModal = closeDetailModal;
     window.toggleDone = toggleDone;
