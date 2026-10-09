@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>BDFlow Ver. 4.7.1</title>
   <meta name="theme-color" content="#2563eb" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -425,6 +425,111 @@
       .metric{padding:12px}
     }
 
+
+
+    /* ── MOBILE HARDENING 4.7.1 ── */
+    html,body{width:100%;max-width:100%;overflow-x:hidden}
+    img,svg{max-width:100%}
+    .app,.main,.topbar,.actions,#viewContainer,.metrics,.layout,.grid-2,.exec-grid,.today-grid,.month-grid,.report-box,.activity-day,.task,.row-card,.metric,.kpi-card{min-width:0;max-width:100%}
+
+    @media (max-width:820px){
+      .app{height:100dvh;min-height:100dvh;overflow:hidden}
+      .main{height:100dvh;min-height:0;width:100%;overflow:hidden}
+      .topbar{
+        min-height:58px;height:auto;
+        padding:calc(8px + env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 8px max(10px,env(safe-area-inset-left));
+        align-items:center;overflow:hidden
+      }
+      .title{min-width:0;flex:1}
+      .title h1{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .actions{min-width:0;flex:0 0 auto;flex-wrap:nowrap}
+      .actions .mobile-toggle{padding:8px 9px}
+      .actions .btn.primary{padding:8px 9px;white-space:nowrap}
+      #alertsBtn{padding:8px 9px;min-width:42px}
+      #viewContainer{
+        width:100%;max-width:100%;
+        padding:12px max(10px,env(safe-area-inset-right)) calc(84px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+        overflow-y:auto;overflow-x:hidden;min-height:0
+      }
+      #metricsSection{padding-inline:max(10px,env(safe-area-inset-left));margin-top:10px}
+      .metrics{gap:8px}
+      .metric{padding:13px}
+      .metric .v{font-size:28px}
+      .filter-banner{margin:8px 10px 0;flex-direction:column;align-items:flex-start}
+      .filter-banner .btn{width:100%}
+
+      .task,.row-card,.activity-entry,.worklog-row,.exec-card,.report-box{overflow:hidden}
+      .task-title,.task-desc,.activity-top>div,.row-card>div,.exec-card p,.report-box{overflow-wrap:anywhere;word-break:break-word}
+      .task-top{align-items:flex-start}
+      .task .meta,.task.compact .meta,.meta{grid-template-columns:1fr!important}
+      .task .qa,.task.compact .qa{display:grid;grid-template-columns:1fr 1fr;width:100%}
+      .task .qbtn,.task.compact .qbtn{width:100%;justify-content:center}
+      .inline-form{display:grid;grid-template-columns:1fr;width:100%}
+      .inline-form input,.inline-form select,.inline-form button{width:100%;min-width:0}
+      .activity-top,.worklog-row{flex-direction:column;align-items:stretch}
+      .worklog-row>div:last-child{display:flex;gap:6px;flex-wrap:wrap}
+
+      .kanban,.week-grid{width:100%;max-width:100%;scroll-snap-type:x proximity}
+      .kanban-col{min-width:min(280px,86vw);scroll-snap-align:start}
+      .week-col{min-width:min(220px,76vw);scroll-snap-align:start}
+
+      .modal-wrap{padding:0;align-items:stretch}
+      .modal{
+        width:100vw!important;max-width:100vw!important;
+        height:100dvh;max-height:100dvh;
+        border-radius:0;margin:0;
+        display:flex;flex-direction:column;overflow:hidden
+      }
+      .modal-head{padding:calc(12px + env(safe-area-inset-top)) 14px 12px;gap:8px;flex:0 0 auto}
+      .modal-head h3{font-size:17px;min-width:0;overflow-wrap:anywhere}
+      .modal-head .btn{flex:0 0 auto}
+      .modal-body{padding:14px;overflow-y:auto;overflow-x:hidden;min-height:0;flex:1}
+      .modal-actions{
+        padding:10px 14px calc(12px + env(safe-area-inset-bottom));
+        flex:0 0 auto;background:#fff;border-top:1px solid var(--border)
+      }
+      .modal-actions>div{display:flex!important;width:100%;gap:8px!important}
+      .modal-actions .btn{flex:1;justify-content:center}
+      .form-grid{grid-template-columns:1fr!important}
+      .field{min-width:0}
+      .field input,.field select,.field textarea{width:100%;min-width:0;font-size:16px}
+
+      .report-toolbar{align-items:stretch}
+      .report-toolbar>*{width:100%;min-width:0}
+      .exec-grid{grid-template-columns:1fr!important}
+      .report-box{font-size:13px;padding:14px}
+
+      .mobile-bottom-nav{
+        padding:6px max(4px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));
+      }
+      .mobile-bottom-nav button{min-width:0;font-size:9px}
+      .mobile-bottom-nav button .nav-icon{font-size:18px}
+
+      .sidebar{
+        width:min(320px,88vw);
+        padding-top:calc(18px + env(safe-area-inset-top));
+        padding-bottom:calc(18px + env(safe-area-inset-bottom))
+      }
+      .sidebar .brand-top{align-items:center}
+      .sidebar .version{padding:6px 9px;font-size:11px}
+      .side-card{overflow:hidden}
+      .toast-wrap{
+        left:10px;right:10px;bottom:calc(78px + env(safe-area-inset-bottom));
+        max-width:none
+      }
+      .smart-alert-panel{left:10px;right:10px;top:calc(10px + env(safe-area-inset-top));width:auto;max-width:none}
+    }
+
+    @media (max-width:430px){
+      .topbar{gap:5px}
+      .actions .mobile-toggle{font-size:0}
+      .actions .mobile-toggle::after{content:"☰";font-size:18px}
+      .actions .btn.primary{font-size:0}
+      .actions .btn.primary::after{content:"+ Tarea";font-size:11px}
+      .metric .v{font-size:25px}
+      .task .qa,.task.compact .qa{grid-template-columns:1fr}
+      .modal-actions{gap:7px}
+    }
 
     /* ── ANIMACIONES V4.3 ── */
     @keyframes fadeInUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
